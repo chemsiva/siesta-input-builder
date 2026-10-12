@@ -1,0 +1,93 @@
+{
+  "bulk_scf": {
+    "label": "Bulk SCF (single-point)",
+    "description": "Single-point energy calculation on a bulk crystal",
+    "values": {
+      "system": { "SystemLabel": "bulk", "SystemName": "Bulk material", "NumberOfAtoms": "", "NumberOfSpecies": "" },
+      "structure": {
+        "LatticeConstant": "1.0 Ang",
+        "LatticeVectors": [[1,0,0],[0,1,0],[0,0,1]],
+        "AtomicCoordinatesFormat": "Fractional",
+        "species": [],
+        "atoms": []
+      },
+      "dft": { "XC.functional": "GGA", "XC.authors": "PBE", "MeshCutoff": "300 Ry", "Spin": "none" },
+      "basis": { "PAO.BasisSize": "DZP", "PAO.BasisType": "split", "PAO.EnergyShift": "100 meV" },
+      "scf": { "MaxSCFIterations": "200", "DM.Tolerance": "1e-4", "DM.MixingWeight": "0.25", "DM.NumberPulay": "8", "SCF.MustConverge": "true", "ElectronicTemperature": "300 K", "SolutionMethod": "diagon", "DM.UseSaveDM": "false" },
+      "kpoints": { "mode": "mp", "mp": [[8,0,0,0],[0,8,0,0],[0,0,8,0]], "kgrid_cutoff": "", "BandLines": [], "BandLinesScale": "pi/a" },
+      "output": { "WriteMullikenPop": "0", "WriteForces": "true", "WriteCoorStep": "false", "WriteCoorXmol": "false", "SaveRho": "false", "SaveDeltaRho": "false", "SaveElectrostaticPotential": "false", "SaveTotalPotential": "false", "LongOutput": "false", "SaveHS": "false" },
+      "md": { "MD.TypeOfRun": "CG", "MD.NumCGsteps": "0", "MD.MaxForceTol": "0.04 eV/Ang", "MD.MaxStressTol": "1.0 GPa", "MD.VariableCell": "false", "MD.MaxDispl": "0.1 Ang", "MD.Steps": "1", "MD.TargetPressure": "0.0 GPa", "MD.UseSaveXV": "false" }
+    }
+  },
+  "relax": {
+    "label": "Geometry Relaxation (CG)",
+    "description": "Relax atomic positions using conjugate gradient",
+    "values": {
+      "system": { "SystemLabel": "relax", "SystemName": "Geometry optimization", "NumberOfAtoms": "", "NumberOfSpecies": "" },
+      "structure": { "LatticeConstant": "1.0 Ang", "LatticeVectors": [[1,0,0],[0,1,0],[0,0,1]], "AtomicCoordinatesFormat": "Fractional", "species": [], "atoms": [] },
+      "dft": { "XC.functional": "GGA", "XC.authors": "PBE", "MeshCutoff": "300 Ry", "Spin": "none" },
+      "basis": { "PAO.BasisSize": "DZP", "PAO.BasisType": "split", "PAO.EnergyShift": "100 meV" },
+      "scf": { "MaxSCFIterations": "200", "DM.Tolerance": "1e-4", "DM.MixingWeight": "0.25", "DM.NumberPulay": "8", "SCF.MustConverge": "true", "ElectronicTemperature": "300 K", "SolutionMethod": "diagon", "DM.UseSaveDM": "false" },
+      "kpoints": { "mode": "mp", "mp": [[4,0,0,0],[0,4,0,0],[0,0,4,0]], "kgrid_cutoff": "", "BandLines": [], "BandLinesScale": "pi/a" },
+      "output": { "WriteMullikenPop": "1", "WriteForces": "true", "WriteCoorStep": "true", "WriteCoorXmol": "true", "SaveRho": "false", "SaveDeltaRho": "false", "SaveElectrostaticPotential": "false", "SaveTotalPotential": "false", "LongOutput": "false", "SaveHS": "false" },
+      "md": { "MD.TypeOfRun": "CG", "MD.NumCGsteps": "200", "MD.MaxForceTol": "0.04 eV/Ang", "MD.MaxStressTol": "1.0 GPa", "MD.VariableCell": "false", "MD.MaxDispl": "0.1 Ang", "MD.Steps": "1", "MD.TargetPressure": "0.0 GPa", "MD.UseSaveXV": "false" }
+    }
+  },
+  "relax_vc": {
+    "label": "Variable-Cell Relaxation",
+    "description": "Relax both atoms and cell vectors (CG + variable cell)",
+    "values": {
+      "system": { "SystemLabel": "vc_relax", "SystemName": "Variable cell relaxation", "NumberOfAtoms": "", "NumberOfSpecies": "" },
+      "structure": { "LatticeConstant": "1.0 Ang", "LatticeVectors": [[1,0,0],[0,1,0],[0,0,1]], "AtomicCoordinatesFormat": "Fractional", "species": [], "atoms": [] },
+      "dft": { "XC.functional": "GGA", "XC.authors": "PBE", "MeshCutoff": "400 Ry", "Spin": "none" },
+      "basis": { "PAO.BasisSize": "DZP", "PAO.BasisType": "split", "PAO.EnergyShift": "100 meV" },
+      "scf": { "MaxSCFIterations": "200", "DM.Tolerance": "1e-4", "DM.MixingWeight": "0.25", "DM.NumberPulay": "8", "SCF.MustConverge": "true", "ElectronicTemperature": "300 K", "SolutionMethod": "diagon", "DM.UseSaveDM": "false" },
+      "kpoints": { "mode": "mp", "mp": [[4,0,0,0],[0,4,0,0],[0,0,4,0]], "kgrid_cutoff": "", "BandLines": [], "BandLinesScale": "pi/a" },
+      "output": { "WriteMullikenPop": "1", "WriteForces": "true", "WriteCoorStep": "true", "WriteCoorXmol": "true", "SaveRho": "false", "SaveDeltaRho": "false", "SaveElectrostaticPotential": "false", "SaveTotalPotential": "false", "LongOutput": "false", "SaveHS": "false" },
+      "md": { "MD.TypeOfRun": "CG", "MD.NumCGsteps": "300", "MD.MaxForceTol": "0.04 eV/Ang", "MD.MaxStressTol": "0.1 GPa", "MD.VariableCell": "true", "MD.MaxDispl": "0.1 Ang", "MD.Steps": "1", "MD.TargetPressure": "0.0 GPa", "MD.UseSaveXV": "false" }
+    }
+  },
+  "bands": {
+    "label": "Band Structure",
+    "description": "Electronic band structure along high-symmetry k-path",
+    "values": {
+      "system": { "SystemLabel": "bands", "SystemName": "Band structure", "NumberOfAtoms": "", "NumberOfSpecies": "" },
+      "structure": { "LatticeConstant": "1.0 Ang", "LatticeVectors": [[1,0,0],[0,1,0],[0,0,1]], "AtomicCoordinatesFormat": "Fractional", "species": [], "atoms": [] },
+      "dft": { "XC.functional": "GGA", "XC.authors": "PBE", "MeshCutoff": "300 Ry", "Spin": "none" },
+      "basis": { "PAO.BasisSize": "DZP", "PAO.BasisType": "split", "PAO.EnergyShift": "100 meV" },
+      "scf": { "MaxSCFIterations": "200", "DM.Tolerance": "1e-4", "DM.MixingWeight": "0.25", "DM.NumberPulay": "8", "SCF.MustConverge": "true", "ElectronicTemperature": "25 meV", "SolutionMethod": "diagon", "DM.UseSaveDM": "true" },
+      "kpoints": { "mode": "mp", "mp": [[8,0,0,0],[0,8,0,0],[0,0,8,0]], "kgrid_cutoff": "", "BandLines": [[1,0,0,0,"\\Gamma"],[20,0.5,0,0,"X"],[15,0.5,0.5,0,"M"],[20,0,0,0,"\\Gamma"]], "BandLinesScale": "pi/a" },
+      "output": { "WriteMullikenPop": "0", "WriteForces": "false", "WriteCoorStep": "false", "WriteCoorXmol": "false", "SaveRho": "false", "SaveDeltaRho": "false", "SaveElectrostaticPotential": "false", "SaveTotalPotential": "false", "LongOutput": "false", "SaveHS": "false" },
+      "md": { "MD.TypeOfRun": "CG", "MD.NumCGsteps": "0", "MD.MaxForceTol": "0.04 eV/Ang", "MD.MaxStressTol": "1.0 GPa", "MD.VariableCell": "false", "MD.MaxDispl": "0.1 Ang", "MD.Steps": "1", "MD.TargetPressure": "0.0 GPa", "MD.UseSaveXV": "false" }
+    }
+  },
+  "slab": {
+    "label": "Slab / Surface",
+    "description": "Surface slab with dipole correction",
+    "values": {
+      "system": { "SystemLabel": "slab", "SystemName": "Surface slab", "NumberOfAtoms": "", "NumberOfSpecies": "" },
+      "structure": { "LatticeConstant": "1.0 Ang", "LatticeVectors": [[1,0,0],[0,1,0],[0,0,1]], "AtomicCoordinatesFormat": "Fractional", "species": [], "atoms": [] },
+      "dft": { "XC.functional": "GGA", "XC.authors": "PBE", "MeshCutoff": "400 Ry", "Spin": "none", "Slab.DipoleCorrection": "true" },
+      "basis": { "PAO.BasisSize": "DZP", "PAO.BasisType": "split", "PAO.EnergyShift": "100 meV" },
+      "scf": { "MaxSCFIterations": "300", "DM.Tolerance": "1e-4", "DM.MixingWeight": "0.1", "DM.NumberPulay": "8", "SCF.MustConverge": "true", "ElectronicTemperature": "300 K", "SolutionMethod": "diagon", "DM.UseSaveDM": "false" },
+      "kpoints": { "mode": "mp", "mp": [[4,0,0,0],[0,4,0,0],[0,0,1,0]], "kgrid_cutoff": "", "BandLines": [], "BandLinesScale": "pi/a" },
+      "output": { "WriteMullikenPop": "1", "WriteForces": "true", "WriteCoorStep": "false", "WriteCoorXmol": "false", "SaveRho": "true", "SaveDeltaRho": "true", "SaveElectrostaticPotential": "true", "SaveTotalPotential": "false", "LongOutput": "false", "SaveHS": "false" },
+      "md": { "MD.TypeOfRun": "CG", "MD.NumCGsteps": "200", "MD.MaxForceTol": "0.04 eV/Ang", "MD.MaxStressTol": "1.0 GPa", "MD.VariableCell": "false", "MD.MaxDispl": "0.1 Ang", "MD.Steps": "1", "MD.TargetPressure": "0.0 GPa", "MD.UseSaveXV": "false" }
+    }
+  },
+  "dos_pdos": {
+    "label": "Density of States (DOS + PDOS)",
+    "description": "Total DOS and orbital projected PDOS with dense k-grid",
+    "values": {
+      "system": { "SystemLabel": "dos", "SystemName": "DOS and PDOS calculation", "NumberOfAtoms": "", "NumberOfSpecies": "" },
+      "structure": { "LatticeConstant": "1.0 Ang", "LatticeVectors": [[1,0,0],[0,1,0],[0,0,1]], "AtomicCoordinatesFormat": "Fractional", "species": [], "atoms": [] },
+      "dft": { "XC.functional": "GGA", "XC.authors": "PBE", "MeshCutoff": "300 Ry", "Spin": "none" },
+      "basis": { "PAO.BasisSize": "DZP", "PAO.BasisType": "split", "PAO.EnergyShift": "100 meV" },
+      "scf": { "MaxSCFIterations": "200", "DM.Tolerance": "1e-4", "DM.MixingWeight": "0.25", "DM.NumberPulay": "8", "SCF.MustConverge": "true", "ElectronicTemperature": "10 meV", "SolutionMethod": "diagon", "DM.UseSaveDM": "true" },
+      "kpoints": { "mode": "mp", "mp": [[8,0,0,0],[0,8,0,0],[0,0,8,0]], "kgrid_cutoff": "", "BandLines": [], "BandLinesScale": "pi/a" },
+      "dos": { "enablePDOS": true, "useEF": true, "eMin": "-10.0", "eMax": "10.0", "peakWidth": "0.100", "numPoints": "1000", "energyUnits": "eV", "useCustomKgrid": true, "pdosKgrid": [12, 12, 12], "enableLDOS": false, "writeEigenvalues": true },
+      "output": { "WriteMullikenPop": "1", "WriteForces": "false", "WriteCoorStep": "false", "WriteCoorXmol": "false", "SaveRho": "false", "SaveDeltaRho": "false", "SaveElectrostaticPotential": "false", "SaveTotalPotential": "false", "LongOutput": "false", "SaveHS": "false" },
+      "md": { "MD.TypeOfRun": "CG", "MD.NumCGsteps": "0", "MD.MaxForceTol": "0.04 eV/Ang", "MD.MaxStressTol": "1.0 GPa", "MD.VariableCell": "false", "MD.MaxDispl": "0.1 Ang", "MD.Steps": "1", "MD.TargetPressure": "0.0 GPa", "MD.UseSaveXV": "false" }
+    }
+  }
+}

@@ -1,0 +1,437 @@
+import { useState } from 'react';
+import { useFDFStore } from '../store/fdfStore';
+import { FieldRow, SelectInput, TextInput, SectionHeader } from '../components/FieldRow';
+
+const XC_MAP = {
+  LDA:  ['CA','PW92'],
+  GGA:  ['PBE','PBEsol','RPBE','revPBE','PW91'],
+  VDW:  ['VDW-DF','VDW-DF2','optB88','optPBE'],
+  MGGA: ['SCAN','r2SCAN','MS2'],
+};
+
+const SPIN_OPTIONS = [
+  { value: 'none',              label: 'None (non-spin-polarized)' },
+  { value: 'polarized',         label: 'Collinear spin-polarized' },
+  { value: 'non-collinear',     label: 'Non-collinear (NC-DFT)' },
+  { value: 'spin-orbit',        label: 'Full Spin-Orbit (SOC)' },
+  { value: 'Spin-Orbit+onsite', label: 'SOC + on-site approx.' },
+];
+
+const MESH_UNITS = ['Ry','eV','Hartree'];
+
+export function DFTSection() {
+  const dft = useFDFStore(s => s.dft);
+  const structure = useFDFStore(s => s.structure);
+  const setField = useFDFStore(s => s.setField);
+  const set = (k, v) => setField('dft', k, v);
+
+  const [showAdvancedD3, setShowAdvancedD3] = useState(false);
+
+  const species = structure.species || [];
+  const dfuList = dft.dfu || [];
+
+  const updateDFU = (spLabel, field, val) => {
+    const existing = dfuList.find(item => item.speciesLabel === spLabel);
+    let next;
+    if (existing) {
+      next = dfuList.map(item => item.speciesLabel === spLabel ? { ...item, [field]: val } : item);
+    } else {
+      next = [...dfuList, { speciesLabel: spLabel, enabled: true, l: 2, n: '', U: 4.0, J: 0.0, [field]: val }];
+    }
+    set('dfu', next);
+  };
+
+  const func = dft['XC.functional'] || 'GGA';
+  const authorOptions = XC_MAP[func] || ['PBE'];
+  const xcAuthor = dft['XC.authors'] || 'PBE';
+
+  const [mcVal, mcUnit] = (dft.MeshCutoff || '300 Ry').split(' ');
+
+  const d3On = dft['DFTD3'] === 'true' || dft['d3.dispersion'] === 'true';
+  const useXCDefaults = dft['DFTD3.UseXCDefaults'] !== 'false';
+  const bjDamping = dft['DFTD3.BJdamping'] !== 'false';
+  const dipoleOn = dft['Slab.DipoleCorrection'] === 'true';
+
+  const handleD3Toggle = (checked) => {
+    set('DFTD3', checked ? 'true' : 'false');
+    set('d3.dispersion', checked ? 'true' : 'false');
+  };
+
+  return (
+    <div className="section-pane">
+      <SectionHeader title="DFT / Exchange-Correlation" />
+
+      {/* ── XC Functional ── */}
+      <div className="field-row-group">
+        <FieldRow label="XC.functional" keyword="XC.functional">
+          <SelectInput value={func}
+            onChange={v => { set('XC.functional', v); set('XC.authors', (XC_MAP[v]||[])[0]||'PBE'); }}
+            options={Object.keys(XC_MAP)} />
+        </FieldRow>
+        <FieldRow label="XC.authors" keyword="XC.authors">
+          <SelectInput value={xcAuthor}
+            onChange={v => set('XC.authors', v)} options={authorOptions} />
+        </FieldRow>
+      </div>
+
+      <FieldRow label="MeshCutoff" keyword="MeshCutoff">
+        <div className="input-with-unit">
+          <TextInput mono value={mcVal}
+            onChange={v => set('MeshCutoff', `${v} ${mcUnit||'Ry'}`)} placeholder="300" />
+          <SelectInput value={mcUnit||'Ry'}
+            onChange={u => set('MeshCutoff', `${mcVal} ${u}`)} options={MESH_UNITS} />
+        </div>
+      </FieldRow>
+
+      <FieldRow label="Spin" keyword="Spin">
+        <SelectInput value={dft.Spin || 'none'}
+          onChange={v => set('Spin', v)} options={SPIN_OPTIONS} />
+      </FieldRow>
+
+      {(dft.Spin === 'spin-orbit' || dft.Spin === 'Spin-Orbit+onsite') && (
+        <div className="info-box warning">
+          ⚠️ Full SOC requires fully-relativistic PSML pseudopotentials (e.g. from ONCVPSP with "both" option or Pseudo-Dojo FR tables).
+        </div>
+      )}
+      {(dft.Spin === 'polarized' || dft.Spin === 'non-collinear') && (
+        <div className="info-box">
+          🔵 Collinear spin: initialize spin on atoms via DM.InitSpin block (set in SCF section).
+        </div>
+      )}
+
+      {/* ── Section 6.26: Grimme's DFT-D3 Dispersion Model ── */}
+      <div className="subsection">
+        <div className="subsection-title">
+          🌐 Grimme’s DFT-D3 Dispersion Model
+          <span className="opt" style={{ fontSize: '0.75rem' }}>DFTD3 (Section 6.26)</span>
+        </div>
+        <p className="subsection-desc">
+          Adds Grimme’s semi-empirical D3 dispersion corrections to DFT (E_D3 = E_2body + E_3body).
+          Essential for layered materials, molecular crystals, surface adsorption, and weak van der Waals interactions.
+        </p>
+
+        {/* Master Toggle */}
+        <FieldRow label="DFTD3" keyword="DFTD3">
+          <label className="toggle">
+            <input type="checkbox"
+              checked={d3On}
+              onChange={e => handleD3Toggle(e.target.checked)} />
+            <span className="toggle-label">
+              {d3On ? '✅ DFTD3 Enabled' : 'Off'}
+            </span>
+          </label>
+        </FieldRow>
+
+        {d3On && (
+          <div style={{ marginTop: '0.75rem', padding: '0.75rem', background: 'var(--surface)', borderRadius: '6px', border: '1px solid var(--border)' }}>
+            {/* Damping Scheme */}
+            <FieldRow label="DFTD3.BJdamping" keyword="DFTD3.BJdamping">
+              <SelectInput
+                value={bjDamping ? 'true' : 'false'}
+                onChange={v => set('DFTD3.BJdamping', v)}
+                options={[
+                  { value: 'true',  label: 'true  — Becke-Johnson (BJ) damping (recommended)' },
+                  { value: 'false', label: 'false — Zero-damping variant (original D3(0))' },
+                ]} />
+            </FieldRow>
+
+            {/* System Periodicity */}
+            <FieldRow label="DFTD3.Periodic" keyword="DFTD3.Periodic">
+              <SelectInput
+                value={dft['DFTD3.Periodic'] || '[1 2 3]'}
+                onChange={v => set('DFTD3.Periodic', v)}
+                options={[
+                  { value: '[1 2 3]', label: '[1 2 3] — 3D Bulk (all 3 lattice vectors periodic)' },
+                  { value: '[1 2]',   label: '[1 2]   — 2D Slab / Surface (periodic in a1, a2; vacuum in a3)' },
+                  { value: '[1]',     label: '[1]     — 1D Nanowire / Polymer (periodic in a1)' },
+                  { value: '[ ]',     label: '[ ]     — 0D Molecule / Cluster (isolated)' },
+                ]} />
+            </FieldRow>
+            <span className="hint" style={{ display: 'block', marginBottom: '0.75rem', color: 'var(--muted)' }}>
+              Enforces dispersion periodicity for non-orthogonal or slab cells. For slab calculations with vacuum along z, choose <code>[1 2]</code>.
+            </span>
+
+            {/* XC Defaults */}
+            <FieldRow label="DFTD3.UseXCDefaults" keyword="DFTD3.UseXCDefaults">
+              <label className="toggle">
+                <input type="checkbox"
+                  checked={useXCDefaults}
+                  onChange={e => set('DFTD3.UseXCDefaults', e.target.checked ? 'true' : 'false')} />
+                <span className="toggle-label">
+                  {useXCDefaults ? `✅ Use built-in D3 parameters for ${xcAuthor}` : 'Custom user parameters'}
+                </span>
+              </label>
+            </FieldRow>
+
+            {useXCDefaults ? (
+              <div className="hint" style={{ color: 'var(--success)', margin: '0.5rem 0' }}>
+                ✓ SIESTA automatically loads calibrated D3 parameters for <strong>{xcAuthor}</strong> (covers PBE, PBESol, RevPBE, RPBE, LYP, BLYP, PBE0, HS6).
+              </div>
+            ) : (
+              /* Custom D3 Parameters */
+              <div style={{ marginTop: '0.5rem', padding: '0.5rem', background: 'var(--bg, #0f172a)', borderRadius: '4px', border: '1px dashed var(--border)' }}>
+                <div style={{ fontSize: '0.8rem', fontWeight: 600, marginBottom: '0.5rem', color: 'var(--accent)' }}>
+                  Manual D3 Model Parameters (DFTD3.UseXCDefaults false):
+                </div>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(110px, 1fr))', gap: '0.5rem' }}>
+                  <FieldRow label="s6" keyword="DFTD3.s6">
+                    <TextInput mono placeholder="1.0" value={dft['DFTD3.s6'] || ''} onChange={v => set('DFTD3.s6', v)} />
+                  </FieldRow>
+                  <FieldRow label="rs6" keyword="DFTD3.rs6">
+                    <TextInput mono placeholder="1.0" value={dft['DFTD3.rs6'] || ''} onChange={v => set('DFTD3.rs6', v)} />
+                  </FieldRow>
+                  <FieldRow label="s8" keyword="DFTD3.s8">
+                    <TextInput mono placeholder="1.0" value={dft['DFTD3.s8'] || ''} onChange={v => set('DFTD3.s8', v)} />
+                  </FieldRow>
+                  <FieldRow label="rs8" keyword="DFTD3.rs8">
+                    <TextInput mono placeholder="1.0" value={dft['DFTD3.rs8'] || ''} onChange={v => set('DFTD3.rs8', v)} />
+                  </FieldRow>
+                  <FieldRow label="a1 (BJ)" keyword="DFTD3.a1">
+                    <TextInput mono placeholder="0.4" value={dft['DFTD3.a1'] || ''} onChange={v => set('DFTD3.a1', v)} />
+                  </FieldRow>
+                  <FieldRow label="a2 (BJ)" keyword="DFTD3.a2">
+                    <TextInput mono placeholder="5.0" value={dft['DFTD3.a2'] || ''} onChange={v => set('DFTD3.a2', v)} />
+                  </FieldRow>
+                  <FieldRow label="alpha" keyword="DFTD3.alpha">
+                    <TextInput mono placeholder="14.0" value={dft['DFTD3.alpha'] || ''} onChange={v => set('DFTD3.alpha', v)} />
+                  </FieldRow>
+                </div>
+              </div>
+            )}
+
+            {/* Cut-Offs Accordion */}
+            <div style={{ marginTop: '0.75rem' }}>
+              <button
+                type="button"
+                className="btn btn-sm btn-ghost"
+                onClick={() => setShowAdvancedD3(!showAdvancedD3)}
+                style={{ fontSize: '0.75rem', padding: '0.2rem 0.5rem', color: 'var(--muted)' }}>
+                {showAdvancedD3 ? '▾ Hide Cut-Off Distances' : '▸ Advanced: Cut-Off Distances (2Body, 3Body, Coordination)'}
+              </button>
+
+              {showAdvancedD3 && (
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '0.5rem', marginTop: '0.4rem' }}>
+                  <FieldRow label="DFTD3.2BodyCutOff" keyword="DFTD3.2BodyCutOff">
+                    <TextInput mono placeholder="60.0 bohr" value={dft['DFTD3.2BodyCutOff'] || ''} onChange={v => set('DFTD3.2BodyCutOff', v)} />
+                  </FieldRow>
+                  <FieldRow label="DFTD3.3BodyCutOff" keyword="DFTD3.3BodyCutOff">
+                    <TextInput mono placeholder="40.0 bohr" value={dft['DFTD3.3BodyCutOff'] || ''} onChange={v => set('DFTD3.3BodyCutOff', v)} />
+                  </FieldRow>
+                  <FieldRow label="DFTD3.CoordinationCutoff" keyword="DFTD3.CoordinationCutoff">
+                    <TextInput mono placeholder="10.0 bohr" value={dft['DFTD3.CoordinationCutoff'] || ''} onChange={v => set('DFTD3.CoordinationCutoff', v)} />
+                  </FieldRow>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* ── Section 6.23: Net Charge, Dipole Correction & Electric Fields ── */}
+      <div className="subsection">
+        <div className="subsection-title">
+          ⚡ Net Charge, Electric Fields &amp; Slab Dipole
+          <span className="opt" style={{ fontSize: '0.75rem' }}>Section 6.23</span>
+        </div>
+        <p className="subsection-desc">
+          Configure systems with net ionic charge, background doping, external electric fields,
+          and slab dipole compensation for polar or asymmetric surfaces.
+        </p>
+
+        {/* Net Charge & Doping */}
+        <div className="field-row-group">
+          <FieldRow label="NetCharge" keyword="NetCharge">
+            <div className="input-with-unit">
+              <TextInput mono placeholder="0.0" value={dft.NetCharge || ''} onChange={v => set('NetCharge', v)} />
+              <span className="unit-label" style={{ padding: '0 0.5rem', alignSelf: 'center', color: 'var(--muted)', fontSize: '0.8rem' }}>|e|</span>
+            </div>
+          </FieldRow>
+
+          <FieldRow label="SimulateDoping" keyword="SimulateDoping">
+            <label className="toggle">
+              <input type="checkbox"
+                checked={dft.SimulateDoping === 'true'}
+                onChange={e => set('SimulateDoping', e.target.checked ? 'true' : 'false')} />
+              <span className="toggle-label">Compensating background charge (doped slabs)</span>
+            </label>
+          </FieldRow>
+        </div>
+
+        {/* Slab Dipole Correction */}
+        <div className="field-row-group">
+          <FieldRow label="Slab.DipoleCorrection" keyword="Slab.DipoleCorrection">
+            <SelectInput
+              value={dft['Slab.DipoleCorrection'] || 'none'}
+              onChange={v => set('Slab.DipoleCorrection', v)}
+              options={[
+                { value: 'none',   label: 'none   — No dipole correction (bulk or symmetric slab)' },
+                { value: 'charge', label: 'charge — Calculate dipole from valence charge density δρ (standard)' },
+                { value: 'vacuum', label: 'vacuum — Calculate field from potential derivative in vacuum' },
+              ]} />
+          </FieldRow>
+
+          {dft['Slab.DipoleCorrection'] !== 'none' && (
+            <FieldRow label="SlabDipoleDirection" keyword="SlabDipoleDirection">
+              <SelectInput
+                value={dft.SlabDipoleDirection || 'z'}
+                onChange={v => set('SlabDipoleDirection', v)}
+                options={[
+                  { value: 'z',  label: 'z  — along 3rd lattice vector (standard for slabs)' },
+                  { value: '+z', label: '+z — positive z-axis' },
+                  { value: '-z', label: '-z — negative z-axis' },
+                  { value: 'y',  label: 'y  — along 2nd lattice vector' },
+                  { value: 'x',  label: 'x  — along 1st lattice vector' },
+                ]} />
+            </FieldRow>
+          )}
+        </div>
+
+        {(dft['Slab.DipoleCorrection'] === 'charge' || dft['Slab.DipoleCorrection'] === 'true') && (
+          <div style={{ marginTop: '0.5rem', padding: '0.5rem', background: 'var(--surface)', borderRadius: '4px', border: '1px solid var(--border)' }}>
+            <FieldRow label="%block Slab.DipoleCorrection.Origin" keyword="Slab.DipoleCorrection.Origin">
+              <TextInput mono placeholder="0.000 0.000 0.500 Ang (optional origin)"
+                value={dft['Slab.DipoleCorrection.Origin'] || ''}
+                onChange={v => set('Slab.DipoleCorrection.Origin', v)} />
+            </FieldRow>
+            <span className="hint" style={{ display: 'block', color: 'var(--muted)', marginTop: '0.2rem' }}>
+              Specifies dipole origin. If omitted, SIESTA automatically uses the average center of mass of the atoms.
+            </span>
+          </div>
+        )}
+
+        {dft['Slab.DipoleCorrection'] === 'vacuum' && (
+          <div style={{ marginTop: '0.5rem', padding: '0.5rem', background: 'var(--surface)', borderRadius: '4px', border: '1px solid var(--border)' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: '0.5rem' }}>
+              <FieldRow label="position" keyword="Slab.DipoleCorrection.Vacuum">
+                <TextInput mono placeholder="0.0 0.0 10.0 Ang" value={dft['Slab.DipoleCorrection.Vacuum.position'] || ''} onChange={v => set('Slab.DipoleCorrection.Vacuum.position', v)} />
+              </FieldRow>
+              <FieldRow label="tolerance" keyword="Slab.DipoleCorrection.Vacuum">
+                <TextInput mono placeholder="0.001 eV/Ang/e" value={dft['Slab.DipoleCorrection.Vacuum.tolerance'] || ''} onChange={v => set('Slab.DipoleCorrection.Vacuum.tolerance', v)} />
+              </FieldRow>
+              <FieldRow label="direction" keyword="Slab.DipoleCorrection.Vacuum">
+                <TextInput mono placeholder="0.0 0.0 1.0" value={dft['Slab.DipoleCorrection.Vacuum.direction'] || '0.000 0.000 1.000'} onChange={v => set('Slab.DipoleCorrection.Vacuum.direction', v)} />
+              </FieldRow>
+            </div>
+            <span className="hint" style={{ display: 'block', color: 'var(--muted)', marginTop: '0.2rem' }}>
+              Determines electric field at a point in the vacuum region where the potential derivative is flat.
+            </span>
+          </div>
+        )}
+
+        {/* External Electric Field Block */}
+        <div style={{ marginTop: '0.75rem', paddingTop: '0.75rem', borderTop: '1px solid var(--border)' }}>
+          <FieldRow label="ExternalElectricField" keyword="ExternalElectricField">
+            <label className="toggle">
+              <input type="checkbox"
+                checked={!!dft['ExternalElectricField.enabled']}
+                onChange={e => {
+                  set('ExternalElectricField.enabled', e.target.checked);
+                  if (e.target.checked && (!dft['Slab.DipoleCorrection'] || dft['Slab.DipoleCorrection'] === 'none')) {
+                    set('Slab.DipoleCorrection', 'charge');
+                  }
+                }} />
+              <span className="toggle-label">Apply external electric field</span>
+            </label>
+          </FieldRow>
+
+          {dft['ExternalElectricField.enabled'] && (
+            <div style={{ marginTop: '0.5rem', padding: '0.5rem', background: 'var(--surface)', borderRadius: '4px', border: '1px solid var(--border)' }}>
+              <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', alignItems: 'flex-end' }}>
+                <FieldRow label="E_x" style={{ flex: 1 }}>
+                  <TextInput mono value={dft['ExternalElectricField.x'] || '0.000'} onChange={v => set('ExternalElectricField.x', v)} />
+                </FieldRow>
+                <FieldRow label="E_y" style={{ flex: 1 }}>
+                  <TextInput mono value={dft['ExternalElectricField.y'] || '0.000'} onChange={v => set('ExternalElectricField.y', v)} />
+                </FieldRow>
+                <FieldRow label="E_z" style={{ flex: 1 }}>
+                  <TextInput mono value={dft['ExternalElectricField.z'] || '0.500'} onChange={v => set('ExternalElectricField.z', v)} />
+                </FieldRow>
+                <FieldRow label="Units" style={{ width: '130px' }}>
+                  <SelectInput
+                    value={dft['ExternalElectricField.units'] || 'V/Ang'}
+                    onChange={v => set('ExternalElectricField.units', v)}
+                    options={['V/Ang', 'Ry/Bohr/e', 'eV/Ang/e']} />
+                </FieldRow>
+              </div>
+              <span className="hint" style={{ display: 'block', color: 'var(--muted)', marginTop: '0.3rem' }}>
+                Must be orthogonal to periodic slab directions (e.g. along $z$ for an $xy$ slab). Applying an electric field automatically activates <code>Slab.DipoleCorrection</code>.
+              </span>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* ── DFT+U ── */}
+      <div className="subsection">
+        <div className="subsection-title">
+          🔬 DFT+U (Hubbard U) — Correlated Electrons
+          <span className="opt" style={{ fontSize: '0.75rem' }}>%block DFTU.Proj</span>
+        </div>
+        <p className="subsection-desc">
+          Apply on-site Coulomb repulsion $U$ for localized $d$- or $f$-orbitals (transition metal oxides, rare-earths).
+        </p>
+
+        {species.length > 0 ? (
+          <table className="atoms-table" style={{ marginTop: '0.5rem' }}>
+            <thead>
+              <tr>
+                <th>Apply</th>
+                <th>Species</th>
+                <th>Shell (l)</th>
+                <th>n (opt)</th>
+                <th>U (eV)</th>
+                <th>J (eV)</th>
+              </tr>
+            </thead>
+            <tbody>
+              {species.map(sp => {
+                const item = dfuList.find(d => d.speciesLabel === sp.label) || { enabled: false, l: 2, n: '', U: 4.0, J: 0.0 };
+                return (
+                  <tr key={sp.idx}>
+                    <td>
+                      <input type="checkbox" checked={!!item.enabled}
+                        onChange={e => updateDFU(sp.label, 'enabled', e.target.checked)} />
+                    </td>
+                    <td><strong>{sp.label}</strong> (Z={sp.z})</td>
+                    <td>
+                      <select className="input select" style={{ width: '80px' }}
+                        disabled={!item.enabled} value={item.l ?? 2}
+                        onChange={e => updateDFU(sp.label, 'l', parseInt(e.target.value))}>
+                        <option value="2">d (l=2)</option>
+                        <option value="3">f (l=3)</option>
+                        <option value="1">p (l=1)</option>
+                      </select>
+                    </td>
+                    <td>
+                      <input type="text" className="input mono" style={{ width: '50px' }}
+                        placeholder="3" disabled={!item.enabled} value={item.n ?? ''}
+                        onChange={e => updateDFU(sp.label, 'n', e.target.value)} />
+                    </td>
+                    <td>
+                      <input type="number" step="0.1" className="input mono" style={{ width: '70px' }}
+                        disabled={!item.enabled} value={item.U ?? 4.0}
+                        onChange={e => updateDFU(sp.label, 'U', e.target.value)} />
+                    </td>
+                    <td>
+                      <input type="number" step="0.1" className="input mono" style={{ width: '70px' }}
+                        disabled={!item.enabled} value={item.J ?? 0.0}
+                        onChange={e => updateDFU(sp.label, 'J', e.target.value)} />
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        ) : (
+          <div className="hint">Define species in ChemicalSpeciesLabel to configure DFT+U.</div>
+        )}
+      </div>
+
+      <div className="info-box">
+        <strong>MeshCutoff guide:</strong> Controls fineness of the real-space grid for Hartree and XC.
+        Start at 200–300 Ry; converge by doubling until total energy changes &lt;1 meV/atom.
+        Higher cutoff = more memory and CPU. Typical production: 400–600 Ry for hard pseudopotentials.
+      </div>
+    </div>
+  );
+}
