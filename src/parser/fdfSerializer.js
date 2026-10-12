@@ -241,7 +241,7 @@ export function serializeFDF(state) {
   }
   sections.push(kLines.join('\n'));
 
-  // ── Output ────────────────────────────────────────────────────────────────
+  // ── Output flags ──────────────────────────────────────────────────────────
   const outFlags = [
     'WriteMullikenPop','WriteForces','WriteCoorStep','WriteCoorXmol',
     'WriteMDXmol','WriteMDhistory',
@@ -251,10 +251,43 @@ export function serializeFDF(state) {
   sections.push(sec('Output', outFlags.map(k => {
     const v = output[k];
     if (v === undefined || v === '' || v === null) return null;
-    // boolean flags — skip default falses to keep file clean
     if (v === 'false' || v === 'F' || v === false) return null;
     return line(k, v);
   })));
+
+  // ── COOP / COHP ───────────────────────────────────────────────────────────
+  if (output['COOP.Write'] === 'true') {
+    const coopLines = [`# ── COOP / COHP (Crystal-Orbital Overlap/Hamilton Populations) ─`];
+    coopLines.push(line('COOP.Write', 'true'));
+    if (output['WFS.Energy.Min']) coopLines.push(line('WFS.Energy.Min', output['WFS.Energy.Min']));
+    if (output['WFS.Energy.Max']) coopLines.push(line('WFS.Energy.Max', output['WFS.Energy.Max']));
+    if (output['WFS.Band.Min'])   coopLines.push(line('WFS.Band.Min',   output['WFS.Band.Min']));
+    if (output['WFS.Band.Max'])   coopLines.push(line('WFS.Band.Max',   output['WFS.Band.Max']));
+    sections.push(coopLines.join('\n'));
+  }
+
+  // ── Optical Properties ────────────────────────────────────────────────────
+  if (output['OpticalCalculation'] === 'true') {
+    const optLines = [`# ── Optical Properties ─────────────────────────────────────────`];
+    optLines.push(line('OpticalCalculation', 'true'));
+    if (output['Optical.Energy.Minimum']) optLines.push(line('Optical.Energy.Minimum', output['Optical.Energy.Minimum']));
+    if (output['Optical.Energy.Maximum']) optLines.push(line('Optical.Energy.Maximum', output['Optical.Energy.Maximum']));
+    if (output['Optical.Broaden'])        optLines.push(line('Optical.Broaden',        output['Optical.Broaden']));
+    if (output['Optical.Scissor'])        optLines.push(line('Optical.Scissor',        output['Optical.Scissor']));
+    if (output['Optical.NumberOfBands'])  optLines.push(line('Optical.NumberOfBands',  output['Optical.NumberOfBands']));
+    optLines.push(line('Optical.PolarizationType', output['Optical.PolarizationType'] || 'polycrystal'));
+    if (output['Optical.OffsetMesh'] === 'true') optLines.push(line('Optical.OffsetMesh', 'true'));
+    // Mesh block
+    const meshVals = (output['Optical.Mesh'] || '5 5 5').trim().split(/\s+/);
+    optLines.push(`%block Optical.Mesh\n  ${meshVals.join(' ')}\n%endblock Optical.Mesh`);
+    // Vector block (only needed for polarized/unpolarized)
+    const polType = output['Optical.PolarizationType'] || 'polycrystal';
+    if (polType === 'polarized' || polType === 'unpolarized') {
+      const vec = (output['Optical.Vector'] || '1.0 0.0 0.0').trim().split(/\s+/);
+      optLines.push(`%block Optical.Vector\n  ${vec.join(' ')}\n%endblock Optical.Vector`);
+    }
+    sections.push(optLines.join('\n'));
+  }
 
   // ── MD / Relaxation ───────────────────────────────────────────────────────
   const mdLines = [`# ── MD / Relaxation ─────────────────────────────────────`];

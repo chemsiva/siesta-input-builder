@@ -80,6 +80,23 @@ const defaultState = {
     SaveRho: 'false', SaveDeltaRho: 'false',
     SaveElectrostaticPotential: 'false', SaveTotalPotential: 'false',
     LongOutput: 'false', SaveHS: 'false', WriteDM: 'true',
+    // COOP / COHP
+    'COOP.Write': 'false',
+    'WFS.Energy.Min': '',
+    'WFS.Energy.Max': '',
+    'WFS.Band.Min': '',
+    'WFS.Band.Max': '',
+    // Optical
+    OpticalCalculation: 'false',
+    'Optical.Energy.Minimum': '0.0 eV',
+    'Optical.Energy.Maximum': '20.0 eV',
+    'Optical.Broaden': '0.1 eV',
+    'Optical.Scissor': '0.0 eV',
+    'Optical.NumberOfBands': '',
+    'Optical.PolarizationType': 'polycrystal',
+    'Optical.Vector': '1.0 0.0 0.0',
+    'Optical.OffsetMesh': 'false',
+    'Optical.Mesh': '5 5 5',
   },
   md: {
     'MD.TypeOfRun': 'CG', 'MD.NumCGsteps': '100', 'MD.MaxForceTol': '0.04 eV/Ang',

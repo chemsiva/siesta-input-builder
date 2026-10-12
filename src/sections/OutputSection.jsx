@@ -271,11 +271,202 @@ export function OutputSection() {
           {/* General & Analysis */}
           <div className="subsection">
             <div className="subsection-title">
-              📊 General Output &amp; Populations
+              📊 General Output & Populations
             </div>
             <div className="output-flags-grid">
               {GENERAL_FLAGS.map(renderFlag)}
             </div>
+          </div>
+
+          {/* ── COOP / COHP ──────────────────────────────────────────────── */}
+          <div className="subsection">
+            <div className="subsection-title">
+              🔗 COOP / COHP — Crystal-Orbital Overlap & Hamilton Populations
+            </div>
+            <p className="subsection-desc">
+              Activating <code>COOP.Write</code> instructs SIESTA to write{' '}
+              <code>SystemLabel.fullBZ.WFSX</code> (packed wavefunction, single precision) and{' '}
+              <code>SystemLabel.HSX</code> (Hamiltonian, overlap, X-matrix), processed by{' '}
+              <code>Util/COOP/mprop</code> to produce COOP/COHP curves and projected DOS.
+              Optionally narrow the wavefunction energy/band range to reduce file size.
+            </p>
+
+            {/* Master toggle */}
+            <div className="flag-card" title="Write .fullBZ.WFSX and .HSX files for COOP/COHP post-processing">
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <div className="flag-label"><code>COOP.Write</code></div>
+                <span style={{ fontSize: '0.68rem', padding: '0.1rem 0.35rem', borderRadius: '3px', background: 'var(--surface)', border: '1px solid var(--border)', color: 'var(--accent)', fontFamily: 'monospace', fontWeight: 600 }}>
+                  .fullBZ.WFSX + .HSX
+                </span>
+              </div>
+              <div className="flag-help">
+                Generates packed wavefunction and H/S/X matrix files for COOP/COHP analysis via <code>Util/COOP/mprop</code>.
+                Reference: Hughbanks & Hoffmann, JACS 1983; Dronskowski & Blöchl, J.Phys.Chem 1993.
+              </div>
+              <div className="flag-control">
+                <label className="toggle">
+                  <input type="checkbox"
+                    checked={output['COOP.Write'] === 'true'}
+                    onChange={e => set('COOP.Write', e.target.checked ? 'true' : 'false')} />
+                  <span className="toggle-label">{output['COOP.Write'] === 'true' ? '✓ on' : 'off'}</span>
+                </label>
+              </div>
+            </div>
+
+            {/* Energy/Band range filters — only shown when COOP.Write is on */}
+            {output['COOP.Write'] === 'true' && (
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px,1fr))', gap: '0.6rem', marginTop: '0.5rem' }}>
+                {[
+                  { key: 'WFS.Energy.Min', label: 'WFS.Energy.Min', placeholder: 'e.g. -10.0 eV', help: 'Lowest wavefunction eigenvalue written to .fullBZ.WFSX (default −∞). Include units: eV, Ry, Ha.' },
+                  { key: 'WFS.Energy.Max', label: 'WFS.Energy.Max', placeholder: 'e.g. 5.0 eV',  help: 'Highest wavefunction eigenvalue written to .fullBZ.WFSX (default +∞). Include units.' },
+                  { key: 'WFS.Band.Min',   label: 'WFS.Band.Min',   placeholder: 'e.g. 1',        help: 'First band index to write (integer; alternative to energy range).' },
+                  { key: 'WFS.Band.Max',   label: 'WFS.Band.Max',   placeholder: 'e.g. 60',       help: 'Last band index to write (integer; must be ≤ number of basis functions).' },
+                ].map(({ key, label, placeholder, help }) => (
+                  <div key={key} style={{ display: 'flex', flexDirection: 'column', gap: '0.2rem' }}>
+                    <label style={{ fontSize: '0.78rem', color: 'var(--muted)', fontFamily: 'monospace' }} title={help}>
+                      {label}
+                      <span style={{ fontSize: '0.65rem', marginLeft: '4px', color: 'var(--accent)' }}>ℹ</span>
+                    </label>
+                    <input
+                      className="input"
+                      placeholder={placeholder}
+                      value={output[key] || ''}
+                      onChange={e => set(key, e.target.value)}
+                      title={help}
+                    />
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* ── Optical Properties ───────────────────────────────────────── */}
+          <div className="subsection">
+            <div className="subsection-title">
+              🌈 Optical Properties — Dielectric Function ε(ω)
+            </div>
+            <p className="subsection-desc">
+              Computes the imaginary part of the dielectric function via dipolar transition matrix elements
+              between KS eigenstates (molecules: position operator; solids: momentum formulation + non-local
+              pseudopotential corrections). Output: <code>SystemLabel.EPSIMG</code>.
+              Use <code>Optical.Scissor</code> to correct the DFT band-gap underestimation with a rigid shift.
+            </p>
+
+            {/* Master toggle */}
+            <div className="flag-card" title="Enable optical dielectric function calculation">
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <div className="flag-label"><code>OpticalCalculation</code></div>
+                <span style={{ fontSize: '0.68rem', padding: '0.1rem 0.35rem', borderRadius: '3px', background: 'var(--surface)', border: '1px solid var(--border)', color: 'var(--accent)', fontFamily: 'monospace', fontWeight: 600 }}>
+                  .EPSIMG
+                </span>
+              </div>
+              <div className="flag-help">
+                Calculates imaginary part of ε(ω) and writes <code>SystemLabel.EPSIMG</code>.
+              </div>
+              <div className="flag-control">
+                <label className="toggle">
+                  <input type="checkbox"
+                    checked={output['OpticalCalculation'] === 'true'}
+                    onChange={e => set('OpticalCalculation', e.target.checked ? 'true' : 'false')} />
+                  <span className="toggle-label">{output['OpticalCalculation'] === 'true' ? '✓ on' : 'off'}</span>
+                </label>
+              </div>
+            </div>
+
+            {output['OpticalCalculation'] === 'true' && (
+              <div style={{ marginTop: '0.6rem', display: 'flex', flexDirection: 'column', gap: '0.7rem' }}>
+
+                {/* Energy range row */}
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(200px,1fr))', gap: '0.6rem' }}>
+                  {[
+                    { key: 'Optical.Energy.Minimum', label: 'Optical.Energy.Minimum', placeholder: '0.0 eV', help: 'Minimum photon energy for the ε(ω) spectrum. Include units (eV, Ry, Ha).' },
+                    { key: 'Optical.Energy.Maximum', label: 'Optical.Energy.Maximum', placeholder: '20.0 eV', help: 'Maximum photon energy for the ε(ω) spectrum. Include units.' },
+                    { key: 'Optical.Broaden',        label: 'Optical.Broaden (Gaussian σ)', placeholder: '0.1 eV', help: 'Gaussian broadening applied to frequency spectrum. Include units.' },
+                    { key: 'Optical.Scissor',        label: 'Optical.Scissor (Δ_gap)',      placeholder: '0.0 eV', help: 'Rigid shift of unoccupied states to correct DFT band-gap underestimation. Include units.' },
+                    { key: 'Optical.NumberOfBands',  label: 'Optical.NumberOfBands',         placeholder: 'all (default)', help: 'Number of bands included (must exceed # occupied bands; default = all).' },
+                  ].map(({ key, label, placeholder, help }) => (
+                    <div key={key} style={{ display: 'flex', flexDirection: 'column', gap: '0.2rem' }}>
+                      <label style={{ fontSize: '0.78rem', color: 'var(--muted)', fontFamily: 'monospace' }} title={help}>
+                        {label}
+                        <span style={{ fontSize: '0.65rem', marginLeft: '4px', color: 'var(--accent)' }}>ℹ</span>
+                      </label>
+                      <input
+                        className="input"
+                        placeholder={placeholder}
+                        value={output[key] || ''}
+                        onChange={e => set(key, e.target.value)}
+                        title={help}
+                      />
+                    </div>
+                  ))}
+                </div>
+
+                {/* BZ mesh row */}
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.6rem' }}>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.2rem' }}>
+                    <label style={{ fontSize: '0.78rem', color: 'var(--muted)', fontFamily: 'monospace' }}
+                      title="3 integers: Brillouin-zone mesh for optical integration (e.g. 5 5 5)">
+                      Optical.Mesh (Nx Ny Nz)
+                      <span style={{ fontSize: '0.65rem', marginLeft: '4px', color: 'var(--accent)' }}>ℹ</span>
+                    </label>
+                    <input
+                      className="input"
+                      placeholder="5 5 5"
+                      value={output['Optical.Mesh'] || ''}
+                      onChange={e => set('Optical.Mesh', e.target.value)}
+                    />
+                  </div>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.2rem' }}>
+                    <label style={{ fontSize: '0.78rem', color: 'var(--muted)', fontFamily: 'monospace' }}
+                      title="Offset mesh away from Γ for odd mesh sizes">
+                      Optical.OffsetMesh
+                    </label>
+                    <label className="toggle">
+                      <input type="checkbox"
+                        checked={output['Optical.OffsetMesh'] === 'true'}
+                        onChange={e => set('Optical.OffsetMesh', e.target.checked ? 'true' : 'false')} />
+                      <span className="toggle-label">
+                        {output['Optical.OffsetMesh'] === 'true' ? '✓ offset (avoid Γ)' : 'off (include Γ)'}
+                      </span>
+                    </label>
+                  </div>
+                </div>
+
+                {/* Polarization type */}
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.6rem' }}>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.2rem' }}>
+                    <label style={{ fontSize: '0.78rem', color: 'var(--muted)', fontFamily: 'monospace' }}
+                      title="polycrystal: isotropic average. polarized: apply E-field along Optical.Vector. unpolarized: light propagates along Optical.Vector.">
+                      Optical.PolarizationType
+                    </label>
+                    <select className="input select"
+                      value={output['Optical.PolarizationType'] || 'polycrystal'}
+                      onChange={e => set('Optical.PolarizationType', e.target.value)}>
+                      <option value="polycrystal">polycrystal — isotropic average</option>
+                      <option value="polarized">polarized — E-field along vector</option>
+                      <option value="unpolarized">unpolarized — light propagates along vector</option>
+                    </select>
+                  </div>
+
+                  {/* Vector input — only meaningful for polarized / unpolarized */}
+                  {(output['Optical.PolarizationType'] === 'polarized' ||
+                    output['Optical.PolarizationType'] === 'unpolarized') && (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.2rem' }}>
+                      <label style={{ fontSize: '0.78rem', color: 'var(--muted)', fontFamily: 'monospace' }}
+                        title="Direction vector for E-field (polarized) or light propagation (unpolarized): 3 floats, e.g. 1.0 0.0 0.0">
+                        Optical.Vector (x y z)
+                      </label>
+                      <input
+                        className="input"
+                        placeholder="1.0 0.0 0.0"
+                        value={output['Optical.Vector'] || ''}
+                        onChange={e => set('Optical.Vector', e.target.value)}
+                      />
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
           </div>
         </>
       )}
