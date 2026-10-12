@@ -9,17 +9,17 @@ export const BAND_PRESETS = [
     name: '📸 Lead-Free Double Perovskites (From Attached Image)',
     description: 'Device architecture: FTO / TiO2 / Cs2TiBr6, Cs2TiI2Br4, Cs2ScAgI6, Cs2TiI6, Cs2AgBiBr6, Cs2PdBr6 / CuSbS2 / Pt / Ir',
     layers: [
-      { name: 'FTO', type: 'electrode', cbm: -3.50, vbm: -7.50, fermi: -4.40, color: '#a3b18a' },
-      { name: 'TiO₂', type: 'etl', cbm: -3.36, vbm: -7.56, fermi: -4.20, color: '#0ea5e9' },
-      { name: 'Cs₂TiBr₆', type: 'absorber', cbm: -1.60, vbm: -6.07, fermi: -3.83, color: '#c084fc' },
-      { name: 'Cs₂TiI₂Br₄', type: 'absorber', cbm: -1.38, vbm: -5.38, fermi: -3.38, color: '#d946ef' },
+      { name: 'FTO', type: 'electrode', cbm: -3.50, vbm: -7.50, fermi: -4.40, color: '#9ba37e' },
+      { name: 'TiO₂', type: 'etl', cbm: -3.36, vbm: -7.56, fermi: -4.20, color: '#0284c7' },
+      { name: 'Cs₂TiBr₆', type: 'absorber', cbm: -1.60, vbm: -6.07, fermi: -3.83, color: '#d946ef' },
+      { name: 'Cs₂TiI₂Br₄', type: 'absorber', cbm: -1.38, vbm: -5.38, fermi: -3.38, color: '#e879f9' },
       { name: 'Cs₂ScAgI₆', type: 'absorber', cbm: -1.55, vbm: -5.74, fermi: -3.65, color: '#c084fc' },
-      { name: 'Cs₂TiI₆', type: 'absorber', cbm: -1.65, vbm: -5.55, fermi: -3.60, color: '#e879f9' },
+      { name: 'Cs₂TiI₆', type: 'absorber', cbm: -1.65, vbm: -5.55, fermi: -3.60, color: '#d946ef' },
       { name: 'Cs₂AgBiBr₆', type: 'absorber', cbm: -2.05, vbm: -6.24, fermi: -4.15, color: '#c084fc' },
-      { name: 'Cs₂PdBr₆', type: 'absorber', cbm: -1.70, vbm: -5.90, fermi: -3.80, color: '#d946ef' },
+      { name: 'Cs₂PdBr₆', type: 'absorber', cbm: -1.70, vbm: -5.90, fermi: -3.80, color: '#e879f9' },
       { name: 'CuSbS₂', type: 'htl', cbm: -1.58, vbm: -5.78, fermi: -4.80, color: '#d4b996' },
       { name: 'Pt', type: 'metal', cbm: -3.35, vbm: -5.65, fermi: -5.65, isMetal: true, color: '#dc2626' },
-      { name: 'Ir', type: 'metal', cbm: -3.00, vbm: -5.27, fermi: -5.27, isMetal: true, color: '#ef4444' },
+      { name: 'Ir', type: 'metal', cbm: -3.00, vbm: -5.27, fermi: -5.27, isMetal: true, color: '#b91c1c' },
     ],
   },
   {
@@ -27,7 +27,7 @@ export const BAND_PRESETS = [
     name: '☀️ Standard Perovskite Solar Cell (FAPbI₃ / SnO₂ / Spiro)',
     description: 'FTO / SnO2 (ETL) / FAPbI3 (Absorber) / Spiro-OMeTAD (HTL) / Au (Electrode)',
     layers: [
-      { name: 'FTO', type: 'electrode', cbm: -4.00, vbm: -7.60, fermi: -4.40, color: '#a3b18a' },
+      { name: 'FTO', type: 'electrode', cbm: -4.00, vbm: -7.60, fermi: -4.40, color: '#9ba37e' },
       { name: 'SnO₂', type: 'etl', cbm: -4.10, vbm: -7.80, fermi: -4.30, color: '#0ea5e9' },
       { name: 'FAPbI₃', type: 'absorber', cbm: -3.95, vbm: -5.45, fermi: -4.70, color: '#ec4899' },
       { name: 'Spiro-OMeTAD', type: 'htl', cbm: -2.05, vbm: -5.15, fermi: -5.00, color: '#f59e0b' },
@@ -60,32 +60,22 @@ export function BandAlignmentChart({
   title = 'Energy Band Alignment Diagram',
   showCarrierArrows = true,
   showRedoxPotentials = false,
-  energyScale = 'vacuum', // 'vacuum' (0 at vacuum, negative eV) or 'nhe' (0 at NHE, -4.44 eV vs vac)
-  render3D = true, // 3D shaded block style like the screenshot
+  energyScale = 'vacuum',
+  render3D = true,
 }) {
   const containerRef = useRef(null);
   const [hoverLayer, setHoverLayer] = useState(null);
 
-  const width = Math.max(860, layers.length * 85 + 160);
+  // Scaled dimensions so everything fits in one view without scrolling
+  const width = 960;
   const height = 480;
-  const margin = { top: 70, right: 40, bottom: 65, left: 75 };
+  const margin = { top: 60, right: 35, bottom: 55, left: 65 };
   const plotW = width - margin.left - margin.right;
   const plotH = height - margin.top - margin.bottom;
 
-  // Energy bounds
-  const { eMin, eMax } = useMemo(() => {
-    let min = -9.0;
-    let max = 0.0;
-    layers.forEach(l => {
-      if (l.vbm < min) min = l.vbm;
-      if (l.cbm > max) max = l.cbm;
-      if (l.fermi && l.fermi < min) min = l.fermi;
-    });
-    return {
-      eMin: Math.floor(min - 0.5),
-      eMax: Math.ceil(max + 0.5),
-    };
-  }, [layers]);
+  // Energy bounds: 0.0 down to -9.0 eV (matches literature)
+  const eMin = -9.0;
+  const eMax = 0.0;
 
   // Coordinate transforms
   const getY = (energy) => {
@@ -94,16 +84,15 @@ export function BandAlignmentChart({
 
   // Block positions along X
   const numLayers = layers.length;
-  const colW = numLayers > 0 ? Math.min(75, (plotW - 40) / numLayers) : 60;
-  const gap = numLayers > 1 ? (plotW - numLayers * colW) / (numLayers + 1) : 30;
+  const colW = numLayers > 0 ? Math.max(40, Math.min(64, (plotW - (numLayers + 1) * 10) / numLayers)) : 55;
+  const totalColsW = numLayers * colW;
+  const gap = numLayers > 1 ? (plotW - totalColsW) / (numLayers + 1) : 20;
 
   const getBlockX = (index) => {
     return margin.left + gap + index * (colW + gap);
   };
 
   // Water redox lines vs vacuum (pH = 0)
-  // H+/H2 = -4.44 eV vs vacuum
-  // O2/H2O = -5.67 eV vs vacuum (1.23 eV separation)
   const eH2_vac = -4.44;
   const eO2_vac = -5.67;
 
@@ -141,14 +130,14 @@ export function BandAlignmentChart({
     URL.revokeObjectURL(url);
   };
 
-  // Generate energy ticks
+  // Generate energy ticks from 0.0 to -9.0 eV in 0.5 steps
   const energyTicks = useMemo(() => {
     const ticks = [];
-    for (let e = eMax; e >= eMin; e -= 0.5) {
-      ticks.push(e);
+    for (let e = 0.0; e >= -9.0; e -= 0.5) {
+      ticks.push(Number(e.toFixed(1)));
     }
     return ticks;
-  }, [eMin, eMax]);
+  }, []);
 
   return (
     <div className="band-alignment-wrapper" style={{ marginTop: '0.8rem' }}>
@@ -192,26 +181,26 @@ export function BandAlignmentChart({
         ref={containerRef}
         style={{
           width: '100%',
-          overflowX: 'auto',
-          background: 'rgba(15, 23, 42, 0.9)',
+          background: 'rgba(15, 23, 42, 0.95)',
           borderRadius: '8px',
           border: '1px solid var(--border)',
           boxShadow: '0 4px 18px rgba(0,0,0,0.4)',
+          overflow: 'hidden',
         }}>
         <svg
           viewBox={`0 0 ${width} ${height}`}
-          style={{ minWidth: `${width}px`, height: 'auto', display: 'block' }}>
-          {/* Defs: Gradients and 3D lighting filters */}
+          style={{ width: '100%', height: 'auto', display: 'block' }}>
+          {/* Defs */}
           <defs>
             <filter id="blockShadow" x="-10%" y="-10%" width="130%" height="130%">
-              <feDropShadow dx="3" dy="4" stdDeviation="3" floodOpacity="0.4" />
+              <feDropShadow dx="2.5" dy="3" stdDeviation="2.5" floodOpacity="0.45" />
             </filter>
             {/* Arrow marker for electrons (yellow) */}
-            <marker id="arrowElectron" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+            <marker id="arrowElectron" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="6" markerHeight="6" orient="auto">
               <path d="M 0 1 L 10 5 L 0 9 z" fill="#eab308" />
             </marker>
             {/* Arrow marker for holes (green) */}
-            <marker id="arrowHole" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+            <marker id="arrowHole" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="6" markerHeight="6" orient="auto">
               <path d="M 0 1 L 10 5 L 0 9 z" fill="#22c55e" />
             </marker>
           </defs>
@@ -227,8 +216,8 @@ export function BandAlignmentChart({
                   y1={y}
                   x2={margin.left + plotW}
                   y2={y}
-                  stroke={isZero ? 'rgba(255,255,255,0.4)' : 'rgba(255,255,255,0.06)'}
-                  strokeWidth={isZero ? 1.5 : 0.8}
+                  stroke={isZero ? 'rgba(255,255,255,0.35)' : 'rgba(255,255,255,0.06)'}
+                  strokeWidth={isZero ? 1.4 : 0.75}
                   strokeDasharray={isZero ? 'none' : '2,2'}
                 />
                 {/* Tick mark */}
@@ -241,10 +230,10 @@ export function BandAlignmentChart({
                 />
                 {/* Tick label */}
                 <text
-                  x={margin.left - 9}
-                  y={y + 4}
+                  x={margin.left - 8}
+                  y={y + 3.5}
                   textAnchor="end"
-                  fontSize="11"
+                  fontSize="10"
                   fontFamily="monospace"
                   fill={isZero ? '#38bdf8' : 'var(--muted)'}
                   fontWeight={isZero ? 'bold' : 'normal'}>
@@ -254,10 +243,9 @@ export function BandAlignmentChart({
             );
           })}
 
-          {/* Optional Redox Potentials (H+/H2 and O2/H2O) */}
+          {/* Optional Redox Potentials */}
           {showRedoxPotentials && (
             <g>
-              {/* H+/H2 at -4.44 eV */}
               <line
                 x1={margin.left}
                 y1={getY(eH2_vac)}
@@ -276,8 +264,6 @@ export function BandAlignmentChart({
                 fontWeight="bold">
                 H⁺/H₂ (−4.44 eV)
               </text>
-
-              {/* O2/H2O at -5.67 eV */}
               <line
                 x1={margin.left}
                 y1={getY(eO2_vac)}
@@ -299,13 +285,13 @@ export function BandAlignmentChart({
             </g>
           )}
 
-          {/* Render Each Material Layer Block */}
+          {/* Render Material Layer Blocks */}
           {layers.map((layer, idx) => {
             const bx = getBlockX(idx);
             const topY = getY(layer.cbm);
             const botY = getY(layer.vbm);
             const blockH = Math.max(8, botY - topY);
-            const d3Offset = render3D ? 9 : 0; // 3D side perspective bevel
+            const d3Offset = render3D ? 8 : 0;
 
             const isHovered = hoverLayer === layer.name;
 
@@ -315,27 +301,27 @@ export function BandAlignmentChart({
                 onMouseEnter={() => setHoverLayer(layer.name)}
                 onMouseLeave={() => setHoverLayer(null)}
                 style={{ cursor: 'pointer' }}>
-                {/* 3D Side Perspective Surface (Right Side) */}
+                {/* 3D Right Bevel */}
                 {render3D && (
                   <path
                     d={`M ${bx + colW} ${topY} L ${bx + colW + d3Offset} ${topY - d3Offset} L ${bx + colW + d3Offset} ${botY - d3Offset} L ${bx + colW} ${botY} Z`}
                     fill={layer.color}
-                    filter="brightness(0.72)"
-                    opacity="0.9"
+                    filter="brightness(0.68)"
+                    opacity="0.95"
                   />
                 )}
 
-                {/* 3D Top Perspective Surface */}
+                {/* 3D Top Bevel */}
                 {render3D && (
                   <path
                     d={`M ${bx} ${topY} L ${bx + d3Offset} ${topY - d3Offset} L ${bx + colW + d3Offset} ${topY - d3Offset} L ${bx + colW} ${topY} Z`}
                     fill={layer.color}
-                    filter="brightness(1.15)"
-                    opacity="0.9"
+                    filter="brightness(1.2)"
+                    opacity="0.95"
                   />
                 )}
 
-                {/* Main Front Rectangular Face */}
+                {/* Main Front Face */}
                 <rect
                   x={bx}
                   y={topY}
@@ -346,48 +332,48 @@ export function BandAlignmentChart({
                   stroke={isHovered ? '#ffffff' : 'rgba(0,0,0,0.35)'}
                   strokeWidth={isHovered ? 2 : 1}
                   filter="url(#blockShadow)"
-                  opacity={isHovered ? 1 : 0.92}
+                  opacity={isHovered ? 1 : 0.95}
                 />
 
-                {/* Top Energy Label (CBM / LUMO) */}
+                {/* Top Number (CBM) */}
                 <text
                   x={bx + colW / 2}
-                  y={topY - (render3D ? d3Offset + 5 : 6)}
+                  y={topY - (render3D ? d3Offset + 4 : 5)}
                   textAnchor="middle"
-                  fontSize="11"
+                  fontSize="10"
                   fontFamily="monospace"
                   fill="var(--fg)"
                   fontWeight="bold">
                   {layer.cbm.toFixed(2)}
                 </text>
 
-                {/* Bottom Energy Label (VBM / HOMO) */}
+                {/* Bottom Number (VBM) */}
                 <text
                   x={bx + colW / 2}
-                  y={botY + 16}
+                  y={botY + 14}
                   textAnchor="middle"
-                  fontSize="11"
+                  fontSize="10"
                   fontFamily="monospace"
                   fill="var(--fg)"
                   fontWeight="bold">
                   {layer.vbm.toFixed(2)}
                 </text>
 
-                {/* Inside Block Material Name (Vertical or Horizontal) */}
+                {/* Inside Block Material Name */}
                 <text
                   x={bx + colW / 2}
-                  y={topY + blockH / 2 + 5}
+                  y={topY + blockH / 2 + 4}
                   textAnchor="middle"
-                  fontSize={colW < 60 ? '11' : '13'}
+                  fontSize={colW < 55 ? '10' : '11.5'}
                   fill="#ffffff"
                   fontWeight="bold"
                   transform={
-                    layer.name.length > 7
+                    layer.name.length > 6
                       ? `rotate(-90 ${bx + colW / 2} ${topY + blockH / 2})`
                       : undefined
                   }
                   style={{
-                    textShadow: '0 1px 3px rgba(0,0,0,0.85)',
+                    textShadow: '0 1px 3px rgba(0,0,0,0.9)',
                     pointerEvents: 'none',
                   }}>
                   {layer.name}
@@ -396,27 +382,30 @@ export function BandAlignmentChart({
             );
           })}
 
-          {/* Carrier Transfer Pathways (Curved Arrows & Brackets) */}
+          {/* Carrier Transfer Pathways Matching Reference Image */}
           {showCarrierArrows && numLayers >= 4 && (
             <g>
-              {/* Hole extraction pathway (Green bracket on top) */}
-              {/* Over absorber layers down to HTL/metal */}
+              {/* 1. Hole Extraction Pathways (Green Bracket & Curved Arrows on Top) */}
               {(() => {
-                const absStartIdx = Math.max(1, layers.findIndex(l => l.type === 'absorber'));
-                const absEndIdx = layers.findIndex(l => l.type === 'htl' || l.type === 'metal');
-                if (absStartIdx >= 0 && absEndIdx > absStartIdx) {
-                  const x1 = getBlockX(absStartIdx) - 5;
-                  const x2 = getBlockX(absEndIdx) + colW / 2;
-                  const bracketY = getY(0.0) + 10;
+                const absStartIdx = layers.findIndex(l => l.type === 'absorber');
+                const absEndIdx = layers.findLastIndex(l => l.type === 'absorber');
+                const htlIdx = layers.findIndex(l => l.type === 'htl');
+                const ptIdx = layers.findIndex(l => l.name === 'Pt');
+                const irIdx = layers.findIndex(l => l.name === 'Ir');
+
+                if (absStartIdx >= 0 && absEndIdx >= absStartIdx) {
+                  const x1 = getBlockX(absStartIdx) - 2;
+                  const x2 = getBlockX(absEndIdx) + colW + 2;
+                  const bracketY = getY(-0.65); // Just above the highest CBM
 
                   return (
                     <g>
-                      {/* Green bracket */}
+                      {/* Green bracket enclosing all absorber layers */}
                       <path
-                        d={`M ${x1} ${bracketY + 15} L ${x1} ${bracketY} L ${x2} ${bracketY}`}
+                        d={`M ${x1} ${bracketY + 12} L ${x1} ${bracketY} L ${x2} ${bracketY} L ${x2} ${bracketY + 12}`}
                         fill="none"
                         stroke="#22c55e"
-                        strokeWidth="2.5"
+                        strokeWidth="2.4"
                       />
                       {/* h+ label */}
                       <text
@@ -427,56 +416,97 @@ export function BandAlignmentChart({
                         fill="#22c55e">
                         h⁺
                       </text>
-                      {/* Curved extraction arrow towards HTL */}
-                      <path
-                        d={`M ${x2 - 15} ${bracketY} C ${x2 + 25} ${bracketY - 15}, ${x2 + 25} ${bracketY + 15}, ${x2 + 10} ${bracketY + 30}`}
-                        fill="none"
-                        stroke="#22c55e"
-                        strokeWidth="2.5"
-                        markerEnd="url(#arrowHole)"
-                      />
+
+                      {/* Curved arrow: Absorber -> CuSbS2 (HTL) */}
+                      {htlIdx >= 0 && (
+                        <path
+                          d={`M ${x2 - 10} ${bracketY - 2} Q ${x2 + 20} ${bracketY - 20}, ${getBlockX(htlIdx) + colW / 2} ${getY(layers[htlIdx].cbm) - 15}`}
+                          fill="none"
+                          stroke="#22c55e"
+                          strokeWidth="2.4"
+                          markerEnd="url(#arrowHole)"
+                        />
+                      )}
+
+                      {/* Curved arrow: CuSbS2 -> Pt */}
+                      {htlIdx >= 0 && ptIdx >= 0 && (
+                        <path
+                          d={`M ${getBlockX(htlIdx) + colW / 2 + 5} ${getY(layers[htlIdx].cbm) - 18} Q ${getBlockX(ptIdx)} ${getY(layers[htlIdx].cbm) - 35}, ${getBlockX(ptIdx) + colW / 2} ${getY(layers[ptIdx].cbm) - 15}`}
+                          fill="none"
+                          stroke="#22c55e"
+                          strokeWidth="2.4"
+                          markerEnd="url(#arrowHole)"
+                        />
+                      )}
+
+                      {/* Curved arrow: Pt -> Ir */}
+                      {ptIdx >= 0 && irIdx >= 0 && (
+                        <path
+                          d={`M ${getBlockX(ptIdx) + colW / 2 + 5} ${getY(layers[ptIdx].cbm) - 18} Q ${getBlockX(irIdx)} ${getY(layers[ptIdx].cbm) - 35}, ${getBlockX(irIdx) + colW / 2} ${getY(layers[irIdx].cbm) - 15}`}
+                          fill="none"
+                          stroke="#22c55e"
+                          strokeWidth="2.4"
+                          markerEnd="url(#arrowHole)"
+                        />
+                      )}
                     </g>
                   );
                 }
                 return null;
               })()}
 
-              {/* Electron extraction pathway (Yellow bracket on bottom) */}
-              {/* Under absorber layers to ETL and Anode */}
+              {/* 2. Electron Extraction Pathways (Yellow Bracket & Curved Arrows on Bottom) */}
               {(() => {
                 const etlIdx = layers.findIndex(l => l.type === 'etl');
+                const ftoIdx = layers.findIndex(l => l.type === 'electrode');
+                const absStartIdx = layers.findIndex(l => l.type === 'absorber');
                 const absEndIdx = layers.findLastIndex(l => l.type === 'absorber');
-                if (etlIdx >= 0 && absEndIdx > etlIdx) {
-                  const x1 = getBlockX(etlIdx) + colW / 2;
-                  const x2 = getBlockX(absEndIdx) + colW + 5;
-                  const bracketY = getY(-6.6);
+
+                if (absStartIdx >= 0 && absEndIdx >= absStartIdx) {
+                  const x1 = getBlockX(absStartIdx) - 2;
+                  const x2 = getBlockX(absEndIdx) + colW + 2;
+                  const bracketY = getY(-6.7); // Just below lowest absorber VBM
 
                   return (
                     <g>
-                      {/* Yellow bracket */}
+                      {/* Yellow bracket under all absorber layers */}
                       <path
-                        d={`M ${x1} ${bracketY} L ${x2} ${bracketY} L ${x2} ${bracketY - 20}`}
+                        d={`M ${x1} ${bracketY - 12} L ${x1} ${bracketY} L ${x2} ${bracketY} L ${x2} ${bracketY - 12}`}
                         fill="none"
                         stroke="#eab308"
-                        strokeWidth="2.5"
+                        strokeWidth="2.4"
                       />
                       {/* e- label */}
                       <text
                         x={x1 + 35}
-                        y={bracketY + 18}
+                        y={bracketY + 16}
                         fontSize="12"
                         fontWeight="bold"
                         fill="#eab308">
                         e⁻
                       </text>
-                      {/* Curved extraction arrow towards ETL */}
-                      <path
-                        d={`M ${x1 + 25} ${bracketY} C ${x1 + 10} ${bracketY + 25}, ${x1 - 25} ${bracketY + 25}, ${x1 - 20} ${bracketY + 5}`}
-                        fill="none"
-                        stroke="#eab308"
-                        strokeWidth="2.5"
-                        markerEnd="url(#arrowElectron)"
-                      />
+
+                      {/* Curved arrow: Absorber -> TiO2 (ETL) */}
+                      {etlIdx >= 0 && (
+                        <path
+                          d={`M ${x1 + 10} ${bracketY + 18} Q ${getBlockX(etlIdx) + colW + 10} ${bracketY + 38}, ${getBlockX(etlIdx) + colW / 2 + 5} ${getY(layers[etlIdx].vbm) + 8}`}
+                          fill="none"
+                          stroke="#eab308"
+                          strokeWidth="2.4"
+                          markerEnd="url(#arrowElectron)"
+                        />
+                      )}
+
+                      {/* Curved arrow: TiO2 -> FTO */}
+                      {etlIdx >= 0 && ftoIdx >= 0 && (
+                        <path
+                          d={`M ${getBlockX(etlIdx) + colW / 2 - 5} ${getY(layers[etlIdx].vbm) + 20} Q ${getBlockX(etlIdx) - 10} ${getY(layers[etlIdx].vbm) + 40}, ${getBlockX(ftoIdx) + colW / 2} ${getY(layers[ftoIdx].vbm) + 8}`}
+                          fill="none"
+                          stroke="#eab308"
+                          strokeWidth="2.4"
+                          markerEnd="url(#arrowElectron)"
+                        />
+                      )}
                     </g>
                   );
                 }
@@ -498,9 +528,9 @@ export function BandAlignmentChart({
           {/* Y-Axis Title */}
           <text
             x={-(margin.top + plotH / 2)}
-            y={20}
+            y={18}
             textAnchor="middle"
-            fontSize="13"
+            fontSize="12"
             fontWeight="bold"
             fill="var(--fg)"
             transform="rotate(-90)">
@@ -510,7 +540,7 @@ export function BandAlignmentChart({
           {/* Figure Label (b) like screenshot */}
           <text
             x={15}
-            y={35}
+            y={32}
             fontSize="18"
             fontWeight="bold"
             fill="var(--fg)">
@@ -518,7 +548,7 @@ export function BandAlignmentChart({
           </text>
         </svg>
 
-        {/* Floating Tooltip when hovering over a layer */}
+        {/* Hover Tooltip */}
         {hoverLayer && (() => {
           const l = layers.find(x => x.name === hoverLayer);
           if (!l) return null;
@@ -531,20 +561,20 @@ export function BandAlignmentChart({
               background: 'rgba(15, 23, 42, 0.95)',
               border: `1px solid ${l.color}`,
               borderRadius: '6px',
-              padding: '0.5rem 0.8rem',
+              padding: '0.45rem 0.75rem',
               fontSize: '0.78rem',
               fontFamily: 'monospace',
               pointerEvents: 'none',
               zIndex: 20,
               boxShadow: '0 4px 14px rgba(0,0,0,0.6)',
             }}>
-              <div style={{ fontWeight: 'bold', color: l.color, marginBottom: '0.3rem', fontSize: '0.85rem' }}>
+              <div style={{ fontWeight: 'bold', color: l.color, marginBottom: '0.2rem', fontSize: '0.85rem' }}>
                 {l.name} ({l.type?.toUpperCase() || 'LAYER'})
               </div>
-              <div>CBM / LUMO: <strong>{l.cbm.toFixed(3)} eV</strong></div>
-              <div>VBM / HOMO: <strong>{l.vbm.toFixed(3)} eV</strong></div>
-              <div>Bandgap E_g: <strong>{eg.toFixed(3)} eV</strong></div>
-              {l.fermi && <div>Fermi E_F: <strong>{l.fermi.toFixed(3)} eV</strong></div>}
+              <div>CBM / LUMO: <strong>{l.cbm.toFixed(2)} eV</strong></div>
+              <div>VBM / HOMO: <strong>{l.vbm.toFixed(2)} eV</strong></div>
+              <div>Bandgap E_g: <strong>{eg.toFixed(2)} eV</strong></div>
+              {l.fermi && <div>Fermi E_F: <strong>{l.fermi.toFixed(2)} eV</strong></div>}
               <div>Work Function Φ: <strong>{Math.abs(l.fermi || l.vbm).toFixed(2)} eV</strong></div>
             </div>
           );

@@ -8,7 +8,7 @@ import { WorkFunctionChart } from '../components/WorkFunctionChart.jsx';
 import { BandAlignmentChart, BAND_PRESETS } from '../components/BandAlignmentChart.jsx';
 
 export function AdsorptionSection() {
-  const [activeTab, setActiveTab] = useState('bandalignment'); // 'bandalignment', 'workfunction', 'energy', 'cdd', 'workflow'
+  const [activeTab, setActiveTab] = useState('energy'); // 'energy', 'cdd', 'workfunction', 'bandalignment', 'workflow'
 
   // ═══════════════════════════════════════════════════════════════════════════
   // Band Alignment Diagram State
@@ -291,16 +291,6 @@ export function AdsorptionSection() {
         <SectionHeader title="Surface, Work Function & Adsorption Analysis" />
         <div style={{ display: 'flex', gap: '0.4rem', flexWrap: 'wrap' }}>
           <button
-            className={`btn ${activeTab === 'bandalignment' ? 'btn-primary' : 'btn-secondary'} btn-sm`}
-            onClick={() => setActiveTab('bandalignment')}>
-            📶 Band Alignment Diagram
-          </button>
-          <button
-            className={`btn ${activeTab === 'workfunction' ? 'btn-primary' : 'btn-secondary'} btn-sm`}
-            onClick={() => setActiveTab('workfunction')}>
-            ⚡ Work Function (Φ)
-          </button>
-          <button
             className={`btn ${activeTab === 'energy' ? 'btn-primary' : 'btn-secondary'} btn-sm`}
             onClick={() => setActiveTab('energy')}>
             🎯 Adsorption Energy (E_ads)
@@ -309,6 +299,16 @@ export function AdsorptionSection() {
             className={`btn ${activeTab === 'cdd' ? 'btn-primary' : 'btn-secondary'} btn-sm`}
             onClick={() => setActiveTab('cdd')}>
             📉 Planar Average CDD (Δρ̄ & ΔQ)
+          </button>
+          <button
+            className={`btn ${activeTab === 'workfunction' ? 'btn-primary' : 'btn-secondary'} btn-sm`}
+            onClick={() => setActiveTab('workfunction')}>
+            ⚡ Work Function (Φ)
+          </button>
+          <button
+            className={`btn ${activeTab === 'bandalignment' ? 'btn-primary' : 'btn-secondary'} btn-sm`}
+            onClick={() => setActiveTab('bandalignment')}>
+            📶 Band Alignment Diagram
           </button>
           <button
             className={`btn ${activeTab === 'workflow' ? 'btn-primary' : 'btn-secondary'} btn-sm`}
