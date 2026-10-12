@@ -12,7 +12,7 @@ const SECTIONS = [
   { id: 'md',        label: '⑨ MD / Relax',      icon: '🏃' },
   { id: 'neb',       label: '⑩ CI-NEB',          icon: '⛰️' },
   { id: 'phonon',    label: '⑪ Phonons',         icon: '〰️' },
-  { id: 'adsorption', label: '⑫ Adsorption & CDD', icon: '🌊' },
+  { id: 'adsorption', label: '⑫ Surface & Work Function', icon: '🌊' },
 ];
 
 export function Sidebar() {

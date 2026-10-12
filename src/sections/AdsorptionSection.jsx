@@ -2,10 +2,108 @@ import React, { useState, useRef } from 'react';
 import { SectionHeader } from '../components/FieldRow';
 import { parseSiestaOut } from '../parser/outParser.js';
 import { parse1DPlanarData, parseCubeAndComputePlanar, generateDemoCDD } from '../parser/cddParser.js';
+import { parse1DPotentialData, parsePotentialCube, analyzeWorkFunction, generateDemoPotential } from '../parser/workFunctionParser.js';
 import { PlanarCDDChart } from '../components/PlanarCDDChart.jsx';
-
+import { WorkFunctionChart } from '../components/WorkFunctionChart.jsx';
 export function AdsorptionSection() {
-  const [activeTab, setActiveTab] = useState('energy'); // 'energy', 'cdd', 'workflow'
+  const [activeTab, setActiveTab] = useState('workfunction'); // 'workfunction', 'energy', 'cdd', 'workflow'
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // Work Function (Phi) State
+  // ═══════════════════════════════════════════════════════════════════════════
+  const potFileInputRef = useRef(null);
+  const outEfRef = useRef(null);
+  const [potData, setPotData] = useState(() => generateDemoPotential());
+  const [efInput, setEfInput] = useState('-4.380');
+  const [vacZMinInput, setVacZMinInput] = useState('26.0');
+  const [vacZMaxInput, setVacZMaxInput] = useState('34.0');
+  const [cleanPhiInput, setCleanPhiInput] = useState('');
+  const [potStatus, setPotStatus] = useState('Showing benchmark demo electrostatic potential profile (perovskite slab).');
+  const [potError, setPotError] = useState('');
+
+  // Load Fermi energy directly from SIESTA .out file
+  const handleLoadEfFromOut = (file) => {
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      try {
+        const parsed = parseSiestaOut(e.target.result);
+        if (parsed.fermiEnergy !== null) {
+          setEfInput(parsed.fermiEnergy.toFixed(4));
+          setPotStatus(`✓ Loaded Fermi energy E_F = ${parsed.fermiEnergy.toFixed(4)} eV from ${file.name}`);
+          if (potData && potData.z) {
+            const recomputed = analyzeWorkFunction(
+              potData.z,
+              potData.vPlanar,
+              parsed.fermiEnergy,
+              [parseFloat(vacZMinInput) || potData.vacZMin, parseFloat(vacZMaxInput) || potData.vacZMax]
+            );
+            setPotData(recomputed);
+          }
+        } else {
+          setPotError(`⚠️ Could not find Fermi energy in ${file.name}.`);
+        }
+      } catch (err) {
+        setPotError(`⚠️ Error reading ${file.name}: ${err.message}`);
+      }
+    };
+    reader.readAsText(file);
+  };
+
+  // Load Electrostatic Potential profile file (.dat, .txt, .cube)
+  const handlePotFileUpload = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setPotError('');
+    setPotStatus(`Parsing ${file.name}...`);
+
+    const reader = new FileReader();
+    reader.onload = (evt) => {
+      try {
+        const text = evt.target.result;
+        const lower = file.name.toLowerCase();
+        const efVal = parseFloat(efInput) || 0;
+
+        let analyzed;
+        if (lower.endsWith('.cube')) {
+          analyzed = parsePotentialCube(text, efVal);
+          setPotStatus(`✓ Extracted planar average of potential along z from Gaussian Cube: ${file.name}`);
+        } else {
+          analyzed = parse1DPotentialData(text, efVal);
+          setPotStatus(`✓ Successfully loaded 1D Potential profile: ${file.name} (${analyzed.z.length} points)`);
+        }
+
+        setVacZMinInput(analyzed.vacZMin.toFixed(1));
+        setVacZMaxInput(analyzed.vacZMax.toFixed(1));
+        setPotData(analyzed);
+      } catch (err) {
+        setPotError(`Failed to process potential file: ${err.message}`);
+      }
+    };
+    reader.readAsText(file);
+  };
+
+  // Recalculate Work Function when EF or vacuum window is modified
+  const handleRecomputeWorkFunction = () => {
+    if (!potData || !potData.z) return;
+    const efVal = parseFloat(efInput) || 0;
+    const zMin = parseFloat(vacZMinInput) || potData.vacZMin;
+    const zMax = parseFloat(vacZMaxInput) || potData.vacZMax;
+    const recomputed = analyzeWorkFunction(potData.z, potData.vPlanar, efVal, [zMin, zMax]);
+    setPotData(recomputed);
+    setPotStatus(`✓ Updated work function: Φ = ${recomputed.workFunction.toFixed(3)} eV (V_vac = ${recomputed.vVacuum.toFixed(3)} eV, E_F = ${efVal.toFixed(3)} eV)`);
+  };
+
+  const handleLoadDemoPot = () => {
+    const demo = generateDemoPotential();
+    setPotData(demo);
+    setEfInput(demo.eFermi.toFixed(3));
+    setVacZMinInput(demo.vacZMin.toFixed(1));
+    setVacZMaxInput(demo.vacZMax.toFixed(1));
+    setPotError('');
+    setPotStatus('Reset to benchmark demo electrostatic potential profile (perovskite slab).');
+  };
 
   // ═══════════════════════════════════════════════════════════════════════════
   // Tab 1: Adsorption Energy State
@@ -128,8 +226,13 @@ export function AdsorptionSection() {
   return (
     <div className="section-pane">
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.8rem', marginBottom: '0.5rem' }}>
-        <SectionHeader title="Adsorption Energy & Charge Density Difference (CDD)" />
-        <div style={{ display: 'flex', gap: '0.4rem' }}>
+        <SectionHeader title="Surface, Work Function & Adsorption Analysis" />
+        <div style={{ display: 'flex', gap: '0.4rem', flexWrap: 'wrap' }}>
+          <button
+            className={`btn ${activeTab === 'workfunction' ? 'btn-primary' : 'btn-secondary'} btn-sm`}
+            onClick={() => setActiveTab('workfunction')}>
+            ⚡ Work Function (Φ)
+          </button>
           <button
             className={`btn ${activeTab === 'energy' ? 'btn-primary' : 'btn-secondary'} btn-sm`}
             onClick={() => setActiveTab('energy')}>
@@ -149,10 +252,196 @@ export function AdsorptionSection() {
       </div>
 
       <p className="section-desc">
-        Comprehensive post-DFT analysis workspace for surface science: calculate adsorption energies, thermal Gibbs free energies, 
-        and plot planar-averaged charge density differences with cumulative charge transfer.
+        Comprehensive post-DFT analysis workspace for surface science: calculate work functions (Φ = V_vac − E_F), 
+        adsorption energies with thermal Gibbs corrections, and planar-averaged charge density differences (CDD).
       </p>
 
+      {/* ═════════════════════════════════════════════════════════════════════ */}
+      {/* Tab 0: Work Function (Phi) Calculator & Potential Profile             */}
+      {/* ═════════════════════════════════════════════════════════════════════ */}
+      {activeTab === 'workfunction' && (
+        <div className="work-function-pane">
+          {/* Upload & Controls Card */}
+          <div style={{
+            background: 'rgba(15, 23, 42, 0.65)',
+            border: '1px solid var(--border)',
+            borderRadius: '8px',
+            padding: '1rem',
+            marginBottom: '1rem',
+          }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.8rem' }}>
+              <div>
+                <h3 style={{ fontSize: '0.95rem', margin: 0, color: 'var(--fg)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                  <span>📂</span> Upload Electrostatic Potential Profile or Gaussian Cube (.cube)
+                </h3>
+                <p style={{ margin: '0.3rem 0 0', fontSize: '0.8rem', color: 'var(--muted)' }}>
+                  Upload 1D Planar Potential (from Macroave / <code>average_z.m</code>: <code>.dat</code>, <code>.txt</code>) or 3D Gaussian Cube (<code>.cube</code> from <code>grid2cube .VH</code>).
+                </p>
+              </div>
+
+              <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', flexWrap: 'wrap' }}>
+                <input
+                  ref={potFileInputRef}
+                  type="file"
+                  accept=".dat,.txt,.csv,.cube"
+                  style={{ display: 'none' }}
+                  onChange={handlePotFileUpload}
+                />
+                <button
+                  className="btn btn-primary btn-sm"
+                  onClick={() => potFileInputRef.current?.click()}
+                  title="Upload .dat or .cube potential file">
+                  📁 Load Potential File
+                </button>
+
+                <input
+                  ref={outEfRef}
+                  type="file"
+                  accept=".out,.log,.txt"
+                  style={{ display: 'none' }}
+                  onChange={e => handleLoadEfFromOut(e.target.files?.[0])}
+                />
+                <button
+                  className="btn btn-secondary btn-sm"
+                  onClick={() => outEfRef.current?.click()}
+                  title="Load Fermi energy directly from SIESTA .out file">
+                  📄 Load E_F from .out
+                </button>
+
+                <button
+                  className="btn btn-secondary btn-sm"
+                  onClick={handleLoadDemoPot}
+                  title="Load benchmark perovskite slab potential profile">
+                  ✨ Reset to Demo Profile
+                </button>
+              </div>
+            </div>
+
+            {/* Controls for Fermi Energy and Vacuum Window */}
+            <div style={{
+              marginTop: '1rem',
+              paddingTop: '0.8rem',
+              borderTop: '1px solid var(--border)',
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+              gap: '0.9rem',
+              alignItems: 'flex-end',
+            }}>
+              <div>
+                <label style={{ fontSize: '0.75rem', fontWeight: 600, color: '#fbbf24', display: 'block', marginBottom: '0.25rem' }}>
+                  Fermi Energy E_F (eV)
+                </label>
+                <div style={{ display: 'flex', gap: '0.4rem', alignItems: 'center' }}>
+                  <input
+                    type="number"
+                    step="0.01"
+                    className="input-text"
+                    style={{ width: '110px', fontFamily: 'monospace', fontSize: '0.82rem' }}
+                    value={efInput}
+                    onChange={e => setEfInput(e.target.value)}
+                    placeholder="-4.38"
+                  />
+                  <span style={{ fontSize: '0.75rem', color: 'var(--muted)' }}>eV</span>
+                </div>
+              </div>
+
+              <div>
+                <label style={{ fontSize: '0.75rem', fontWeight: 600, color: '#34d399', display: 'block', marginBottom: '0.25rem' }}>
+                  Vacuum Window [z_min, z_max] (Å)
+                </label>
+                <div style={{ display: 'flex', gap: '0.4rem', alignItems: 'center' }}>
+                  <input
+                    type="number"
+                    step="0.5"
+                    className="input-text"
+                    style={{ width: '75px', fontFamily: 'monospace', fontSize: '0.82rem' }}
+                    value={vacZMinInput}
+                    onChange={e => setVacZMinInput(e.target.value)}
+                    placeholder="26.0"
+                  />
+                  <span style={{ fontSize: '0.75rem', color: 'var(--muted)' }}>to</span>
+                  <input
+                    type="number"
+                    step="0.5"
+                    className="input-text"
+                    style={{ width: '75px', fontFamily: 'monospace', fontSize: '0.82rem' }}
+                    value={vacZMaxInput}
+                    onChange={e => setVacZMaxInput(e.target.value)}
+                    placeholder="34.0"
+                  />
+                  <span style={{ fontSize: '0.75rem', color: 'var(--muted)' }}>Å</span>
+                </div>
+              </div>
+
+              <div>
+                <label style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--muted)', display: 'block', marginBottom: '0.25rem' }}>
+                  Clean Slab Ref Φ_clean (optional)
+                </label>
+                <div style={{ display: 'flex', gap: '0.4rem', alignItems: 'center' }}>
+                  <input
+                    type="number"
+                    step="0.05"
+                    className="input-text"
+                    style={{ width: '90px', fontFamily: 'monospace', fontSize: '0.82rem' }}
+                    value={cleanPhiInput}
+                    onChange={e => setCleanPhiInput(e.target.value)}
+                    placeholder="e.g. 4.90"
+                  />
+                  <span style={{ fontSize: '0.75rem', color: 'var(--muted)' }}>eV</span>
+                </div>
+              </div>
+
+              <div>
+                <button
+                  className="btn btn-primary btn-sm"
+                  style={{ padding: '0.35rem 0.8rem', fontSize: '0.8rem', fontWeight: 600 }}
+                  onClick={handleRecomputeWorkFunction}>
+                  🔄 Recalculate Work Function
+                </button>
+              </div>
+            </div>
+
+            {/* Shift comparison if Clean Slab Ref is given */}
+            {cleanPhiInput && !isNaN(parseFloat(cleanPhiInput)) && potData && (
+              <div style={{
+                marginTop: '0.8rem',
+                padding: '0.4rem 0.7rem',
+                borderRadius: '6px',
+                background: 'rgba(56, 189, 248, 0.1)',
+                border: '1px solid rgba(56, 189, 248, 0.3)',
+                fontSize: '0.8rem',
+                display: 'flex',
+                gap: '1rem',
+                alignItems: 'center',
+              }}>
+                <span>
+                  Work Function Change: <strong>ΔΦ = {(potData.workFunction - parseFloat(cleanPhiInput)).toFixed(3)} eV</strong>
+                  {potData.workFunction - parseFloat(cleanPhiInput) < 0 ? ' (Work function decreased / electron donation)' : ' (Work function increased / electron withdrawal)'}
+                </span>
+              </div>
+            )}
+
+            {potStatus && (
+              <div style={{ marginTop: '0.6rem', fontSize: '0.78rem', color: 'var(--success, #10b981)' }}>
+                {potStatus}
+              </div>
+            )}
+            {potError && (
+              <div style={{ marginTop: '0.6rem', fontSize: '0.78rem', color: 'var(--error, #ef4444)' }}>
+                ⚠️ {potError}
+              </div>
+            )}
+          </div>
+
+          {/* Interactive Chart */}
+          {potData && (
+            <WorkFunctionChart
+              potData={potData}
+              title="Electrostatic Potential Profile V̄(z) & Vacuum Barrier (Φ = V_vac − E_F)"
+            />
+          )}
+        </div>
+      )}
       {/* ═════════════════════════════════════════════════════════════════════ */}
       {/* Tab 1: Adsorption Energy Calculator                                  */}
       {/* ═════════════════════════════════════════════════════════════════════ */}
