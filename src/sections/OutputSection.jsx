@@ -6,8 +6,8 @@ import { parseANI } from '../parser/aniParser.js';
 import { parseSiestaOut } from '../parser/outParser.js';
 import { ConvergenceChart } from '../components/ConvergenceChart.jsx';
 import { TrajectoryViewer } from '../components/TrajectoryViewer.jsx';
+import { DOSPlotterSuite } from '../components/DOSPlotterSuite.jsx';
 import { ErrorBoundary } from '../components/ErrorBoundary.jsx';
-
 const TRAJ_FLAGS = [
   { key: 'WriteMDXmol',      type: 'bool', label: 'WriteMDXmol (.ANI)', fileExt: '.ANI',
     help: 'Accumulate coordinates into SystemLabel.ANI (XYZ trajectory format for VMD, JMol, XCrySDen, OVITO)' },
@@ -216,7 +216,7 @@ export function OutputSection() {
           className={`btn ${activeTab === 'viewer' ? 'btn-primary' : 'btn-secondary'}`}
           onClick={() => setActiveTab('viewer')}
           style={{ position: 'relative' }}>
-          📊 Results Analysis &amp; Viewer (.out, .MDE, .ANI)
+          📊 Results Analysis & Viewer (.out, .MDE, .ANI, .EIG, .PDOS)
           {(mdeData || aniData || outData) && (
             <span style={{
               width: '8px',
@@ -434,6 +434,13 @@ export function OutputSection() {
               </ErrorBoundary>
             </div>
           )}
+          {/* DOS & PDOS Electronic Structure Analysis Suite */}
+          <div className="subsection" style={{ marginTop: '1.5rem' }}>
+            <div className="subsection-title">
+              📈 Density of States (DOS) & Projected DOS (PDOS) Visualizer
+            </div>
+            <DOSPlotterSuite />
+          </div>
 
           {/* Hint if nothing uploaded yet */}
           {!outData && !mdeData && !aniData && (

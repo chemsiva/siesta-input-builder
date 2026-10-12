@@ -1,5 +1,7 @@
+import { useState } from 'react';
 import { useFDFStore } from '../store/fdfStore';
 import { FieldRow, SelectInput, TextInput, SectionHeader } from '../components/FieldRow';
+import { DOSPlotterSuite } from '../components/DOSPlotterSuite.jsx';
 
 const ENERGY_UNITS = ['eV', 'Ry', 'Hartree'];
 
@@ -7,6 +9,8 @@ export function DOSSection() {
   const dos = useFDFStore(s => s.dos || {});
   const setField = useFDFStore(s => s.setField);
   const set = (k, v) => setField('dos', k, v);
+
+  const [activeTab, setActiveTab] = useState('input'); // 'input' or 'plotter'
 
   const pdosK = dos.pdosKgrid || [12, 12, 12];
   const setPDOSK = (idx, val) => {
@@ -17,7 +21,26 @@ export function DOSSection() {
 
   return (
     <div className="section-pane">
-      <SectionHeader title="Density of States (DOS / PDOS)" />
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.8rem', marginBottom: '0.5rem' }}>
+        <SectionHeader title="Density of States (DOS / PDOS)" />
+        <div style={{ display: 'flex', gap: '0.4rem' }}>
+          <button
+            className={`btn ${activeTab === 'input' ? 'btn-primary' : 'btn-secondary'} btn-sm`}
+            onClick={() => setActiveTab('input')}>
+            ⚙️ FDF Input Settings
+          </button>
+          <button
+            className={`btn ${activeTab === 'plotter' ? 'btn-primary' : 'btn-secondary'} btn-sm`}
+            onClick={() => setActiveTab('plotter')}>
+            📈 Plot DOS / PDOS Graph
+          </button>
+        </div>
+      </div>
+
+      {activeTab === 'plotter' ? (
+        <DOSPlotterSuite />
+      ) : (
+        <>
       <p className="section-desc">
         Calculate the Total Density of States (DOS) and Projected Density of States (PDOS) on pseudo-atomic orbitals.
       </p>
@@ -245,6 +268,8 @@ export function DOSSection() {
           <li>Can be plotted with Python (matplotlib), <code>sisl</code>, or SIESTA utilities (<code>pdosxml</code>, <code>fmpdos</code>).</li>
         </ul>
       </div>
+        </>
+      )}
     </div>
   );
 }
