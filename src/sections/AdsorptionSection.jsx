@@ -5,8 +5,70 @@ import { parse1DPlanarData, parseCubeAndComputePlanar, generateDemoCDD } from '.
 import { parse1DPotentialData, parsePotentialCube, analyzeWorkFunction, generateDemoPotential } from '../parser/workFunctionParser.js';
 import { PlanarCDDChart } from '../components/PlanarCDDChart.jsx';
 import { WorkFunctionChart } from '../components/WorkFunctionChart.jsx';
+import { BandAlignmentChart, BAND_PRESETS } from '../components/BandAlignmentChart.jsx';
+
 export function AdsorptionSection() {
-  const [activeTab, setActiveTab] = useState('workfunction'); // 'workfunction', 'energy', 'cdd', 'workflow'
+  const [activeTab, setActiveTab] = useState('bandalignment'); // 'bandalignment', 'workfunction', 'energy', 'cdd', 'workflow'
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // Band Alignment Diagram State
+  // ═══════════════════════════════════════════════════════════════════════════
+  const [bandLayers, setBandLayers] = useState(() => JSON.parse(JSON.stringify(BAND_PRESETS[0].layers)));
+  const [selectedPreset, setSelectedPreset] = useState('user_screenshot');
+  const [showCarrierArrows, setShowCarrierArrows] = useState(true);
+  const [showRedoxPotentials, setShowRedoxPotentials] = useState(false);
+  const [render3D, setRender3D] = useState(true);
+
+  // Form state for adding a new layer
+  const [newLayerName, setNewLayerName] = useState('');
+  const [newLayerType, setNewLayerType] = useState('absorber');
+  const [newLayerCBM, setNewLayerCBM] = useState('-1.60');
+  const [newLayerVBM, setNewLayerVBM] = useState('-6.00');
+  const [newLayerColor, setNewLayerColor] = useState('#c084fc');
+
+  // Layer operations
+  const handleAddLayer = () => {
+    if (!newLayerName.trim()) return;
+    const layer = {
+      name: newLayerName.trim(),
+      type: newLayerType,
+      cbm: parseFloat(newLayerCBM) || -1.60,
+      vbm: parseFloat(newLayerVBM) || -6.00,
+      fermi: ((parseFloat(newLayerCBM) || -1.60) + (parseFloat(newLayerVBM) || -6.00)) / 2,
+      isMetal: newLayerType === 'metal',
+      color: newLayerColor,
+    };
+    setBandLayers([...bandLayers, layer]);
+    setNewLayerName('');
+  };
+
+  const handleRemoveLayer = (idx) => {
+    setBandLayers(bandLayers.filter((_, i) => i !== idx));
+  };
+
+  const handleMoveLayer = (idx, dir) => {
+    const target = idx + dir;
+    if (target < 0 || target >= bandLayers.length) return;
+    const next = [...bandLayers];
+    const temp = next[idx];
+    next[idx] = next[target];
+    next[target] = temp;
+    setBandLayers(next);
+  };
+
+  const handleUpdateLayer = (idx, field, val) => {
+    const next = [...bandLayers];
+    next[idx] = { ...next[idx], [field]: val };
+    setBandLayers(next);
+  };
+
+  const handleSelectPreset = (presetId) => {
+    setSelectedPreset(presetId);
+    const found = BAND_PRESETS.find(p => p.id === presetId);
+    if (found) {
+      setBandLayers(JSON.parse(JSON.stringify(found.layers)));
+    }
+  };
 
   // ═══════════════════════════════════════════════════════════════════════════
   // Work Function (Phi) State
@@ -229,6 +291,11 @@ export function AdsorptionSection() {
         <SectionHeader title="Surface, Work Function & Adsorption Analysis" />
         <div style={{ display: 'flex', gap: '0.4rem', flexWrap: 'wrap' }}>
           <button
+            className={`btn ${activeTab === 'bandalignment' ? 'btn-primary' : 'btn-secondary'} btn-sm`}
+            onClick={() => setActiveTab('bandalignment')}>
+            📶 Band Alignment Diagram
+          </button>
+          <button
             className={`btn ${activeTab === 'workfunction' ? 'btn-primary' : 'btn-secondary'} btn-sm`}
             onClick={() => setActiveTab('workfunction')}>
             ⚡ Work Function (Φ)
@@ -252,9 +319,298 @@ export function AdsorptionSection() {
       </div>
 
       <p className="section-desc">
-        Comprehensive post-DFT analysis workspace for surface science: calculate work functions (Φ = V_vac − E_F), 
-        adsorption energies with thermal Gibbs corrections, and planar-averaged charge density differences (CDD).
+        Comprehensive post-DFT surface & device physics workspace: construct publication-grade energy band alignment diagrams, 
+        calculate work functions (Φ = V_vac − E_F), adsorption energies (E_ads), and planar-averaged charge density differences (CDD).
       </p>
+
+      {/* ═════════════════════════════════════════════════════════════════════ */}
+      {/* Tab: Band Alignment Diagram Suite                                    */}
+      {/* ═════════════════════════════════════════════════════════════════════ */}
+      {activeTab === 'bandalignment' && (
+        <div className="band-alignment-pane">
+          {/* Presets & Controls Card */}
+          <div style={{
+            background: 'rgba(15, 23, 42, 0.65)',
+            border: '1px solid var(--border)',
+            borderRadius: '8px',
+            padding: '1rem',
+            marginBottom: '1rem',
+          }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.8rem', marginBottom: '0.8rem' }}>
+              <div>
+                <h3 style={{ margin: 0, fontSize: '0.95rem', color: 'var(--fg)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                  <span>🎨</span> Band Alignment Presets & Display Options
+                </h3>
+                <p style={{ margin: '0.2rem 0 0', fontSize: '0.78rem', color: 'var(--muted)' }}>
+                  Select standard device architectures or build your own custom heterojunction:
+                </p>
+              </div>
+
+              <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+                <select
+                  className="input-select"
+                  style={{ fontSize: '0.82rem', padding: '0.3rem 0.6rem' }}
+                  value={selectedPreset}
+                  onChange={e => handleSelectPreset(e.target.value)}>
+                  {BAND_PRESETS.map(p => (
+                    <option key={p.id} value={p.id}>{p.name}</option>
+                  ))}
+                </select>
+              </div>
+            </div>
+
+            {/* Display Toggles */}
+            <div style={{
+              display: 'flex',
+              gap: '1.2rem',
+              flexWrap: 'wrap',
+              paddingTop: '0.6rem',
+              borderTop: '1px solid var(--border)',
+              fontSize: '0.8rem',
+              alignItems: 'center',
+            }}>
+              <label className="toggle" style={{ cursor: 'pointer' }}>
+                <input
+                  type="checkbox"
+                  checked={render3D}
+                  onChange={e => setRender3D(e.target.checked)}
+                />
+                <span className="toggle-label">
+                  3D Perspective Bevels (Matches Publication Figure)
+                </span>
+              </label>
+
+              <label className="toggle" style={{ cursor: 'pointer' }}>
+                <input
+                  type="checkbox"
+                  checked={showCarrierArrows}
+                  onChange={e => setShowCarrierArrows(e.target.checked)}
+                />
+                <span className="toggle-label">
+                  Carrier Transport Pathways (<span style={{ color: '#eab308' }}>e⁻</span> & <span style={{ color: '#22c55e' }}>h⁺</span> Extraction Arrows)
+                </span>
+              </label>
+
+              <label className="toggle" style={{ cursor: 'pointer' }}>
+                <input
+                  type="checkbox"
+                  checked={showRedoxPotentials}
+                  onChange={e => setShowRedoxPotentials(e.target.checked)}
+                />
+                <span className="toggle-label">
+                  Water Splitting Potentials (H⁺/H₂ & O₂/H₂O)
+                </span>
+              </label>
+            </div>
+          </div>
+
+          {/* Interactive Chart Component */}
+          <BandAlignmentChart
+            layers={bandLayers}
+            title="Energy Band Alignment & Heterojunction Diagram"
+            showCarrierArrows={showCarrierArrows}
+            showRedoxPotentials={showRedoxPotentials}
+            render3D={render3D}
+          />
+
+          {/* Layer Management Table Card */}
+          <div style={{
+            marginTop: '1.2rem',
+            background: 'rgba(15, 23, 42, 0.75)',
+            border: '1px solid var(--border)',
+            borderRadius: '8px',
+            padding: '1rem',
+          }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.8rem', flexWrap: 'wrap', gap: '0.5rem' }}>
+              <h4 style={{ margin: 0, fontSize: '0.92rem', color: 'var(--fg)', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                <span>📋</span> Manage Device Layers & Energy Levels
+              </h4>
+              <span style={{ fontSize: '0.75rem', color: 'var(--muted)' }}>
+                Energy scale: Vacuum level at 0.0 eV (all CBM and VBM values are negative eV)
+              </span>
+            </div>
+
+            {/* Table of Layers */}
+            <div style={{ overflowX: 'auto', marginBottom: '1rem' }}>
+              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.8rem' }}>
+                <thead>
+                  <tr style={{ borderBottom: '1px solid var(--border)', textAlign: 'left', color: 'var(--muted)' }}>
+                    <th style={{ padding: '0.4rem 0.5rem' }}>Order</th>
+                    <th style={{ padding: '0.4rem 0.5rem' }}>Material</th>
+                    <th style={{ padding: '0.4rem 0.5rem' }}>Layer Type</th>
+                    <th style={{ padding: '0.4rem 0.5rem' }}>CBM / LUMO (eV)</th>
+                    <th style={{ padding: '0.4rem 0.5rem' }}>VBM / HOMO (eV)</th>
+                    <th style={{ padding: '0.4rem 0.5rem' }}>Bandgap Eg</th>
+                    <th style={{ padding: '0.4rem 0.5rem' }}>Color</th>
+                    <th style={{ padding: '0.4rem 0.5rem', textAlign: 'center' }}>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {bandLayers.map((l, i) => (
+                    <tr key={`layer-row-${i}`} style={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+                      <td style={{ padding: '0.4rem 0.5rem', fontFamily: 'monospace', color: 'var(--muted)' }}>
+                        {i + 1}
+                      </td>
+                      <td style={{ padding: '0.4rem 0.5rem' }}>
+                        <input
+                          type="text"
+                          className="input-text"
+                          style={{ width: '110px', padding: '0.2rem 0.4rem', fontSize: '0.78rem', fontWeight: 'bold' }}
+                          value={l.name}
+                          onChange={e => handleUpdateLayer(i, 'name', e.target.value)}
+                        />
+                      </td>
+                      <td style={{ padding: '0.4rem 0.5rem' }}>
+                        <select
+                          className="input-select"
+                          style={{ padding: '0.2rem 0.4rem', fontSize: '0.75rem' }}
+                          value={l.type || 'absorber'}
+                          onChange={e => handleUpdateLayer(i, 'type', e.target.value)}>
+                          <option value="electrode">Electrode</option>
+                          <option value="etl">ETL</option>
+                          <option value="absorber">Absorber</option>
+                          <option value="htl">HTL</option>
+                          <option value="metal">Metal</option>
+                        </select>
+                      </td>
+                      <td style={{ padding: '0.4rem 0.5rem' }}>
+                        <input
+                          type="number"
+                          step="0.05"
+                          className="input-text"
+                          style={{ width: '80px', padding: '0.2rem 0.4rem', fontSize: '0.78rem', fontFamily: 'monospace' }}
+                          value={l.cbm}
+                          onChange={e => handleUpdateLayer(i, 'cbm', parseFloat(e.target.value) || 0)}
+                        />
+                      </td>
+                      <td style={{ padding: '0.4rem 0.5rem' }}>
+                        <input
+                          type="number"
+                          step="0.05"
+                          className="input-text"
+                          style={{ width: '80px', padding: '0.2rem 0.4rem', fontSize: '0.78rem', fontFamily: 'monospace' }}
+                          value={l.vbm}
+                          onChange={e => handleUpdateLayer(i, 'vbm', parseFloat(e.target.value) || 0)}
+                        />
+                      </td>
+                      <td style={{ padding: '0.4rem 0.5rem', fontFamily: 'monospace', color: '#38bdf8' }}>
+                        {(Math.abs(l.cbm - l.vbm)).toFixed(2)} eV
+                      </td>
+                      <td style={{ padding: '0.4rem 0.5rem' }}>
+                        <input
+                          type="color"
+                          style={{ width: '32px', height: '22px', border: 'none', borderRadius: '3px', cursor: 'pointer', background: 'transparent' }}
+                          value={l.color || '#c084fc'}
+                          onChange={e => handleUpdateLayer(i, 'color', e.target.value)}
+                        />
+                      </td>
+                      <td style={{ padding: '0.4rem 0.5rem', textAlign: 'center' }}>
+                        <div style={{ display: 'inline-flex', gap: '0.25rem' }}>
+                          <button
+                            className="btn btn-secondary btn-sm"
+                            style={{ padding: '0.15rem 0.35rem', fontSize: '0.68rem' }}
+                            disabled={i === 0}
+                            onClick={() => handleMoveLayer(i, -1)}
+                            title="Move left">
+                            ◀
+                          </button>
+                          <button
+                            className="btn btn-secondary btn-sm"
+                            style={{ padding: '0.15rem 0.35rem', fontSize: '0.68rem' }}
+                            disabled={i === bandLayers.length - 1}
+                            onClick={() => handleMoveLayer(i, 1)}
+                            title="Move right">
+                            ▶
+                          </button>
+                          <button
+                            className="btn btn-secondary btn-sm"
+                            style={{ padding: '0.15rem 0.35rem', fontSize: '0.68rem', color: 'var(--error, #ef4444)' }}
+                            onClick={() => handleRemoveLayer(i)}
+                            title="Delete layer">
+                            ✕
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Add New Layer Row */}
+            <div style={{
+              background: 'rgba(255,255,255,0.02)',
+              border: '1px dashed var(--border)',
+              borderRadius: '6px',
+              padding: '0.7rem',
+              display: 'flex',
+              gap: '0.6rem',
+              flexWrap: 'wrap',
+              alignItems: 'center',
+            }}>
+              <span style={{ fontSize: '0.78rem', fontWeight: 'bold', color: 'var(--fg)', marginRight: '0.2rem' }}>
+                ➕ Add Layer:
+              </span>
+              <input
+                type="text"
+                className="input-text"
+                style={{ width: '120px', padding: '0.25rem 0.45rem', fontSize: '0.78rem' }}
+                placeholder="e.g. MAPbI3"
+                value={newLayerName}
+                onChange={e => setNewLayerName(e.target.value)}
+              />
+              <select
+                className="input-select"
+                style={{ padding: '0.25rem 0.45rem', fontSize: '0.78rem' }}
+                value={newLayerType}
+                onChange={e => setNewLayerType(e.target.value)}>
+                <option value="electrode">Electrode</option>
+                <option value="etl">ETL</option>
+                <option value="absorber">Absorber</option>
+                <option value="htl">HTL</option>
+                <option value="metal">Metal</option>
+              </select>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
+                <span style={{ fontSize: '0.75rem', color: 'var(--muted)' }}>CBM:</span>
+                <input
+                  type="number"
+                  step="0.05"
+                  className="input-text"
+                  style={{ width: '75px', padding: '0.25rem 0.45rem', fontSize: '0.78rem', fontFamily: 'monospace' }}
+                  value={newLayerCBM}
+                  onChange={e => setNewLayerCBM(e.target.value)}
+                  placeholder="-1.60"
+                />
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
+                <span style={{ fontSize: '0.75rem', color: 'var(--muted)' }}>VBM:</span>
+                <input
+                  type="number"
+                  step="0.05"
+                  className="input-text"
+                  style={{ width: '75px', padding: '0.25rem 0.45rem', fontSize: '0.78rem', fontFamily: 'monospace' }}
+                  value={newLayerVBM}
+                  onChange={e => setNewLayerVBM(e.target.value)}
+                  placeholder="-6.00"
+                />
+              </div>
+              <input
+                type="color"
+                style={{ width: '32px', height: '24px', border: 'none', borderRadius: '3px', cursor: 'pointer', background: 'transparent' }}
+                value={newLayerColor}
+                onChange={e => setNewLayerColor(e.target.value)}
+              />
+              <button
+                className="btn btn-primary btn-sm"
+                onClick={handleAddLayer}
+                style={{ padding: '0.25rem 0.7rem', fontSize: '0.78rem' }}>
+                Add to Diagram
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
 
       {/* ═════════════════════════════════════════════════════════════════════ */}
       {/* Tab 0: Work Function (Phi) Calculator & Potential Profile             */}
