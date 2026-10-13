@@ -17,25 +17,19 @@ export function PlanarCDDChart({
   const plotW = width - margin.left - margin.right;
   const plotH = height - margin.top - margin.bottom;
 
-  if (!cddData || !cddData.z || cddData.z.length === 0) {
-    return null;
-  }
-
-  const {
-    z,
-    deltaRho,
-    deltaQ,
-    zMin,
-    zMax,
-    maxAccum,
-    maxAccumZ,
-    maxDeplet,
-    maxDepletZ,
-    zInterface,
-    netChargeTransfer,
-    dipoleDebye,
-    workFunctionShiftEV,
-  } = cddData;
+  const z = cddData?.z || [];
+  const deltaRho = cddData?.deltaRho || [];
+  const deltaQ = cddData?.deltaQ || [];
+  const zMin = cddData?.zMin ?? 0;
+  const zMax = cddData?.zMax ?? 1;
+  const maxAccum = cddData?.maxAccum ?? 0;
+  const maxAccumZ = cddData?.maxAccumZ ?? 0;
+  const maxDeplet = cddData?.maxDeplet ?? 0;
+  const maxDepletZ = cddData?.maxDepletZ ?? 0;
+  const zInterface = cddData?.zInterface ?? 0;
+  const netChargeTransfer = cddData?.netChargeTransfer ?? 0;
+  const dipoleDebye = cddData?.dipoleDebye ?? 0;
+  const workFunctionShiftEV = cddData?.workFunctionShiftEV ?? 0;
 
   const nPoints = z.length;
 
@@ -182,6 +176,9 @@ export function PlanarCDDChart({
     for (let i = 0; i < count; i++) ticks.push(yQMin + i * step);
     return ticks;
   }, [yQMin, yQMax]);
+  if (!cddData || !cddData.z || cddData.z.length === 0) {
+    return null;
+  }
 
   return (
     <div className="planar-cdd-chart" style={{ marginTop: '0.8rem' }}>

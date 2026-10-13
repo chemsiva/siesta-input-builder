@@ -20,8 +20,10 @@ export function Toolbar() {
   const fileRef = useRef();
   const cifRef  = useRef();
 
-  const label = system.SystemLabel || 'siesta';
+  const rawLabel = system.SystemLabel || 'siesta';
+  const label = rawLabel.replace(/[/\\?%*:|"<>]/g, '_').replace(/\.\./g, '_').trim() || 'siesta';
   const pseudoPath = (pseudoSettings.pseudoPath || '').trim().replace(/\/+$/, '');
+  const MAX_FILE_SIZE = 50 * 1024 * 1024; // 50 MB DoS / memory-exhaustion limit
 
   // ── Plain .fdf download ──────────────────────────────────────────────────
   const download = () => {
@@ -31,6 +33,7 @@ export function Toolbar() {
     a.href = URL.createObjectURL(blob);
     a.download = `${label}.fdf`;
     a.click();
+    URL.revokeObjectURL(a.href);
   };
 
   // ── Package download: .fdf + run_siesta.sh ───────────────────────────────
@@ -96,11 +99,17 @@ Either copy your .psf/.psml files here, or edit run_siesta.sh to set
     a.href = URL.createObjectURL(blob);
     a.download = `${label}_siesta_package.zip`;
     a.click();
+    URL.revokeObjectURL(a.href);
   };
 
   const handleLoad = (e) => {
     const file = e.target.files[0];
     if (!file) return;
+    if (file.size > MAX_FILE_SIZE) {
+      alert('⚠️ Security Warning: File exceeds 50 MB limit. Please upload a standard SIESTA .fdf file.');
+      e.target.value = '';
+      return;
+    }
     const reader = new FileReader();
     reader.onload = ev => loadFromText(ev.target.result);
     reader.readAsText(file);
@@ -110,6 +119,11 @@ Either copy your .psf/.psml files here, or edit run_siesta.sh to set
   const handleLoadCIF = (e) => {
     const file = e.target.files[0];
     if (!file) return;
+    if (file.size > MAX_FILE_SIZE) {
+      alert('⚠️ Security Warning: File exceeds 50 MB limit. Please upload a standard CIF file.');
+      e.target.value = '';
+      return;
+    }
     const reader = new FileReader();
     reader.onload = ev => loadFromCIF(ev.target.result);
     reader.readAsText(file);

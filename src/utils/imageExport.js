@@ -81,12 +81,24 @@ export function createTiffBlob(rgbaData, width, height, dpi = 300) {
 }
 
 /**
+ * Sanitize SVG source text to prevent XSS (scripts, foreignObject, event handlers, javascript: links)
+ */
+function sanitizeSvgSource(source) {
+  return source
+    .replace(/<script[\s\S]*?<\/script>/gi, '')
+    .replace(/<foreignObject[\s\S]*?<\/foreignObject>/gi, '')
+    .replace(/\son\w+\s*=\s*(['"]).*?\1/gi, '')
+    .replace(/href\s*=\s*['"]javascript:[^'"]*['"]/gi, 'href="#"');
+}
+
+/**
  * Export SVG element as vector .svg file
  */
 export function exportSvg(svgEl, filename = 'figure.svg') {
   if (!svgEl) return;
   const serializer = new XMLSerializer();
   let source = serializer.serializeToString(svgEl);
+  source = sanitizeSvgSource(source);
 
   // Add namespaces if missing
   if (!source.match(/^<svg[^>]+xmlns="http:\/\/www\.w3\.org\/2000\/svg"/)) {
@@ -106,6 +118,7 @@ export function renderSvgToCanvas(svgEl, width, height, scale = 3, bg = 'dark') 
 
     const serializer = new XMLSerializer();
     let source = serializer.serializeToString(svgEl);
+    source = sanitizeSvgSource(source);
 
     // If publication white background requested, adapt contrast
     if (bg === 'white') {
@@ -170,11 +183,19 @@ export async function exportTiff(svgEl, width, height, filename = 'figure_300dpi
   triggerDownload(tiffBlob, filename.endsWith('.tif') || filename.endsWith('.tiff') ? filename : `${filename}.tif`);
 }
 
+function sanitizeFilename(filename) {
+  return String(filename || 'figure')
+    .replace(/[/\\?%*:|"<>]/g, '_')
+    .replace(/\.\./g, '_')
+    .trim() || 'figure';
+}
+
 function triggerDownload(blob, filename) {
+  const safeName = sanitizeFilename(filename);
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;
-  a.download = filename;
+  a.download = safeName;
   document.body.appendChild(a);
   a.click();
   document.body.removeChild(a);

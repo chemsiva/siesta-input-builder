@@ -23,29 +23,21 @@ export function WorkFunctionChart({
   const plotW = width - margin.left - margin.right;
   const plotH = height - margin.top - margin.bottom;
 
-  if (!potData || !potData.z || potData.z.length === 0) {
-    return null;
-  }
-
-  const {
-    z,
-    vPlanar,
-    zMin,
-    zMax,
-    minV,
-    maxV,
-    vacZMin,
-    vacZMax,
-    vVacuum,
-    eFermi,
-    workFunction,
-    isDipolar,
-    vVacTop,
-    vVacBottom,
-    deltaV_dipole,
-    phiTop,
-    phiBottom,
-  } = potData;
+  const z = potData?.z || [];
+  const vPlanar = potData?.vPlanar || [];
+  const zMin = potData?.zMin ?? 0;
+  const zMax = potData?.zMax ?? 1;
+  const minV = potData?.minV ?? 0;
+  const maxV = potData?.maxV ?? 1;
+  const vacZMin = potData?.vacZMin ?? 0;
+  const vacZMax = potData?.vacZMax ?? 1;
+  const vVacuum = potData?.vVacuum ?? 0;
+  const eFermi = potData?.eFermi ?? 0;
+  const workFunction = potData?.workFunction ?? 0;
+  const isDipolar = potData?.isDipolar ?? false;
+  const deltaV_dipole = potData?.deltaV_dipole ?? 0;
+  const phiTop = potData?.phiTop ?? 0;
+  const phiBottom = potData?.phiBottom ?? 0;
 
   const nPoints = z.length;
 
@@ -156,6 +148,10 @@ export function WorkFunctionChart({
     for (let i = 0; i < count; i++) ticks.push(yLow + i * step);
     return ticks;
   }, [yLow, yHigh]);
+
+  if (!potData || !potData.z || potData.z.length === 0) {
+    return null;
+  }
 
   return (
     <div className="work-function-chart" style={{ marginTop: '0.8rem' }}>

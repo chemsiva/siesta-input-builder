@@ -65,13 +65,19 @@ export function OutputSection() {
   const mdeInputRef = useRef(null);
   const aniInputRef = useRef(null);
 
+  const MAX_FILE_SIZE = 100 * 1024 * 1024; // 100 MB safety limit
+
   // File loading handlers
   const handleLoadOut = (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
+    if (file.size > MAX_FILE_SIZE) {
+      setErrorMsg(`⚠️ File exceeds 100 MB security limit (${file.name}).`);
+      e.target.value = '';
+      return;
+    }
     setLoadingMsg(`Parsing ${file.name}...`);
     setErrorMsg('');
-    const reader = new FileReader();
     reader.onload = (ev) => {
       try {
         const parsed = parseSiestaOut(ev.target.result);
@@ -89,9 +95,13 @@ export function OutputSection() {
   const handleLoadMDE = (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
+    if (file.size > MAX_FILE_SIZE) {
+      setErrorMsg(`⚠️ File exceeds 100 MB security limit (${file.name}).`);
+      e.target.value = '';
+      return;
+    }
     setLoadingMsg(`Parsing ${file.name}...`);
     setErrorMsg('');
-    const reader = new FileReader();
     reader.onload = (ev) => {
       try {
         const parsed = parseMDE(ev.target.result);
@@ -109,9 +119,13 @@ export function OutputSection() {
   const handleLoadANI = (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
+    if (file.size > MAX_FILE_SIZE) {
+      setErrorMsg(`⚠️ File exceeds 100 MB security limit (${file.name}).`);
+      e.target.value = '';
+      return;
+    }
     setLoadingMsg(`Parsing ${file.name}...`);
     setErrorMsg('');
-    const reader = new FileReader();
     reader.onload = (ev) => {
       try {
         const parsed = parseANI(ev.target.result);

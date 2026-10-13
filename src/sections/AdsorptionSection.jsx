@@ -143,9 +143,15 @@ export function AdsorptionSection() {
     }
   };
 
+  const MAX_FILE_SIZE = 100 * 1024 * 1024; // 100 MB safety limit
+
   // Load directly from SIESTA .out file
   const handleLoadEfFromOut = (file) => {
     if (!file) return;
+    if (file.size > MAX_FILE_SIZE) {
+      setPotError(`⚠️ Security: File exceeds 100 MB limit (${file.name}).`);
+      return;
+    }
     const reader = new FileReader();
     reader.onload = (e) => processSiestaOutText(e.target.result, file.name);
     reader.readAsText(file);
@@ -174,10 +180,14 @@ export function AdsorptionSection() {
   const handlePotFileUpload = (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
+    if (file.size > MAX_FILE_SIZE) {
+      setPotError(`⚠️ Security: File exceeds 100 MB limit (${file.name}).`);
+      e.target.value = '';
+      return;
+    }
 
     setPotError('');
     setPotStatus(`Reading ${file.name}...`);
-
     const reader = new FileReader();
     reader.onload = (evt) => {
       try {
