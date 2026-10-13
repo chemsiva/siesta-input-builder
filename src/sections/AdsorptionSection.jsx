@@ -2,7 +2,7 @@ import React, { useState, useRef } from 'react';
 import { SectionHeader } from '../components/FieldRow';
 import { parseSiestaOut } from '../parser/outParser.js';
 import { parse1DPlanarData, parseCubeAndComputePlanar, generateDemoCDD } from '../parser/cddParser.js';
-import { parse1DPotentialData, parsePotentialCube, analyzeWorkFunction, generateDemoPotential } from '../parser/workFunctionParser.js';
+import { parse1DPotentialData, parsePotentialCube, analyzeWorkFunction, generateDemoPotential, generatePotentialFromOut } from '../parser/workFunctionParser.js';
 import { PlanarCDDChart } from '../components/PlanarCDDChart.jsx';
 import { WorkFunctionChart } from '../components/WorkFunctionChart.jsx';
 import { BandAlignmentChart, BAND_PRESETS } from '../components/BandAlignmentChart.jsx';
@@ -77,73 +77,139 @@ export function AdsorptionSection() {
   const outEfRef = useRef(null);
   const [potData, setPotData] = useState(null);   // null = no file loaded yet
   const [efInput, setEfInput] = useState('');
+  const [vVacInput, setVacInput] = useState('');
+  const [outVacData, setOutVacData] = useState(null); // { max, mean, ef, fileName }
+  const [vacChoice, setVacChoice] = useState('max');  // 'max' | 'mean' | 'custom'
   const [vacZMinInput, setVacZMinInput] = useState('');
   const [vacZMaxInput, setVacZMaxInput] = useState('');
   const [cleanPhiInput, setCleanPhiInput] = useState('');
   const [potStatus, setPotStatus] = useState('');
   const [potError, setPotError] = useState('');
 
-  // Load Fermi energy directly from SIESTA .out file
+  // Process text from a SIESTA .out log file
+  const processSiestaOutText = (text, fileName) => {
+    try {
+      const parsed = parseSiestaOut(text);
+      if (parsed.fermiEnergy === null) {
+        setPotError(`⚠️ Could not find Fermi energy in ${fileName}. Ensure SCF converged.`);
+        return;
+      }
+
+      const ef = parsed.fermiEnergy;
+      setEfInput(ef.toFixed(4));
+
+      const hasVac = parsed.vacuumLevelMax !== null;
+      if (hasVac) {
+        const vMax = parsed.vacuumLevelMax;
+        const vMean = parsed.vacuumLevelMean;
+        const phiMax = vMax - ef;
+        const phiMean = vMean - ef;
+
+        setOutVacData({ max: vMax, mean: vMean, ef, fileName });
+        setVacChoice('max');
+        setVacInput(vMax.toFixed(4));
+
+        // If user already loaded a 1D potential profile, adjust its window
+        if (potData && potData.vPlanar && potData.z && potData.z.length > 5) {
+          const tolerance = 0.20;
+          const plateauZ = potData.z.filter(
+            (_, i) => Math.abs(potData.vPlanar[i] - vMax) <= tolerance
+          );
+          const range = plateauZ.length >= 3 ? [Math.min(...plateauZ), Math.max(...plateauZ)] : null;
+          const recomputed = analyzeWorkFunction(potData.z, potData.vPlanar, ef, range);
+          setVacZMinInput(recomputed.vacZMin.toFixed(2));
+          setVacZMaxInput(recomputed.vacZMax.toFixed(2));
+          setPotData(recomputed);
+        } else {
+          const recomputed = generatePotentialFromOut(vMax, vMean, ef, 'max');
+          setVacZMinInput(recomputed.vacZMin.toFixed(2));
+          setVacZMaxInput(recomputed.vacZMax.toFixed(2));
+          setPotData(recomputed);
+        }
+
+        setPotError('');
+        setPotStatus(`✓ Loaded from ${fileName}: E_F = ${ef.toFixed(4)} eV | dhscf: Vacuum level (max) = ${vMax.toFixed(4)} eV, (mean) = ${vMean.toFixed(4)} eV → Φ = ${phiMax.toFixed(4)} eV`);
+      } else {
+        setOutVacData({ max: null, mean: null, ef, fileName });
+        setPotError('');
+        setPotStatus(`✓ Loaded Fermi energy E_F = ${ef.toFixed(4)} eV from ${fileName}. (Note: no dhscf vacuum line found; type V_vac manually or upload 1D profile)`);
+        if (potData && potData.vPlanar && potData.z && potData.z.length > 5) {
+          const recomputed = analyzeWorkFunction(potData.z, potData.vPlanar, ef, null);
+          setPotData(recomputed);
+        }
+      }
+    } catch (err) {
+      setPotError(`⚠️ Error reading ${fileName}: ${err.message}`);
+    }
+  };
+
+  // Load directly from SIESTA .out file
   const handleLoadEfFromOut = (file) => {
     if (!file) return;
     const reader = new FileReader();
-    reader.onload = (e) => {
-      try {
-        const parsed = parseSiestaOut(e.target.result);
-        if (parsed.fermiEnergy !== null) {
-          setEfInput(parsed.fermiEnergy.toFixed(4));
-          setPotStatus(`✓ Loaded Fermi energy E_F = ${parsed.fermiEnergy.toFixed(4)} eV from ${file.name}`);
-          if (potData && potData.z) {
-            const recomputed = analyzeWorkFunction(
-              potData.z,
-              potData.vPlanar,
-              parsed.fermiEnergy,
-              [parseFloat(vacZMinInput) || potData.vacZMin, parseFloat(vacZMaxInput) || potData.vacZMax]
-            );
-            setPotData(recomputed);
-          }
-        } else {
-          setPotError(`⚠️ Could not find Fermi energy in ${file.name}.`);
-        }
-      } catch (err) {
-        setPotError(`⚠️ Error reading ${file.name}: ${err.message}`);
-      }
-    };
+    reader.onload = (e) => processSiestaOutText(e.target.result, file.name);
     reader.readAsText(file);
   };
 
-  // Load Electrostatic Potential profile file (.dat, .txt, .cube)
+  // Toggle between Max and Mean vacuum level from dhscf
+  const handleSelectVacMode = (mode) => {
+    if (!outVacData) return;
+    setVacChoice(mode);
+    const chosenV = mode === 'mean' ? outVacData.mean : outVacData.max;
+    if (chosenV !== null) {
+      setVacInput(chosenV.toFixed(4));
+      const efVal = parseFloat(efInput) || outVacData.ef;
+      if (potData && potData.vPlanar && potData.z && !potData.fromOutFile) {
+        const recomputed = { ...potData, vVacuum: chosenV, workFunction: chosenV - efVal };
+        setPotData(recomputed);
+      } else {
+        const recomputed = generatePotentialFromOut(outVacData.max, outVacData.mean, efVal, mode);
+        setPotData(recomputed);
+      }
+      setPotStatus(`✓ Selected V_vac (${mode}): ${chosenV.toFixed(4)} eV → Φ = ${(chosenV - efVal).toFixed(4)} eV`);
+    }
+  };
+
+  // Load Electrostatic Potential profile file (.dat, .txt, .cube) OR SIESTA .out file
   const handlePotFileUpload = (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
     setPotError('');
-    setPotStatus(`Parsing ${file.name}...`);
+    setPotStatus(`Reading ${file.name}...`);
 
     const reader = new FileReader();
     reader.onload = (evt) => {
       try {
         const text = evt.target.result;
         const lower = file.name.toLowerCase();
-        // Use EF from input if already set; otherwise pass 0 and let user set it after
+
+        // AUTO-DETECT: If user uploaded a SIESTA .out / .log file through this button
+        if (text.includes('dhscf:') || text.includes('siesta:') || text.includes('NumberOfAtoms') || lower.endsWith('.out') || lower.endsWith('.log')) {
+          processSiestaOutText(text, file.name);
+          return;
+        }
+
+        // Parse as Cube or 1D planar profile
         const efVal = parseFloat(efInput);
         const efForParse = isFinite(efVal) ? efVal : 0;
 
         let analyzed;
         if (lower.endsWith('.cube')) {
           analyzed = parsePotentialCube(text, efForParse);
-          setPotStatus(`✓ Extracted planar average along z from Gaussian Cube: ${file.name} (${analyzed.z.length} points). Auto-detected vacuum: z = ${analyzed.vacZMin.toFixed(2)}–${analyzed.vacZMax.toFixed(2)} Å, V_vac = ${analyzed.vVacuum.toFixed(3)} eV`);
+          setPotStatus(`✓ Extracted planar average from Gaussian Cube: ${file.name} (${analyzed.z.length} points). Auto-detected V_vac = ${analyzed.vVacuum.toFixed(4)} eV`);
         } else {
           analyzed = parse1DPotentialData(text, efForParse);
-          setPotStatus(`✓ Loaded 1D potential profile: ${file.name} (${analyzed.z.length} points). Auto-detected vacuum: z = ${analyzed.vacZMin.toFixed(2)}–${analyzed.vacZMax.toFixed(2)} Å, V_vac = ${analyzed.vVacuum.toFixed(3)} eV`);
+          setPotStatus(`✓ Loaded 1D potential profile: ${file.name} (${analyzed.z.length} points). Auto-detected V_vac = ${analyzed.vVacuum.toFixed(4)} eV`);
         }
 
-        // Auto-populate vacuum range inputs from detection result
+        setVacInput(analyzed.vVacuum.toFixed(4));
         setVacZMinInput(analyzed.vacZMin.toFixed(2));
         setVacZMaxInput(analyzed.vacZMax.toFixed(2));
-        // If EF input is blank, leave blank but show hint in status
+        setVacChoice('custom');
+
         if (!isFinite(efVal)) {
-          setPotStatus(prev => prev + ' — Enter your E_F (eV) below and click Recalculate.');
+          setPotStatus(prev => prev + ' — Enter your E_F (eV) below and click Calculate.');
         }
         setPotData(analyzed);
       } catch (err) {
@@ -155,38 +221,56 @@ export function AdsorptionSection() {
     e.target.value = '';
   };
 
-  // Recalculate Work Function when EF or vacuum window changes
+  // Recalculate Work Function when EF, V_vac, or vacuum window changes
   const handleRecomputeWorkFunction = () => {
-    if (!potData || !potData.z) return;
     const efVal = parseFloat(efInput);
     if (!isFinite(efVal)) {
-      setPotError('⚠️ Enter a valid Fermi energy (eV) before recalculating.');
+      setPotError('⚠️ Enter a valid Fermi energy E_F (eV).');
       return;
     }
-    setPotError('');
-    const zMin = parseFloat(vacZMinInput);
-    const zMax = parseFloat(vacZMaxInput);
-    const useRange = isFinite(zMin) && isFinite(zMax) && zMax > zMin
-      ? [zMin, zMax]
-      : null; // null → auto-detect
-    const recomputed = analyzeWorkFunction(potData.z, potData.vPlanar, efVal, useRange);
-    setPotData(recomputed);
-    // Also sync the detected range back to inputs
-    setVacZMinInput(recomputed.vacZMin.toFixed(2));
-    setVacZMaxInput(recomputed.vacZMax.toFixed(2));
-    setPotStatus(`✓ Φ = ${recomputed.workFunction.toFixed(3)} eV  (V_vac = ${recomputed.vVacuum.toFixed(3)} eV, E_F = ${efVal.toFixed(3)} eV)`);
+
+    const vVacVal = parseFloat(vVacInput);
+
+    // Case 1: user has a full 1D potential curve
+    if (potData && potData.vPlanar && potData.z && potData.z.length > 5) {
+      setPotError('');
+      const zMin = parseFloat(vacZMinInput);
+      const zMax = parseFloat(vacZMaxInput);
+      const useRange = isFinite(zMin) && isFinite(zMax) && zMax > zMin ? [zMin, zMax] : null;
+      const recomputed = analyzeWorkFunction(potData.z, potData.vPlanar, efVal, useRange);
+      setPotData(recomputed);
+      setVacInput(recomputed.vVacuum.toFixed(4));
+      setVacZMinInput(recomputed.vacZMin.toFixed(2));
+      setVacZMaxInput(recomputed.vacZMax.toFixed(2));
+      setPotStatus(`✓ Φ = ${recomputed.workFunction.toFixed(4)} eV (V_vac = ${recomputed.vVacuum.toFixed(4)} eV, E_F = ${efVal.toFixed(4)} eV)`);
+      return;
+    }
+
+    // Case 2: direct calculation from V_vac and E_F (either from .out or entered manually)
+    if (isFinite(vVacVal)) {
+      setPotError('');
+      const recomputed = generatePotentialFromOut(vVacVal, outVacData?.mean ?? vVacVal, efVal, vacChoice);
+      setVacZMinInput(recomputed.vacZMin.toFixed(2));
+      setVacZMaxInput(recomputed.vacZMax.toFixed(2));
+      setPotData(recomputed);
+      setPotStatus(`✓ Calculated & Plotted: Φ = V_vac − E_F = ${vVacVal.toFixed(4)} − (${efVal.toFixed(4)}) = ${recomputed.workFunction.toFixed(4)} eV`);
+    } else {
+      setPotError('⚠️ Enter a Vacuum Level V_vac (eV) or load a SIESTA .out file.');
+    }
   };
 
   const handleLoadDemoPot = () => {
     const demo = generateDemoPotential();
     setPotData(demo);
-    setEfInput(demo.eFermi.toFixed(3));
+    setEfInput(demo.eFermi.toFixed(4));
+    setVacInput(demo.vVacuum.toFixed(4));
     setVacZMinInput(demo.vacZMin.toFixed(2));
     setVacZMaxInput(demo.vacZMax.toFixed(2));
+    setOutVacData(null);
+    setVacChoice('custom');
     setPotError('');
-    setPotStatus(`Demo loaded: perovskite slab. V_vac = ${demo.vVacuum.toFixed(3)} eV, E_F = ${demo.eFermi.toFixed(3)} eV → Φ = ${demo.workFunction.toFixed(3)} eV`);
+    setPotStatus(`Demo loaded: perovskite slab. V_vac = ${demo.vVacuum.toFixed(4)} eV, E_F = ${demo.eFermi.toFixed(4)} eV → Φ = ${demo.workFunction.toFixed(4)} eV`);
   };
-
   // ═══════════════════════════════════════════════════════════════════════════
   // Tab 1: Adsorption Energy State
   // ═══════════════════════════════════════════════════════════════════════════
@@ -657,20 +741,6 @@ export function AdsorptionSection() {
 
               <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', flexWrap: 'wrap' }}>
                 <input
-                  ref={potFileInputRef}
-                  type="file"
-                  accept=".dat,.txt,.csv,.cube"
-                  style={{ display: 'none' }}
-                  onChange={handlePotFileUpload}
-                />
-                <button
-                  className="btn btn-primary btn-sm"
-                  onClick={() => potFileInputRef.current?.click()}
-                  title="Upload .dat or .cube potential file">
-                  📁 Load Potential File
-                </button>
-
-                <input
                   ref={outEfRef}
                   type="file"
                   accept=".out,.log,.txt"
@@ -678,28 +748,42 @@ export function AdsorptionSection() {
                   onChange={e => handleLoadEfFromOut(e.target.files?.[0])}
                 />
                 <button
-                  className="btn btn-secondary btn-sm"
+                  className="btn btn-primary btn-sm"
                   onClick={() => outEfRef.current?.click()}
-                  title="Load Fermi energy directly from SIESTA .out file">
-                  📄 Load E_F from .out
+                  title="Load Fermi energy and dhscf Vacuum level directly from SIESTA .out file">
+                  📄 Load SIESTA .out (auto E_F &amp; V_vac)
+                </button>
+
+                <input
+                  ref={potFileInputRef}
+                  type="file"
+                  accept=".dat,.txt,.csv,.cube,.out,.log"
+                  style={{ display: 'none' }}
+                  onChange={handlePotFileUpload}
+                />
+                <button
+                  className="btn btn-secondary btn-sm"
+                  onClick={() => potFileInputRef.current?.click()}
+                  title="Upload .dat or .cube potential file">
+                  📁 Load 1D Profile (.dat / .cube)
                 </button>
 
                 <button
                   className="btn btn-secondary btn-sm"
                   onClick={handleLoadDemoPot}
                   title="Load benchmark perovskite slab potential profile">
-                  ✨ Reset to Demo Profile
+                  ✨ Load Demo
                 </button>
               </div>
             </div>
 
-            {/* Controls for Fermi Energy and Vacuum Window */}
+            {/* Controls for Fermi Energy, Vacuum Level, and Vacuum Window */}
             <div style={{
               marginTop: '1rem',
               paddingTop: '0.8rem',
               borderTop: '1px solid var(--border)',
               display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
               gap: '0.9rem',
               alignItems: 'flex-end',
             }}>
@@ -710,7 +794,7 @@ export function AdsorptionSection() {
                 <div style={{ display: 'flex', gap: '0.4rem', alignItems: 'center' }}>
                   <input
                     type="number"
-                    step="0.01"
+                    step="0.0001"
                     className="input-text"
                     style={{ width: '110px', fontFamily: 'monospace', fontSize: '0.82rem' }}
                     value={efInput}
@@ -723,6 +807,44 @@ export function AdsorptionSection() {
 
               <div>
                 <label style={{ fontSize: '0.75rem', fontWeight: 600, color: '#34d399', display: 'block', marginBottom: '0.25rem' }}>
+                  Vacuum Level V_vac (eV)
+                </label>
+                <div style={{ display: 'flex', gap: '0.4rem', alignItems: 'center' }}>
+                  <input
+                    type="number"
+                    step="0.0001"
+                    className="input-text"
+                    style={{ width: '110px', fontFamily: 'monospace', fontSize: '0.82rem' }}
+                    value={vVacInput}
+                    onChange={e => setVacInput(e.target.value)}
+                    placeholder="0.9740"
+                  />
+                  <span style={{ fontSize: '0.75rem', color: 'var(--muted)' }}>eV</span>
+                </div>
+                {outVacData && outVacData.max != null && (
+                  <div style={{ display: 'flex', gap: '0.3rem', marginTop: '0.35rem' }}>
+                    <button
+                      type="button"
+                      className={`btn btn-xs ${vacChoice === 'max' ? 'btn-primary' : 'btn-secondary'}`}
+                      style={{ fontSize: '0.68rem', padding: '0.1rem 0.35rem' }}
+                      onClick={() => handleSelectVacMode('max')}>
+                      Max: {outVacData.max.toFixed(3)}
+                    </button>
+                    {outVacData.mean != null && (
+                      <button
+                        type="button"
+                        className={`btn btn-xs ${vacChoice === 'mean' ? 'btn-primary' : 'btn-secondary'}`}
+                        style={{ fontSize: '0.68rem', padding: '0.1rem 0.35rem' }}
+                        onClick={() => handleSelectVacMode('mean')}>
+                        Mean: {outVacData.mean.toFixed(3)}
+                      </button>
+                    )}
+                  </div>
+                )}
+              </div>
+
+              <div>
+                <label style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--muted)', display: 'block', marginBottom: '0.25rem' }}>
                   Vacuum Window [z_min, z_max] (Å)
                 </label>
                 <div style={{ display: 'flex', gap: '0.4rem', alignItems: 'center' }}>
@@ -730,20 +852,20 @@ export function AdsorptionSection() {
                     type="number"
                     step="0.5"
                     className="input-text"
-                    style={{ width: '75px', fontFamily: 'monospace', fontSize: '0.82rem' }}
+                    style={{ width: '65px', fontFamily: 'monospace', fontSize: '0.82rem' }}
                     value={vacZMinInput}
                     onChange={e => setVacZMinInput(e.target.value)}
-                    placeholder="26.0"
+                    placeholder="22.5"
                   />
                   <span style={{ fontSize: '0.75rem', color: 'var(--muted)' }}>to</span>
                   <input
                     type="number"
                     step="0.5"
                     className="input-text"
-                    style={{ width: '75px', fontFamily: 'monospace', fontSize: '0.82rem' }}
+                    style={{ width: '65px', fontFamily: 'monospace', fontSize: '0.82rem' }}
                     value={vacZMaxInput}
                     onChange={e => setVacZMaxInput(e.target.value)}
-                    placeholder="34.0"
+                    placeholder="31.0"
                   />
                   <span style={{ fontSize: '0.75rem', color: 'var(--muted)' }}>Å</span>
                 </div>
@@ -758,7 +880,7 @@ export function AdsorptionSection() {
                     type="number"
                     step="0.05"
                     className="input-text"
-                    style={{ width: '90px', fontFamily: 'monospace', fontSize: '0.82rem' }}
+                    style={{ width: '85px', fontFamily: 'monospace', fontSize: '0.82rem' }}
                     value={cleanPhiInput}
                     onChange={e => setCleanPhiInput(e.target.value)}
                     placeholder="e.g. 4.90"
@@ -772,7 +894,7 @@ export function AdsorptionSection() {
                   className="btn btn-primary btn-sm"
                   style={{ padding: '0.35rem 0.8rem', fontSize: '0.8rem', fontWeight: 600 }}
                   onClick={handleRecomputeWorkFunction}>
-                  🔄 Recalculate Work Function
+                  🔄 Calculate &amp; Plot Work Function
                 </button>
               </div>
             </div>
@@ -822,26 +944,24 @@ export function AdsorptionSection() {
             }}>
               <div style={{ fontSize: '2.5rem', marginBottom: '0.6rem' }}>📂</div>
               <div style={{ fontWeight: 600, fontSize: '0.95rem', color: 'var(--fg)', marginBottom: '0.3rem' }}>
-                No potential profile loaded
+                No data loaded yet
               </div>
-              <div style={{ fontSize: '0.82rem', maxWidth: '480px', margin: '0 auto 1rem' }}>
-                Upload a <strong>1D planar average</strong> file (<code>.dat</code> / <code>.txt</code> from
-                Macroave or <code>average_z.m</code>) or a <strong>Gaussian Cube</strong> (<code>.cube</code>
-                from <code>grid2cube .VH</code>). The vacuum level V_vac will be auto-detected from the
-                flattest high-potential plateau.
+              <div style={{ fontSize: '0.82rem', maxWidth: '520px', margin: '0 auto 1rem' }}>
+                <strong>Option A — from .out file directly:</strong> click <code>Load E_F from .out</code>.
+                SIESTA prints <code>dhscf: Vacuum level (max, mean)</code> every SCF step — the GUI
+                reads both numbers and computes Φ immediately, no potential profile needed.<br /><br />
+                <strong>Option B — from potential profile:</strong> upload a 1D planar average
+                (<code>.dat</code> / <code>.txt</code> from Macroave or <code>average_z.m</code>)
+                or Gaussian Cube (<code>.cube</code> from <code>grid2cube .VH</code>).
               </div>
-              <div style={{ fontSize: '0.78rem', color: 'var(--muted)', marginBottom: '1rem' }}>
-                — or try the built-in benchmark —
-              </div>
-              <button
-                className="btn btn-secondary btn-sm"
-                onClick={handleLoadDemoPot}>
+              <div style={{ fontSize: '0.78rem', color: 'var(--muted)', marginBottom: '1rem' }}>— or try the built-in benchmark —</div>
+              <button className="btn btn-secondary btn-sm" onClick={handleLoadDemoPot}>
                 ✨ Load Demo (perovskite slab, Φ ≈ 4.90 eV)
               </button>
             </div>
           )}
 
-          {/* Interactive Chart — only when data is loaded */}
+          {/* Interactive Chart — ALWAYS PLOT THE GRAPH */}
           {potData && (
             <WorkFunctionChart
               potData={potData}

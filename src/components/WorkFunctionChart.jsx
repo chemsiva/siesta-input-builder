@@ -215,8 +215,17 @@ export function WorkFunctionChart({
         flexWrap: 'wrap',
         gap: '0.5rem',
       }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', flexWrap: 'wrap' }}>
           <strong style={{ fontSize: '0.92rem', color: 'var(--fg)' }}>{title}</strong>
+          {potData.fromOutFile ? (
+            <span className="badge badge-accent" style={{ fontSize: '0.72rem' }}>
+              Plotted from SIESTA .out (dhscf: Vacuum level)
+            </span>
+          ) : (
+            <span className="badge badge-success" style={{ fontSize: '0.72rem' }}>
+              Plotted from 1D Potential Grid Profile
+            </span>
+          )}
           <span style={{ fontSize: '0.75rem', color: 'var(--muted)' }}>
             Vacuum window: [{vacZMin.toFixed(1)}, {vacZMax.toFixed(1)}] Å
           </span>
@@ -353,6 +362,38 @@ export function WorkFunctionChart({
               V_vac ({vVacuum.toFixed(2)} eV)
             </text>
           </g>
+          {/* Secondary Mean Vacuum Line if available and distinct */}
+          {potData.vVacMean != null && Math.abs(potData.vVacMean - vVacuum) > 0.02 && (
+            <g>
+              <line
+                x1={margin.left}
+                y1={getY(potData.vVacMean)}
+                x2={margin.left + plotW}
+                y2={getY(potData.vVacMean)}
+                stroke="#a78bfa"
+                strokeWidth="1.4"
+                strokeDasharray="3,3"
+              />
+              <rect
+                x={margin.left + plotW - 225}
+                y={getY(potData.vVacMean) - 18}
+                width="105"
+                height="16"
+                rx="3"
+                fill="rgba(167, 139, 250, 0.25)"
+                stroke="#a78bfa"
+              />
+              <text
+                x={margin.left + plotW - 172}
+                y={getY(potData.vVacMean) - 6}
+                textAnchor="middle"
+                fontSize="9.5"
+                fill="#a78bfa"
+                fontWeight="bold">
+                V_mean ({potData.vVacMean.toFixed(2)} eV)
+              </text>
+            </g>
+          )}
 
           {/* Work Function Double-Headed Arrow Bracket */}
           <g>

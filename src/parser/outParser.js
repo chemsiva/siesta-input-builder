@@ -23,6 +23,8 @@ export function parseSiestaOut(text) {
     finalEnergyKS: null,
     finalEnergyTot: null,
     fermiEnergy: null,
+    vacuumLevelMax: null,   // dhscf: Vacuum level (max, mean) — first value
+    vacuumLevelMean: null,  // dhscf: Vacuum level (max, mean) — second value
     maxForce: null,
     stressTensorVoigt: null,
     cellVectors: null,
@@ -85,10 +87,19 @@ export function parseSiestaOut(text) {
       }
     }
 
-    // Fermi energy
-    if (line.includes('siesta: Fermi =') || line.includes('Fermi energy =') || line.includes('siesta: Fermi energy (eV) =')) {
-      const m = line.match(/(?:Fermi\s*=|Fermi energy\s*=|Fermi energy \(eV\)\s*=)\s*([-\d\.]+)/i);
+    // Fermi energy — handles "siesta:         Fermi = -4.958", "Fermi energy = ", etc.
+    if (/Fermi/i.test(line)) {
+      const m = line.match(/(?:siesta:\s*Fermi|Fermi energy(?:\s*\(eV\))?|Fermi)\s*=\s*([-\d\.eE\+]+)/i);
       if (m) result.fermiEnergy = parseFloat(m[1]);
+    }
+
+    // Vacuum level — printed by dhscf every SCF cycle (e.g. "dhscf: Vacuum level (max, mean) =    0.973999    0.127217 eV")
+    if (/Vacuum level/i.test(line)) {
+      const m = line.match(/Vacuum level\s*\(max,\s*mean\)\s*=\s*([-\d\.eE\+]+)\s+([-\d\.eE\+]+)/i);
+      if (m) {
+        result.vacuumLevelMax  = parseFloat(m[1]);
+        result.vacuumLevelMean = parseFloat(m[2]);
+      }
     }
 
     // E_KS

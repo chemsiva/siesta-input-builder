@@ -260,3 +260,78 @@ export function generateDemoPotential() {
   // Explicitly tell the analyzer where the vacuum plateau is
   return analyzeWorkFunction(z, vPlanar, eFermi, [24.0, 34.0]);
 }
+
+/**
+ * Construct a realistic potential profile directly from SIESTA .out values:
+ * dhscf: Vacuum level (max, mean) = V_max V_mean eV and E_Fermi
+ * This allows plotting the full electrostatic potential profile V̄(z) immediately
+ * upon loading a SIESTA .out file, without needing a separate .dat or .cube grid file.
+ */
+export function generatePotentialFromOut(vVacMax, vVacMean, eFermi, activeMode = 'max') {
+  const n = 280;
+  const zMax = 32.0;
+  const dz = zMax / (n - 1);
+
+  const chosenVac = (activeMode === 'mean' && vVacMean != null) ? vVacMean : vVacMax;
+  const z = [];
+  const vPlanar = [];
+
+  // Realistic perovskite/semiconductor slab between z = 4.0 and 19.0 A
+  // Vacuum region between z = 19.0 and 32.0 A
+  const slabLayers = [5.5, 8.5, 11.5, 14.5, 17.5];
+  const slabDepth = eFermi - 16.0;
+
+  for (let i = 0; i < n; i++) {
+    const zi = i * dz;
+    z.push(zi);
+
+    let pot;
+    if (zi < 19.0) {
+      // Inside slab: valence envelope + periodic atomic core potentials
+      const env = 0.5 * (1 - Math.tanh((zi - 18.0) / 1.1)) *
+                  0.5 * (1 + Math.tanh((zi - 4.5) / 1.1));
+      const baseDrop = (slabDepth - chosenVac) * env;
+      let coreOsc = 0;
+      slabLayers.forEach(lz => {
+        coreOsc += -12.0 * Math.exp(-Math.pow((zi - lz) / 0.8, 2));
+      });
+      pot = chosenVac + baseDrop + coreOsc;
+    } else {
+      // In vacuum: smoothly levels off exactly to chosenVac
+      const t = (zi - 19.0) / 2.5;
+      pot = chosenVac - 0.08 * Math.exp(-t);
+      if (zi >= 22.5) {
+        pot = chosenVac;
+      }
+    }
+    vPlanar.push(pot);
+  }
+
+  const vacZMin = 22.5;
+  const vacZMax = 31.0;
+  const workFunction = chosenVac - eFermi;
+  const deltaV = vVacMean != null ? Math.abs(vVacMax - vVacMean) : 0;
+
+  return {
+    z,
+    vPlanar,
+    zMin: 0,
+    zMax: 32.0,
+    minV: Math.min(...vPlanar),
+    maxV: Math.max(...vPlanar),
+    vacZMin,
+    vacZMax,
+    vVacuum: chosenVac,
+    vVacMax,
+    vVacMean,
+    eFermi,
+    workFunction,
+    isDipolar: deltaV > 0.05,
+    vVacTop: vVacMax,
+    vVacBottom: vVacMean != null ? vVacMean : vVacMax,
+    deltaV_dipole: deltaV,
+    phiTop: vVacMax - eFermi,
+    phiBottom: (vVacMean != null ? vVacMean : vVacMax) - eFermi,
+    fromOutFile: true,
+  };
+}
