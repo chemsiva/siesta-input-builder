@@ -75,12 +75,12 @@ export function AdsorptionSection() {
   // ═══════════════════════════════════════════════════════════════════════════
   const potFileInputRef = useRef(null);
   const outEfRef = useRef(null);
-  const [potData, setPotData] = useState(() => generateDemoPotential());
-  const [efInput, setEfInput] = useState('-4.380');
-  const [vacZMinInput, setVacZMinInput] = useState('26.0');
-  const [vacZMaxInput, setVacZMaxInput] = useState('34.0');
+  const [potData, setPotData] = useState(null);   // null = no file loaded yet
+  const [efInput, setEfInput] = useState('');
+  const [vacZMinInput, setVacZMinInput] = useState('');
+  const [vacZMaxInput, setVacZMaxInput] = useState('');
   const [cleanPhiInput, setCleanPhiInput] = useState('');
-  const [potStatus, setPotStatus] = useState('Showing benchmark demo electrostatic potential profile (perovskite slab).');
+  const [potStatus, setPotStatus] = useState('');
   const [potError, setPotError] = useState('');
 
   // Load Fermi energy directly from SIESTA .out file
@@ -125,46 +125,66 @@ export function AdsorptionSection() {
       try {
         const text = evt.target.result;
         const lower = file.name.toLowerCase();
-        const efVal = parseFloat(efInput) || 0;
+        // Use EF from input if already set; otherwise pass 0 and let user set it after
+        const efVal = parseFloat(efInput);
+        const efForParse = isFinite(efVal) ? efVal : 0;
 
         let analyzed;
         if (lower.endsWith('.cube')) {
-          analyzed = parsePotentialCube(text, efVal);
-          setPotStatus(`✓ Extracted planar average of potential along z from Gaussian Cube: ${file.name}`);
+          analyzed = parsePotentialCube(text, efForParse);
+          setPotStatus(`✓ Extracted planar average along z from Gaussian Cube: ${file.name} (${analyzed.z.length} points). Auto-detected vacuum: z = ${analyzed.vacZMin.toFixed(2)}–${analyzed.vacZMax.toFixed(2)} Å, V_vac = ${analyzed.vVacuum.toFixed(3)} eV`);
         } else {
-          analyzed = parse1DPotentialData(text, efVal);
-          setPotStatus(`✓ Successfully loaded 1D Potential profile: ${file.name} (${analyzed.z.length} points)`);
+          analyzed = parse1DPotentialData(text, efForParse);
+          setPotStatus(`✓ Loaded 1D potential profile: ${file.name} (${analyzed.z.length} points). Auto-detected vacuum: z = ${analyzed.vacZMin.toFixed(2)}–${analyzed.vacZMax.toFixed(2)} Å, V_vac = ${analyzed.vVacuum.toFixed(3)} eV`);
         }
 
-        setVacZMinInput(analyzed.vacZMin.toFixed(1));
-        setVacZMaxInput(analyzed.vacZMax.toFixed(1));
+        // Auto-populate vacuum range inputs from detection result
+        setVacZMinInput(analyzed.vacZMin.toFixed(2));
+        setVacZMaxInput(analyzed.vacZMax.toFixed(2));
+        // If EF input is blank, leave blank but show hint in status
+        if (!isFinite(efVal)) {
+          setPotStatus(prev => prev + ' — Enter your E_F (eV) below and click Recalculate.');
+        }
         setPotData(analyzed);
       } catch (err) {
         setPotError(`Failed to process potential file: ${err.message}`);
+        setPotStatus('');
       }
     };
     reader.readAsText(file);
+    e.target.value = '';
   };
 
-  // Recalculate Work Function when EF or vacuum window is modified
+  // Recalculate Work Function when EF or vacuum window changes
   const handleRecomputeWorkFunction = () => {
     if (!potData || !potData.z) return;
-    const efVal = parseFloat(efInput) || 0;
-    const zMin = parseFloat(vacZMinInput) || potData.vacZMin;
-    const zMax = parseFloat(vacZMaxInput) || potData.vacZMax;
-    const recomputed = analyzeWorkFunction(potData.z, potData.vPlanar, efVal, [zMin, zMax]);
+    const efVal = parseFloat(efInput);
+    if (!isFinite(efVal)) {
+      setPotError('⚠️ Enter a valid Fermi energy (eV) before recalculating.');
+      return;
+    }
+    setPotError('');
+    const zMin = parseFloat(vacZMinInput);
+    const zMax = parseFloat(vacZMaxInput);
+    const useRange = isFinite(zMin) && isFinite(zMax) && zMax > zMin
+      ? [zMin, zMax]
+      : null; // null → auto-detect
+    const recomputed = analyzeWorkFunction(potData.z, potData.vPlanar, efVal, useRange);
     setPotData(recomputed);
-    setPotStatus(`✓ Updated work function: Φ = ${recomputed.workFunction.toFixed(3)} eV (V_vac = ${recomputed.vVacuum.toFixed(3)} eV, E_F = ${efVal.toFixed(3)} eV)`);
+    // Also sync the detected range back to inputs
+    setVacZMinInput(recomputed.vacZMin.toFixed(2));
+    setVacZMaxInput(recomputed.vacZMax.toFixed(2));
+    setPotStatus(`✓ Φ = ${recomputed.workFunction.toFixed(3)} eV  (V_vac = ${recomputed.vVacuum.toFixed(3)} eV, E_F = ${efVal.toFixed(3)} eV)`);
   };
 
   const handleLoadDemoPot = () => {
     const demo = generateDemoPotential();
     setPotData(demo);
     setEfInput(demo.eFermi.toFixed(3));
-    setVacZMinInput(demo.vacZMin.toFixed(1));
-    setVacZMaxInput(demo.vacZMax.toFixed(1));
+    setVacZMinInput(demo.vacZMin.toFixed(2));
+    setVacZMaxInput(demo.vacZMax.toFixed(2));
     setPotError('');
-    setPotStatus('Reset to benchmark demo electrostatic potential profile (perovskite slab).');
+    setPotStatus(`Demo loaded: perovskite slab. V_vac = ${demo.vVacuum.toFixed(3)} eV, E_F = ${demo.eFermi.toFixed(3)} eV → Φ = ${demo.workFunction.toFixed(3)} eV`);
   };
 
   // ═══════════════════════════════════════════════════════════════════════════
@@ -789,7 +809,39 @@ export function AdsorptionSection() {
             )}
           </div>
 
-          {/* Interactive Chart */}
+          {/* Empty state — shown before any file is loaded */}
+          {!potData && (
+            <div style={{
+              marginTop: '1.5rem',
+              padding: '2.2rem 1.5rem',
+              borderRadius: '10px',
+              border: '2px dashed var(--border)',
+              textAlign: 'center',
+              color: 'var(--muted)',
+              background: 'rgba(15,23,42,0.4)',
+            }}>
+              <div style={{ fontSize: '2.5rem', marginBottom: '0.6rem' }}>📂</div>
+              <div style={{ fontWeight: 600, fontSize: '0.95rem', color: 'var(--fg)', marginBottom: '0.3rem' }}>
+                No potential profile loaded
+              </div>
+              <div style={{ fontSize: '0.82rem', maxWidth: '480px', margin: '0 auto 1rem' }}>
+                Upload a <strong>1D planar average</strong> file (<code>.dat</code> / <code>.txt</code> from
+                Macroave or <code>average_z.m</code>) or a <strong>Gaussian Cube</strong> (<code>.cube</code>
+                from <code>grid2cube .VH</code>). The vacuum level V_vac will be auto-detected from the
+                flattest high-potential plateau.
+              </div>
+              <div style={{ fontSize: '0.78rem', color: 'var(--muted)', marginBottom: '1rem' }}>
+                — or try the built-in benchmark —
+              </div>
+              <button
+                className="btn btn-secondary btn-sm"
+                onClick={handleLoadDemoPot}>
+                ✨ Load Demo (perovskite slab, Φ ≈ 4.90 eV)
+              </button>
+            </div>
+          )}
+
+          {/* Interactive Chart — only when data is loaded */}
           {potData && (
             <WorkFunctionChart
               potData={potData}
