@@ -1,4 +1,5 @@
 import React, { useState, useRef, useMemo } from 'react';
+import { exportSvg, exportPng, exportTiff } from '../utils/imageExport.js';
 
 export function WorkFunctionChart({
   potData,
@@ -119,6 +120,24 @@ export function WorkFunctionChart({
     a.download = 'potential_profile.dat';
     a.click();
     URL.revokeObjectURL(url);
+  };
+  // Export image formats (SVG, PNG 300 DPI, TIFF 300 DPI)
+  const handleExportSVG = () => {
+    const svgEl = containerRef.current?.querySelector('svg');
+    if (!svgEl) return;
+    exportSvg(svgEl, 'work_function_potential.svg');
+  };
+
+  const handleExportPNG = (bg = 'dark') => {
+    const svgEl = containerRef.current?.querySelector('svg');
+    if (!svgEl) return;
+    exportPng(svgEl, width, height, `work_function_potential_${bg === 'white' ? 'white_' : ''}300dpi.png`, 3, bg);
+  };
+
+  const handleExportTIFF = (bg = 'white') => {
+    const svgEl = containerRef.current?.querySelector('svg');
+    if (!svgEl) return;
+    exportTiff(svgEl, width, height, 'work_function_potential_300dpi.tif', 2.5, bg);
   };
 
   // Ticks
@@ -259,12 +278,42 @@ export function WorkFunctionChart({
           </div>
         </div>
 
-        <button
-          className="btn btn-secondary btn-sm"
-          onClick={handleExportDAT}
-          title="Download 2-column DAT profile">
-          📥 Download .DAT Profile
-        </button>
+        {/* Export Buttons: SVG, PNG (Dark/White 300 DPI), TIFF (300 DPI), DAT */}
+        <div style={{ display: 'flex', gap: '0.35rem', alignItems: 'center', flexWrap: 'wrap' }}>
+          <span style={{ fontSize: '0.74rem', color: 'var(--muted)', fontWeight: 600 }}>
+            📥 Download:
+          </span>
+          <button
+            className="btn btn-primary btn-xs"
+            onClick={handleExportSVG}
+            title="Download vector SVG format (Inkscape, Illustrator, publications)">
+            SVG
+          </button>
+          <button
+            className="btn btn-secondary btn-xs"
+            onClick={() => handleExportPNG('dark')}
+            title="Download high-resolution 300 DPI PNG (dark theme)">
+            PNG (Dark)
+          </button>
+          <button
+            className="btn btn-secondary btn-xs"
+            onClick={() => handleExportPNG('white')}
+            title="Download publication-grade 300 DPI PNG (white paper background for manuscripts)">
+            PNG (White)
+          </button>
+          <button
+            className="btn btn-secondary btn-xs"
+            onClick={() => handleExportTIFF('white')}
+            title="Download 300 DPI TIFF (.tif) for journal submissions (Elsevier, Nature, ACS, Wiley)">
+            TIFF (.tif)
+          </button>
+          <button
+            className="btn btn-secondary btn-xs"
+            onClick={handleExportDAT}
+            title="Download 2-column DAT profile for OriginLab / Python">
+            .DAT
+          </button>
+        </div>
       </div>
 
       {/* ── 2. INDICATION TOGGLES TOOLBAR (TURN ON/OFF ANY LINE OR TEXT) ── */}

@@ -1,4 +1,5 @@
 import React, { useState, useRef, useMemo } from 'react';
+import { exportSvg, exportPng, exportTiff } from '../utils/imageExport.js';
 
 /**
  * Standard Presets for Band Alignment Diagrams
@@ -96,22 +97,24 @@ export function BandAlignmentChart({
   const eH2_vac = -4.44;
   const eO2_vac = -5.67;
 
-  // Export SVG file
+  // Export image formats (SVG, PNG 300 DPI, TIFF 300 DPI)
   const handleExportSVG = () => {
-    if (!containerRef.current) return;
-    const svgEl = containerRef.current.querySelector('svg');
+    const svgEl = containerRef.current?.querySelector('svg');
     if (!svgEl) return;
-    const serializer = new XMLSerializer();
-    const source = serializer.serializeToString(svgEl);
-    const blob = new Blob([source], { type: 'image/svg+xml;charset=utf-8' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = 'band_alignment_diagram.svg';
-    a.click();
-    URL.revokeObjectURL(url);
+    exportSvg(svgEl, 'band_alignment_diagram.svg');
   };
 
+  const handleExportPNG = (bg = 'dark') => {
+    const svgEl = containerRef.current?.querySelector('svg');
+    if (!svgEl) return;
+    exportPng(svgEl, width, height, `band_alignment_${bg === 'white' ? 'white_' : ''}300dpi.png`, 3, bg);
+  };
+
+  const handleExportTIFF = (bg = 'white') => {
+    const svgEl = containerRef.current?.querySelector('svg');
+    if (!svgEl) return;
+    exportTiff(svgEl, width, height, 'band_alignment_300dpi.tif', 2.5, bg);
+  };
   // Export CSV Data
   const handleExportCSV = () => {
     const headers = ['Layer_Name', 'Type', 'CBM_eV', 'VBM_eV', 'Bandgap_eV', 'Fermi_eV', 'WorkFunction_eV'];
@@ -160,18 +163,39 @@ export function BandAlignmentChart({
           </span>
         </div>
 
-        <div style={{ display: 'flex', gap: '0.4rem' }}>
+        <div style={{ display: 'flex', gap: '0.35rem', alignItems: 'center', flexWrap: 'wrap' }}>
+          <span style={{ fontSize: '0.74rem', color: 'var(--muted)', fontWeight: 600 }}>
+            📥 Download:
+          </span>
           <button
-            className="btn btn-secondary btn-sm"
-            onClick={handleExportCSV}
-            title="Download band levels as CSV spreadsheet">
-            📊 Export CSV
+            className="btn btn-primary btn-xs"
+            onClick={handleExportSVG}
+            title="Download publication-quality vector SVG diagram (Inkscape / Illustrator)">
+            SVG
           </button>
           <button
-            className="btn btn-primary btn-sm"
-            onClick={handleExportSVG}
-            title="Download publication-quality vector SVG image">
-            📥 Download SVG Diagram
+            className="btn btn-secondary btn-xs"
+            onClick={() => handleExportPNG('dark')}
+            title="Download high-resolution 300 DPI PNG (dark theme)">
+            PNG (Dark)
+          </button>
+          <button
+            className="btn btn-secondary btn-xs"
+            onClick={() => handleExportPNG('white')}
+            title="Download publication-grade 300 DPI PNG (white paper background)">
+            PNG (White)
+          </button>
+          <button
+            className="btn btn-secondary btn-xs"
+            onClick={() => handleExportTIFF('white')}
+            title="Download 300 DPI TIFF (.tif) for journal submissions (Elsevier, Nature, ACS)">
+            TIFF (.tif)
+          </button>
+          <button
+            className="btn btn-secondary btn-xs"
+            onClick={handleExportCSV}
+            title="Download band levels as CSV spreadsheet">
+            .CSV
           </button>
         </div>
       </div>
