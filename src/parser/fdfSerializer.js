@@ -140,14 +140,25 @@ export function serializeFDF(state) {
     });
     sections.push(block('XC.mix', mixLines));
   } else {
-    sections.push(sec('Exchange-Correlation', [
+    const isHyb = dft['XC.functional'] === 'HYB';
+    const xcLines = [
       line('XC.functional',   dft['XC.functional']),
       line('XC.authors',      dft['XC.authors']),
       line('MeshCutoff',      dft.MeshCutoff),
       line('Spin',            dft.Spin && dft.Spin !== 'none' ? dft.Spin : null),
       ...d3Lines,
       ...chargeDipoleLines,
-    ]));
+    ];
+
+    if (isHyb) {
+      xcLines.push('');
+      xcLines.push('# Hybrid NAO2GTO Parameters (CPC 2026 paper)');
+      if (dft['Hybrid.NGauss']) xcLines.push(line('Hybrid.NGauss', dft['Hybrid.NGauss']));
+      if (dft['Hybrid.EpsGauss']) xcLines.push(line('Hybrid.EpsGauss', dft['Hybrid.EpsGauss']));
+      if (dft['Hybrid.ScreeningThreshold']) xcLines.push(line('Hybrid.ScreeningThreshold', dft['Hybrid.ScreeningThreshold']));
+    }
+
+    sections.push(sec(`Exchange-Correlation${isHyb ? ` (${dft['XC.authors'] || 'HSE06'} Hybrid)` : ''}`, xcLines));
   }
 
   // External Electric Field block

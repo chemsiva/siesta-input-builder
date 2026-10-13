@@ -27,6 +27,10 @@ const defaultState = {
       { func: 'GGA', author: 'PBE', weightX: '0.75', weightC: '1.00' },
       { func: 'LDA', author: 'CA',  weightX: '0.25', weightC: '0.00' },
     ],
+    // Hybrid NAO2GTO Parameters (CPC 2026 paper)
+    'Hybrid.NGauss': '4',
+    'Hybrid.EpsGauss': '5.0e-3',
+    'Hybrid.ScreeningThreshold': '1.0e-6',
     // Section 6.23: Net Charge, Dipole Correction & Electric Fields
     NetCharge: '',
     SimulateDoping: 'false',

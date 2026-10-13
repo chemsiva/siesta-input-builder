@@ -76,9 +76,73 @@ export function DFTSection() {
       </div>
 
       {func === 'HYB' && (
-        <div className="info-box" style={{ background: 'rgba(56, 189, 248, 0.1)', borderColor: 'rgba(56, 189, 248, 0.4)', margin: '0.4rem 0 0.8rem' }}>
-          ⚡ <strong>Hybrid Functional (HYB / {xcAuthor}):</strong> Emits <code>XC.functional HYB</code> and <code>XC.authors {xcAuthor}</code>.
-          Uses exact/screened exchange to predict accurate band gaps and electronic structures of semiconductors, molecules, and perovskites.
+        <div style={{ margin: '0.6rem 0 0.8rem', padding: '0.85rem', background: 'rgba(15, 23, 42, 0.65)', borderRadius: '8px', border: '1px solid var(--border)' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.35rem' }}>
+            <span style={{ fontSize: '1.1rem' }}>⚡</span>
+            <strong style={{ fontSize: '0.88rem', color: '#38bdf8' }}>
+              Hybrid NAO2GTO Parameters (CPC 2026 Paper) — {xcAuthor}
+            </strong>
+          </div>
+          <p style={{ margin: '0 0 0.75rem', fontSize: '0.78rem', color: 'var(--muted)', lineHeight: '1.45' }}>
+            In SIESTA, exact exchange evaluation in the numerical atomic orbital (NAO) basis is accelerated by expanding each orbital into a linear combination of primitive Gaussian functions (NAO2GTO).
+            This allows fast, variationally robust HSE06, PBE0, and B3LYP calculations.
+          </p>
+
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '0.8rem' }}>
+            {/* Hybrid.NGauss */}
+            <div>
+              <label style={{ fontSize: '0.76rem', fontWeight: 600, color: '#34d399', display: 'block', marginBottom: '0.2rem' }}
+                title="Number of primitive Gaussians per numerical atomic orbital (typical: 4 to 6). Higher provides higher variational accuracy.">
+                <code>Hybrid.NGauss</code>
+                <span style={{ fontSize: '0.68rem', color: 'var(--muted)', marginLeft: '4px' }}>(Gaussians / NAO)</span>
+              </label>
+              <TextInput
+                mono
+                placeholder="4"
+                value={dft['Hybrid.NGauss'] || '4'}
+                onChange={v => set('Hybrid.NGauss', v)}
+              />
+              <span style={{ fontSize: '0.71rem', color: 'var(--muted)', display: 'block', marginTop: '0.2rem' }}>
+                Expansion size: <code>4</code> provides optimal balance of speed &amp; accuracy (CPC 2026 benchmark).
+              </span>
+            </div>
+
+            {/* Hybrid.EpsGauss */}
+            <div>
+              <label style={{ fontSize: '0.76rem', fontWeight: 600, color: '#fbbf24', display: 'block', marginBottom: '0.2rem' }}
+                title="Least-squares fitting tolerance for the NAO-to-Gaussian expansion.">
+                <code>Hybrid.EpsGauss</code>
+                <span style={{ fontSize: '0.68rem', color: 'var(--muted)', marginLeft: '4px' }}>(Fitting Tolerance)</span>
+              </label>
+              <TextInput
+                mono
+                placeholder="5.0e-3"
+                value={dft['Hybrid.EpsGauss'] || '5.0e-3'}
+                onChange={v => set('Hybrid.EpsGauss', v)}
+              />
+              <span style={{ fontSize: '0.71rem', color: 'var(--muted)', display: 'block', marginTop: '0.2rem' }}>
+                Gaussian fitting residual error threshold (standard: <code>5.0e-3</code>).
+              </span>
+            </div>
+
+            {/* Hybrid.ScreeningThreshold */}
+            <div>
+              <label style={{ fontSize: '0.76rem', fontWeight: 600, color: '#a78bfa', display: 'block', marginBottom: '0.2rem' }}
+                title="Cauchy-Schwarz integral screening threshold for 4-center 2-electron integrals.">
+                <code>Hybrid.ScreeningThreshold</code>
+                <span style={{ fontSize: '0.68rem', color: 'var(--muted)', marginLeft: '4px' }}>(Integral Cutoff)</span>
+              </label>
+              <TextInput
+                mono
+                placeholder="1.0e-6"
+                value={dft['Hybrid.ScreeningThreshold'] || '1.0e-6'}
+                onChange={v => set('Hybrid.ScreeningThreshold', v)}
+              />
+              <span style={{ fontSize: '0.71rem', color: 'var(--muted)', display: 'block', marginTop: '0.2rem' }}>
+                Cauchy-Schwarz threshold to drop negligible exchange pairs (standard: <code>1.0e-6</code>).
+              </span>
+            </div>
+          </div>
         </div>
       )}
       {/* ── Advanced: Custom Hybrid Cocktail (%block XC.mix) ── */}

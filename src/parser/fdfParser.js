@@ -141,6 +141,7 @@ export function parseFDF(text) {
    'DFTD3.2BodyCutOff','DFTD3.3BodyCutOff','DFTD3.CoordinationCutoff',
    'DFTD3.s6','DFTD3.rs6','DFTD3.s8','DFTD3.rs8','DFTD3.a1','DFTD3.a2','DFTD3.alpha',
    'MM.Grimme.D3','MM.Grimme.D3.Damping','MM.Grimme.D3.s6','MM.Grimme.D3.sr6','MM.Grimme.D3.s8',
+   'Hybrid.NGauss','Hybrid.EpsGauss','Hybrid.ScreeningThreshold',
   ].forEach(k => setIfPresent(result.dft, k));
 
   // ExternalElectricField block
