@@ -272,6 +272,31 @@ export function parseFDF(text) {
   if (g('WriteEigenvalues') === 'true' || g('WriteEigenvalues') === 'T') {
     result.dos.writeEigenvalues = true;
   }
+  // Hybrid / Mixed Functional (%block XC.mix, XC.hybrid, XC.cocktail)
+  const xcMixBlock = blockMap['xcmix'] || blockMap['xchybrid'] || blockMap['xccocktail'];
+  if (xcMixBlock && xcMixBlock.length > 0) {
+    result.dft.useHybridXC = true;
+    const rows = [];
+    let startIdx = 0;
+    const firstTokens = xcMixBlock[0].trim().split(/\s+/);
+    if (firstTokens.length === 1 && !isNaN(Number(firstTokens[0]))) {
+      startIdx = 1; // skip line with integer count
+    }
+    for (let i = startIdx; i < xcMixBlock.length; i++) {
+      const parts = xcMixBlock[i].trim().split(/\s+/);
+      if (parts.length >= 2) {
+        rows.push({
+          func: parts[0],
+          author: parts[1],
+          weightX: parts[2] || '1.0',
+          weightC: parts[3] || parts[2] || '1.0',
+        });
+      }
+    }
+    if (rows.length > 0) {
+      result.dft.xcMixRows = rows;
+    }
+  }
 
   return result;
 }

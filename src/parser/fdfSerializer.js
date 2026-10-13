@@ -123,14 +123,32 @@ export function serializeFDF(state) {
     chargeDipoleLines.push(line('SlabDipoleDirection', dft.SlabDipoleDirection || 'z'));
   }
 
-  sections.push(sec('Exchange-Correlation', [
-    line('XC.functional',   dft['XC.functional']),
-    line('XC.authors',      dft['XC.authors']),
-    line('MeshCutoff',      dft.MeshCutoff),
-    line('Spin',            dft.Spin && dft.Spin !== 'none' ? dft.Spin : null),
-    ...d3Lines,
-    ...chargeDipoleLines,
-  ]));
+  if (dft.useHybridXC && dft.xcMixRows && dft.xcMixRows.length > 0) {
+    const xcLines = [
+      `# Hybrid / Mixed Functional enabled (%block XC.mix)`,
+      line('MeshCutoff',      dft.MeshCutoff),
+      line('Spin',            dft.Spin && dft.Spin !== 'none' ? dft.Spin : null),
+      ...d3Lines,
+      ...chargeDipoleLines,
+    ];
+    sections.push(sec('Exchange-Correlation', xcLines));
+
+    // %block XC.mix
+    const mixLines = [`  ${dft.xcMixRows.length}`];
+    dft.xcMixRows.forEach(row => {
+      mixLines.push(`  ${row.func || 'GGA'} ${row.author || 'PBE'} ${row.weightX ?? '1.0'} ${row.weightC ?? '1.0'}`);
+    });
+    sections.push(block('XC.mix', mixLines));
+  } else {
+    sections.push(sec('Exchange-Correlation', [
+      line('XC.functional',   dft['XC.functional']),
+      line('XC.authors',      dft['XC.authors']),
+      line('MeshCutoff',      dft.MeshCutoff),
+      line('Spin',            dft.Spin && dft.Spin !== 'none' ? dft.Spin : null),
+      ...d3Lines,
+      ...chargeDipoleLines,
+    ]));
+  }
 
   // External Electric Field block
   if (dft['ExternalElectricField.enabled'] === true || dft['ExternalElectricField.enabled'] === 'true') {

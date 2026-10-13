@@ -20,6 +20,13 @@ const defaultState = {
   },
   dft: {
     'XC.functional': 'GGA', 'XC.authors': 'PBE', MeshCutoff: '300 Ry', Spin: 'none',
+    // Section 6.2: Hybrid & Mixed Functionals (%block XC.mix)
+    useHybridXC: false,
+    hybridPreset: 'pbe0',
+    xcMixRows: [
+      { func: 'GGA', author: 'PBE', weightX: '0.75', weightC: '1.00' },
+      { func: 'LDA', author: 'CA',  weightX: '0.25', weightC: '0.00' },
+    ],
     // Section 6.23: Net Charge, Dipole Correction & Electric Fields
     NetCharge: '',
     SimulateDoping: 'false',

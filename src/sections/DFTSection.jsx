@@ -3,8 +3,9 @@ import { useFDFStore } from '../store/fdfStore';
 import { FieldRow, SelectInput, TextInput, SectionHeader } from '../components/FieldRow';
 
 const XC_MAP = {
+  GGA:  ['PBE','PBEsol','RPBE','revPBE','PW91','BLYP'],
+  HYB:  ['HSE06','PBE0','B3LYP','HSE03','B3PW91','CAM-B3LYP'],
   LDA:  ['CA','PW92'],
-  GGA:  ['PBE','PBEsol','RPBE','revPBE','PW91'],
   VDW:  ['VDW-DF','VDW-DF2','optB88','optPBE'],
   MGGA: ['SCAN','r2SCAN','MS2'],
 };
@@ -74,6 +75,167 @@ export function DFTSection() {
         </FieldRow>
       </div>
 
+      {func === 'HYB' && (
+        <div className="info-box" style={{ background: 'rgba(56, 189, 248, 0.1)', borderColor: 'rgba(56, 189, 248, 0.4)', margin: '0.4rem 0 0.8rem' }}>
+          ⚡ <strong>Hybrid Functional (HYB / {xcAuthor}):</strong> Emits <code>XC.functional HYB</code> and <code>XC.authors {xcAuthor}</code>.
+          Uses exact/screened exchange to predict accurate band gaps and electronic structures of semiconductors, molecules, and perovskites.
+        </div>
+      )}
+      {/* ── Advanced: Custom Hybrid Cocktail (%block XC.mix) ── */}
+      <div style={{ margin: '0.6rem 0 1rem' }}>
+        <label style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--muted)', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.45rem' }}>
+          <input
+            type="checkbox"
+            checked={!!dft.useHybridXC}
+            onChange={e => set('useHybridXC', e.target.checked)}
+          />
+          <span>🧪 Advanced: Custom Hybrid Cocktail / Mixing Weights (<code>%block XC.mix</code>)</span>
+        </label>
+
+        {dft.useHybridXC && (
+          <div style={{ marginTop: '0.5rem', padding: '0.75rem', background: 'var(--surface)', borderRadius: '6px', border: '1px solid var(--border)' }}>
+            <p style={{ margin: '0 0 0.5rem', fontSize: '0.78rem', color: 'var(--muted)' }}>
+              Mix custom fractions of exchange ($W_x$) and correlation ($W_c$) across LDA, GGA, and LibXC functionals into a single Hamiltonian.
+            </p>
+
+            {/* Presets */}
+            <div style={{ display: 'flex', gap: '0.4rem', alignItems: 'center', marginBottom: '0.6rem', flexWrap: 'wrap' }}>
+              <span style={{ fontSize: '0.74rem', color: 'var(--muted)', fontWeight: 600 }}>Presets:</span>
+              <button
+                type="button"
+                className="btn btn-secondary btn-xs"
+                onClick={() => {
+                  set('xcMixRows', [
+                    { func: 'GGA', author: 'PBE', weightX: '0.75', weightC: '1.00' },
+                    { func: 'LDA', author: 'CA',  weightX: '0.25', weightC: '0.00' },
+                  ]);
+                }}>
+                PBE0 (75% PBE + 25% EX)
+              </button>
+              <button
+                type="button"
+                className="btn btn-secondary btn-xs"
+                onClick={() => {
+                  set('xcMixRows', [
+                    { func: 'GGA', author: 'LIBXC-00-HYB_GGA_XC_HSE06', weightX: '1.00', weightC: '1.00' },
+                  ]);
+                }}>
+                HSE06 (LibXC)
+              </button>
+              <button
+                type="button"
+                className="btn btn-secondary btn-xs"
+                onClick={() => {
+                  set('xcMixRows', [
+                    { func: 'GGA', author: 'LIBXC-00-HYB_GGA_XC_B3LYP', weightX: '1.00', weightC: '1.00' },
+                  ]);
+                }}>
+                B3LYP (LibXC)
+              </button>
+            </div>
+
+            {/* Table */}
+            <table className="atoms-table" style={{ width: '100%', marginBottom: '0.5rem' }}>
+              <thead>
+                <tr>
+                  <th>Family</th>
+                  <th>Functional / Author</th>
+                  <th>Weight (Ex)</th>
+                  <th>Weight (Ec)</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody>
+                {(dft.xcMixRows || []).map((row, idx) => (
+                  <tr key={idx}>
+                    <td>
+                      <select
+                        className="input select"
+                        style={{ width: '85px', fontSize: '0.8rem' }}
+                        value={row.func || 'GGA'}
+                        onChange={e => {
+                          const next = [...(dft.xcMixRows || [])];
+                          next[idx] = { ...next[idx], func: e.target.value };
+                          set('xcMixRows', next);
+                        }}>
+                        <option value="GGA">GGA</option>
+                        <option value="LDA">LDA</option>
+                        <option value="MGGA">MGGA</option>
+                        <option value="VDW">VDW</option>
+                      </select>
+                    </td>
+                    <td>
+                      <input
+                        type="text"
+                        className="input mono"
+                        style={{ width: '100%', fontSize: '0.8rem' }}
+                        value={row.author || ''}
+                        placeholder="PBE or LIBXC-00-..."
+                        onChange={e => {
+                          const next = [...(dft.xcMixRows || [])];
+                          next[idx] = { ...next[idx], author: e.target.value };
+                          set('xcMixRows', next);
+                        }}
+                      />
+                    </td>
+                    <td>
+                      <input
+                        type="number"
+                        step="0.05"
+                        className="input mono"
+                        style={{ width: '70px', fontSize: '0.8rem' }}
+                        value={row.weightX ?? '1.0'}
+                        onChange={e => {
+                          const next = [...(dft.xcMixRows || [])];
+                          next[idx] = { ...next[idx], weightX: e.target.value };
+                          set('xcMixRows', next);
+                        }}
+                      />
+                    </td>
+                    <td>
+                      <input
+                        type="number"
+                        step="0.05"
+                        className="input mono"
+                        style={{ width: '70px', fontSize: '0.8rem' }}
+                        value={row.weightC ?? '1.0'}
+                        onChange={e => {
+                          const next = [...(dft.xcMixRows || [])];
+                          next[idx] = { ...next[idx], weightC: e.target.value };
+                          set('xcMixRows', next);
+                        }}
+                      />
+                    </td>
+                    <td>
+                      <button
+                        type="button"
+                        className="btn btn-secondary btn-xs"
+                        style={{ color: 'var(--error)' }}
+                        disabled={(dft.xcMixRows || []).length <= 1}
+                        onClick={() => {
+                          const next = (dft.xcMixRows || []).filter((_, i) => i !== idx);
+                          set('xcMixRows', next);
+                        }}>
+                        ✕
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+
+            <button
+              type="button"
+              className="btn btn-secondary btn-xs"
+              onClick={() => {
+                const next = [...(dft.xcMixRows || []), { func: 'GGA', author: 'PBE', weightX: '1.00', weightC: '1.00' }];
+                set('xcMixRows', next);
+              }}>
+              ➕ Add Component Row
+            </button>
+          </div>
+        )}
+      </div>
       <FieldRow label="MeshCutoff" keyword="MeshCutoff">
         <div className="input-with-unit">
           <TextInput mono value={mcVal}
