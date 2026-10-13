@@ -7,6 +7,7 @@ export function WorkFunctionChart({
 }) {
   const containerRef = useRef(null);
   const [hoverIdx, setHoverIdx] = useState(null);
+  const [legendPos, setLegendPos] = useState('top-right'); // 'top-right' | 'top-left'
 
   const width = 860;
   const height = 420;
@@ -231,12 +232,21 @@ export function WorkFunctionChart({
           </span>
         </div>
 
-        <button
-          className="btn btn-secondary btn-sm"
-          onClick={handleExportDAT}
-          title="Download 2-column DAT profile">
-          📥 Download .DAT Profile
-        </button>
+        <div style={{ display: 'flex', gap: '0.4rem', alignItems: 'center' }}>
+          <button
+            type="button"
+            className="btn btn-secondary btn-xs"
+            onClick={() => setLegendPos(prev => prev === 'top-right' ? 'top-left' : 'top-right')}
+            title="Move corner legend between Top-Right and Top-Left">
+            📍 Corner: {legendPos === 'top-right' ? 'Top-Right' : 'Top-Left'}
+          </button>
+          <button
+            className="btn btn-secondary btn-sm"
+            onClick={handleExportDAT}
+            title="Download 2-column DAT profile">
+            📥 Download .DAT Profile
+          </button>
+        </div>
       </div>
 
       {/* SVG Canvas Mount */}
@@ -301,7 +311,7 @@ export function WorkFunctionChart({
             opacity="0.12"
           />
 
-          {/* Fermi Level Horizontal Line (EF) */}
+          {/* 1. Yellow Fermi Level Line (EF) — sleek dashed reference line */}
           <g>
             <line
               x1={margin.left}
@@ -312,27 +322,18 @@ export function WorkFunctionChart({
               strokeWidth="1.8"
               strokeDasharray="5,3"
             />
-            <rect
-              x={margin.left + 8}
-              y={efY - 18}
-              width="60"
-              height="16"
-              rx="3"
-              fill="rgba(251, 191, 36, 0.25)"
-              stroke="#fbbf24"
-            />
             <text
-              x={margin.left + 38}
-              y={efY - 6}
-              textAnchor="middle"
-              fontSize="10"
+              x={margin.left + 6}
+              y={efY - 4}
+              fontSize="9"
               fill="#fbbf24"
+              fontFamily="monospace"
               fontWeight="bold">
-              E_F ({eFermi.toFixed(2)} eV)
+              E_F
             </text>
           </g>
 
-          {/* Vacuum Level Horizontal Line (V_vac) */}
+          {/* 2. Green Vacuum Level Line (V_vac) — sleek dashed reference line */}
           <g>
             <line
               x1={margin.left}
@@ -343,26 +344,18 @@ export function WorkFunctionChart({
               strokeWidth="2"
               strokeDasharray="5,3"
             />
-            <rect
-              x={margin.left + plotW - 110}
-              y={vVacY - 18}
-              width="100"
-              height="16"
-              rx="3"
-              fill="rgba(52, 211, 153, 0.25)"
-              stroke="#34d399"
-            />
             <text
-              x={margin.left + plotW - 60}
-              y={vVacY - 6}
-              textAnchor="middle"
-              fontSize="10"
+              x={margin.left + 6}
+              y={vVacY - 4}
+              fontSize="9"
               fill="#34d399"
+              fontFamily="monospace"
               fontWeight="bold">
-              V_vac ({vVacuum.toFixed(2)} eV)
+              V_vac
             </text>
           </g>
-          {/* Secondary Mean Vacuum Line if available and distinct */}
+
+          {/* 3. Purple Mean Vacuum Line (V_mean) — if available and distinct */}
           {potData.vVacMean != null && Math.abs(potData.vVacMean - vVacuum) > 0.02 && (
             <g>
               <line
@@ -374,58 +367,112 @@ export function WorkFunctionChart({
                 strokeWidth="1.4"
                 strokeDasharray="3,3"
               />
-              <rect
-                x={margin.left + plotW - 225}
-                y={getY(potData.vVacMean) - 18}
-                width="105"
-                height="16"
-                rx="3"
-                fill="rgba(167, 139, 250, 0.25)"
-                stroke="#a78bfa"
-              />
               <text
-                x={margin.left + plotW - 172}
-                y={getY(potData.vVacMean) - 6}
-                textAnchor="middle"
-                fontSize="9.5"
+                x={margin.left + 6}
+                y={getY(potData.vVacMean) - 4}
+                fontSize="8.5"
                 fill="#a78bfa"
+                fontFamily="monospace"
                 fontWeight="bold">
-                V_mean ({potData.vVacMean.toFixed(2)} eV)
+                V_mean
               </text>
             </g>
           )}
 
-          {/* Work Function Double-Headed Arrow Bracket */}
+          {/* 4. Blue Work Function Dimension Arrow (Φ = V_vac − EF) */}
           <g>
             <line
-              x1={margin.left + plotW / 2}
+              x1={margin.left + 45}
               y1={efY}
-              x2={margin.left + plotW / 2}
+              x2={margin.left + 45}
               y2={vVacY}
               stroke="#38bdf8"
               strokeWidth="2"
             />
-            <circle cx={margin.left + plotW / 2} cy={efY} r="3" fill="#38bdf8" />
-            <circle cx={margin.left + plotW / 2} cy={vVacY} r="3" fill="#38bdf8" />
-            <rect
-              x={margin.left + plotW / 2 + 10}
-              y={(efY + vVacY) / 2 - 12}
-              width="86"
-              height="22"
-              rx="4"
-              fill="rgba(15, 23, 42, 0.9)"
-              stroke="#38bdf8"
-            />
+            <circle cx={margin.left + 45} cy={efY} r="3" fill="#38bdf8" />
+            <circle cx={margin.left + 45} cy={vVacY} r="3" fill="#38bdf8" />
             <text
-              x={margin.left + plotW / 2 + 53}
+              x={margin.left + 52}
               y={(efY + vVacY) / 2 + 3}
-              textAnchor="middle"
-              fontSize="11"
+              fontSize="10"
               fill="#38bdf8"
               fontWeight="bold">
-              Φ = {workFunction.toFixed(2)} eV
+              Φ
             </text>
           </g>
+
+          {/* 5. SEPARATED LINE-BY-LINE CORNER LEGEND CARD — ZERO OVERLAPPING */}
+          {(() => {
+            const hasMean = potData.vVacMean != null && Math.abs(potData.vVacMean - vVacuum) > 0.02;
+            const cardW = 215;
+            const cardH = hasMean ? 116 : 96;
+            const cardX = legendPos === 'top-left'
+              ? margin.left + 16
+              : margin.left + plotW - cardW - 14;
+            const cardY = margin.top + 10;
+
+            return (
+              <g transform={`translate(${cardX}, ${cardY})`}>
+                {/* Semi-transparent dark background card */}
+                <rect
+                  x={0}
+                  y={0}
+                  width={cardW}
+                  height={cardH}
+                  rx={6}
+                  fill="rgba(15, 23, 42, 0.94)"
+                  stroke="rgba(255, 255, 255, 0.16)"
+                  strokeWidth="1.2"
+                />
+
+                {/* Title */}
+                <text x={10} y={15} fontSize="9.5" fontWeight="bold" fill="#f8fafc">
+                  ⚡ Potential Levels &amp; Work Function
+                </text>
+                <line x1={10} y1={21} x2={cardW - 10} y2={21} stroke="rgba(255,255,255,0.12)" strokeWidth="0.8" />
+
+                {/* Line 1: Green Vacuum Level */}
+                <g transform="translate(10, 37)">
+                  <line x1={0} y1={-3} x2={16} y2={-3} stroke="#34d399" strokeWidth="2.5" strokeDasharray="3,2" />
+                  <text x={22} y={0} fontSize="9" fill="#34d399" fontWeight="600">V_vac (Vacuum):</text>
+                  <text x={cardW - 20} y={0} textAnchor="end" fontSize="9.5" fontFamily="monospace" fill="#34d399" fontWeight="bold">
+                    {vVacuum.toFixed(3)} eV
+                  </text>
+                </g>
+
+                {/* Line 2: Purple Mean Vacuum Level (if available) */}
+                {hasMean && (
+                  <g transform="translate(10, 56)">
+                    <line x1={0} y1={-3} x2={16} y2={-3} stroke="#a78bfa" strokeWidth="2" strokeDasharray="3,2" />
+                    <text x={22} y={0} fontSize="9" fill="#a78bfa" fontWeight="600">V_mean (Mean):</text>
+                    <text x={cardW - 20} y={0} textAnchor="end" fontSize="9.5" fontFamily="monospace" fill="#a78bfa" fontWeight="bold">
+                      {potData.vVacMean.toFixed(3)} eV
+                    </text>
+                  </g>
+                )}
+
+                {/* Line 3: Yellow Fermi Energy */}
+                <g transform={`translate(10, ${hasMean ? 75 : 56})`}>
+                  <line x1={0} y1={-3} x2={16} y2={-3} stroke="#fbbf24" strokeWidth="2" strokeDasharray="3,2" />
+                  <text x={22} y={0} fontSize="9" fill="#fbbf24" fontWeight="600">E_F (Fermi):</text>
+                  <text x={cardW - 20} y={0} textAnchor="end" fontSize="9.5" fontFamily="monospace" fill="#fbbf24" fontWeight="bold">
+                    {eFermi.toFixed(3)} eV
+                  </text>
+                </g>
+
+                {/* Line 4: Blue Work Function */}
+                <g transform={`translate(10, ${hasMean ? 94 : 75})`}>
+                  <line x1={0} y1={-3} x2={16} y2={-3} stroke="#38bdf8" strokeWidth="2.5" />
+                  <circle cx={0} cy={-3} r="1.8" fill="#38bdf8" />
+                  <circle cx={16} cy={-3} r="1.8" fill="#38bdf8" />
+                  <text x={22} y={0} fontSize="9.2" fill="#38bdf8" fontWeight="bold">Φ (Work Function):</text>
+                  <text x={cardW - 20} y={0} textAnchor="end" fontSize="10" fontFamily="monospace" fill="#38bdf8" fontWeight="800">
+                    {workFunction.toFixed(3)} eV
+                  </text>
+                </g>
+              </g>
+            );
+          })()}
 
           {/* Potential Curve V_bar(z) */}
           <path d={potPath} fill="none" stroke="#e2e8f0" strokeWidth="2.2" />
