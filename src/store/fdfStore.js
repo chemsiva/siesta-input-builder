@@ -62,13 +62,27 @@ const defaultState = {
     'PAO.BasisType': 'split',
     'PAO.EnergyShift': '100 meV',
     'PAO.SplitNorm': '0.15',
-    // Section 6.3 Basis Set Options
+    // Section 6.3.3 Basis Sizes & Per-Species
+    usePerSpeciesBasisSizes: false,
+    speciesBasisSizes: {},
+    // Section 6.3.5 Multiple-Zeta Generation
     'PAO.SplitNormH': '',
     'PAO.SplitTailNorm': 'true',
+    'PAO.SplitValence.Legacy': 'false',
+    'PAO.FixSplitTable': 'false',
+    'PAO.EnergyCutoff': '20 Ry',
+    'PAO.EnergyPolCutoff': '20 Ry',
+    'PAO.ContractionCutoff': '0',
+    // Section 6.3.6 Polarization Options
+    'PAO.Polarization.NonPerturbative': 'false',
+    'PAO.Polarization.Rc-Expansion-Factor': '1.0',
+    'PAO.Polarization.NonPerturbative.Fallback': 'true',
+    usePerSpeciesPolarization: false,
+    speciesPolarizationSchemes: {},
+    // Confinement & Sparsity
     'PAO.SoftDefault': 'true',
     'PAO.SoftInnerRadius': '0.9',
     'PAO.SoftPotential': '40 Ry',
-    'PAO.Polarization.NonPerturbative': 'false',
     'BasisPressure': '',
     'Write.Graphviz': 'none',
     'User.Basis': 'false',

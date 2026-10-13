@@ -178,12 +178,13 @@ export function parseFDF(text) {
   if (!g('XC.functional') && g('xc.functional')) result.dft['XC.functional'] = g('xc.functional');
   if (!g('XC.authors') && g('xc.authors')) result.dft['XC.authors'] = g('xc.authors');
 
-  // Basis
+  // Basis (Section 6.3)
   ['PAO.BasisSize','PAO.BasisType','PAO.EnergyShift','PAO.SplitNorm',
-   'PAO.SplitNormH','PAO.SplitTailNorm','PAO.SoftDefault','PAO.SoftInnerRadius',
-   'PAO.SoftPotential','PAO.Polarization.NonPerturbative',
+   'PAO.SplitNormH','PAO.SplitTailNorm','PAO.SplitValence.Legacy','PAO.FixSplitTable',
+   'PAO.EnergyCutoff','PAO.EnergyPolCutoff','PAO.ContractionCutoff',
+   'PAO.SoftDefault','PAO.SoftInnerRadius','PAO.SoftPotential',
+   'PAO.Polarization.NonPerturbative','PAO.Polarization.Rc-Expansion-Factor','PAO.Polarization.NonPerturbative.Fallback',
    'BasisPressure','Write.Graphviz','User.Basis','FilterCutoff'].forEach(k => setIfPresent(result.basis, k));
-
   // SCF
   ['MaxSCFIterations','DM.Tolerance','DM.MixingWeight','DM.NumberPulay',
    'SCF.MustConverge','ElectronicTemperature','SolutionMethod','DM.UseSaveDM',
@@ -296,6 +297,30 @@ export function parseFDF(text) {
     if (rows.length > 0) {
       result.dft.xcMixRows = rows;
     }
+  }
+
+  // %block PAO.BasisSizes (Section 6.3.3)
+  const basisSizesBlock = blockMap['paobasissizes'];
+  if (basisSizesBlock && basisSizesBlock.length > 0) {
+    result.basis.usePerSpeciesBasisSizes = true;
+    const sizes = {};
+    basisSizesBlock.forEach(l => {
+      const parts = l.trim().split(/\s+/);
+      if (parts.length >= 2) sizes[parts[0]] = parts[1];
+    });
+    result.basis.speciesBasisSizes = sizes;
+  }
+
+  // %block PAO.Polarization.Scheme (Section 6.3.6)
+  const polSchemeBlock = blockMap['paopolarizationscheme'];
+  if (polSchemeBlock && polSchemeBlock.length > 0) {
+    result.basis.usePerSpeciesPolarization = true;
+    const schemes = {};
+    polSchemeBlock.forEach(l => {
+      const parts = l.trim().split(/\s+/);
+      if (parts.length >= 2) schemes[parts[0]] = parts.slice(1).join(' ');
+    });
+    result.basis.speciesPolarizationSchemes = schemes;
   }
 
   return result;

@@ -199,22 +199,45 @@ export function serializeFDF(state) {
 
 
   // ── Basis Set (Section 6.3) ───────────────────────────────────────────────
-  sections.push(sec('Basis Set', [
+  const basisLines = [
     line('PAO.BasisSize',   basis['PAO.BasisSize']),
     line('PAO.BasisType',   basis['PAO.BasisType']),
     line('PAO.EnergyShift', basis['PAO.EnergyShift']),
     basis['PAO.SplitNorm'] ? line('PAO.SplitNorm', basis['PAO.SplitNorm']) : null,
     basis['PAO.SplitNormH'] ? line('PAO.SplitNormH', basis['PAO.SplitNormH']) : null,
-    basis['PAO.SplitTailNorm'] !== 'false' && basis['PAO.SplitTailNorm'] ? line('PAO.SplitTailNorm', 'true') : null,
+    basis['PAO.SplitTailNorm'] === 'false' ? line('PAO.SplitTailNorm', 'false') : null,
+    bool(basis['PAO.SplitValence.Legacy']) === 'true' ? line('PAO.SplitValence.Legacy', 'true') : null,
+    bool(basis['PAO.FixSplitTable']) === 'true' ? line('PAO.FixSplitTable', 'true') : null,
+    // Filteret multiple-zeta generation (when PAO.BasisType is filteret)
+    basis['PAO.BasisType'] === 'filteret' && basis['PAO.EnergyCutoff'] ? line('PAO.EnergyCutoff', basis['PAO.EnergyCutoff']) : null,
+    basis['PAO.BasisType'] === 'filteret' && basis['PAO.EnergyPolCutoff'] ? line('PAO.EnergyPolCutoff', basis['PAO.EnergyPolCutoff']) : null,
+    basis['PAO.BasisType'] === 'filteret' && basis['PAO.ContractionCutoff'] ? line('PAO.ContractionCutoff', basis['PAO.ContractionCutoff']) : null,
+    // Confinement
     basis['PAO.SoftDefault'] !== 'false' && basis['PAO.SoftDefault'] ? line('PAO.SoftDefault', 'true') : null,
     basis['PAO.SoftInnerRadius'] ? line('PAO.SoftInnerRadius', basis['PAO.SoftInnerRadius']) : null,
     basis['PAO.SoftPotential'] ? line('PAO.SoftPotential', basis['PAO.SoftPotential']) : null,
-    bool(basis['PAO.Polarization.NonPerturbative']) === 'true' ? line('PAO.Polarization.NonPerturbative', 'true') : null,
     basis['BasisPressure'] ? line('BasisPressure', basis['BasisPressure']) : null,
+    // Polarization (Section 6.3.6)
+    bool(basis['PAO.Polarization.NonPerturbative']) === 'true' ? line('PAO.Polarization.NonPerturbative', 'true') : null,
+    basis['PAO.Polarization.Rc-Expansion-Factor'] && basis['PAO.Polarization.Rc-Expansion-Factor'] !== '1.0' ? line('PAO.Polarization.Rc-Expansion-Factor', basis['PAO.Polarization.Rc-Expansion-Factor']) : null,
+    basis['PAO.Polarization.NonPerturbative.Fallback'] === 'false' ? line('PAO.Polarization.NonPerturbative.Fallback', 'false') : null,
     basis['Write.Graphviz'] && basis['Write.Graphviz'] !== 'none' ? line('Write.Graphviz', basis['Write.Graphviz']) : null,
     bool(basis['User.Basis']) === 'true' ? line('User.Basis', 'true') : null,
     basis['FilterCutoff'] ? line('FilterCutoff', basis['FilterCutoff']) : null,
-  ]));
+  ];
+  sections.push(sec('Basis Set', basisLines));
+
+  // %block PAO.BasisSizes (Section 6.3.3)
+  if (basis.usePerSpeciesBasisSizes && basis.speciesBasisSizes && Object.keys(basis.speciesBasisSizes).length > 0) {
+    const sizeRows = Object.entries(basis.speciesBasisSizes).map(([sp, sz]) => `  ${sp}  ${sz}`);
+    sections.push(block('PAO.BasisSizes', sizeRows));
+  }
+
+  // %block PAO.Polarization.Scheme (Section 6.3.6)
+  if (basis.usePerSpeciesPolarization && basis.speciesPolarizationSchemes && Object.keys(basis.speciesPolarizationSchemes).length > 0) {
+    const polRows = Object.entries(basis.speciesPolarizationSchemes).map(([sp, sch]) => `  ${sp}  ${sch}`);
+    sections.push(block('PAO.Polarization.Scheme', polRows));
+  }
 
   // ── SCF ───────────────────────────────────────────────────────────────────
   sections.push(sec('SCF', [

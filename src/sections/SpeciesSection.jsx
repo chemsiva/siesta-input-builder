@@ -19,7 +19,7 @@ const ELEMENTS = [
 ];
 
 const BASIS_SIZES = ['SZ','SZP','DZ','DZP','DZDP','TZP','TZDP'];
-const BASIS_TYPES = ['split','splitgauss','nodes','nonodes'];
+const BASIS_TYPES = ['split','splitgauss','nodes','nonodes','filteret'];
 
 export function SpeciesSection() {
   const structure = useFDFStore(s => s.structure);
@@ -274,6 +274,48 @@ export function SpeciesSection() {
           </FieldRow>
         </div>
 
+        {/* Section 6.3.3: Per-Species Basis Sizes (%block PAO.BasisSizes) */}
+        <div style={{ margin: '0.6rem 0', padding: '0.6rem', background: 'var(--surface)', borderRadius: '6px', border: '1px solid var(--border)' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <span style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--accent)' }}>
+              🎯 Per-Species Basis Sizes (%block PAO.BasisSizes)
+            </span>
+            <label className="toggle">
+              <input type="checkbox"
+                checked={!!basis.usePerSpeciesBasisSizes}
+                onChange={e => setField('basis', 'usePerSpeciesBasisSizes', e.target.checked)} />
+              <span className="toggle-label">{basis.usePerSpeciesBasisSizes ? 'Custom Sizes Active' : 'Off (Use Global Size)'}</span>
+            </label>
+          </div>
+
+          {basis.usePerSpeciesBasisSizes && (
+            <div style={{ marginTop: '0.5rem' }}>
+              <p style={{ margin: '0 0 0.4rem', fontSize: '0.78rem', color: 'var(--muted)' }}>
+                Specify custom basis sizes for each species (e.g. Si DZ, H DZP, O SZP):
+              </p>
+              {species.length > 0 ? (
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: '0.5rem' }}>
+                  {species.map(sp => (
+                    <div key={sp.idx} style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', background: 'rgba(15,23,42,0.4)', padding: '0.3rem 0.5rem', borderRadius: '4px' }}>
+                      <strong style={{ fontSize: '0.82rem', width: '35px' }}>{sp.label}:</strong>
+                      <SelectInput
+                        value={basis.speciesBasisSizes?.[sp.label] || basis['PAO.BasisSize'] || 'DZP'}
+                        onChange={v => {
+                          const next = { ...(basis.speciesBasisSizes || {}), [sp.label]: v };
+                          setField('basis', 'speciesBasisSizes', next);
+                        }}
+                        options={BASIS_SIZES}
+                      />
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="hint">Define chemical species above to configure per-species basis sizes.</div>
+              )}
+            </div>
+          )}
+        </div>
+
         <div className="field-row-group">
           <FieldRow label="PAO.EnergyShift" keyword="PAO.EnergyShift">
             <TextInput mono value={basis['PAO.EnergyShift']}
@@ -298,6 +340,130 @@ export function SpeciesSection() {
           </FieldRow>
         </div>
 
+        {/* Section 6.3.5: Multiple-Zeta & Filteret Options */}
+        <div style={{ margin: '0.6rem 0', padding: '0.6rem', background: 'var(--surface)', borderRadius: '6px', border: '1px solid var(--border)' }}>
+          <div style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--accent)', marginBottom: '0.4rem' }}>
+            Multiple-Zeta Generation &amp; Tail Norm (Section 6.3.5)
+          </div>
+
+          <div className="field-row-group">
+            <FieldRow label="PAO.SplitTailNorm" keyword="PAO.SplitTailNorm">
+              <SelectInput
+                value={basis['PAO.SplitTailNorm'] !== 'false' ? 'true' : 'false'}
+                onChange={v => setField('basis', 'PAO.SplitTailNorm', v)}
+                options={[
+                  { value: 'true',  label: 'true  — Shorter higher-zeta cutoffs (recommended in v5)' },
+                  { value: 'false', label: 'false — Longer cutoffs (legacy tail+parabola norm)' },
+                ]} />
+            </FieldRow>
+
+            <FieldRow label="PAO.SplitValence.Legacy" keyword="PAO.SplitValence.Legacy">
+              <label className="toggle">
+                <input type="checkbox"
+                  checked={basis['PAO.SplitValence.Legacy'] === 'true'}
+                  onChange={e => setField('basis', 'PAO.SplitValence.Legacy', e.target.checked ? 'true' : 'false')} />
+                <span className="toggle-label">Recover legacy v4 split-valence settings</span>
+              </label>
+            </FieldRow>
+          </div>
+
+          {basis['PAO.SplitValence.Legacy'] === 'true' && (
+            <FieldRow label="PAO.FixSplitTable" keyword="PAO.FixSplitTable">
+              <label className="toggle">
+                <input type="checkbox"
+                  checked={basis['PAO.FixSplitTable'] === 'true'}
+                  onChange={e => setField('basis', 'PAO.FixSplitTable', e.target.checked ? 'true' : 'false')} />
+                <span className="toggle-label">Apply damping function to tail (forces table to zero)</span>
+              </label>
+            </FieldRow>
+          )}
+
+          {basis['PAO.BasisType'] === 'filteret' && (
+            <div style={{ marginTop: '0.5rem', padding: '0.5rem', background: 'rgba(15,23,42,0.4)', borderRadius: '4px' }}>
+              <div style={{ fontSize: '0.78rem', fontWeight: 600, color: 'var(--accent)', marginBottom: '0.3rem' }}>
+                Filteret Basis Generation Parameters
+              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: '0.5rem' }}>
+                <FieldRow label="PAO.EnergyCutoff" keyword="PAO.EnergyCutoff">
+                  <TextInput mono placeholder="20 Ry" value={basis['PAO.EnergyCutoff'] || '20 Ry'} onChange={v => setField('basis', 'PAO.EnergyCutoff', v)} />
+                </FieldRow>
+                <FieldRow label="PAO.EnergyPolCutoff" keyword="PAO.EnergyPolCutoff">
+                  <TextInput mono placeholder="20 Ry" value={basis['PAO.EnergyPolCutoff'] || '20 Ry'} onChange={v => setField('basis', 'PAO.EnergyPolCutoff', v)} />
+                </FieldRow>
+                <FieldRow label="PAO.ContractionCutoff" keyword="PAO.ContractionCutoff">
+                  <TextInput mono placeholder="0" value={basis['PAO.ContractionCutoff'] || '0'} onChange={v => setField('basis', 'PAO.ContractionCutoff', v)} />
+                </FieldRow>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Section 6.3.6: Polarization-Orbital Options */}
+        <div style={{ margin: '0.6rem 0', padding: '0.6rem', background: 'var(--surface)', borderRadius: '6px', border: '1px solid var(--border)' }}>
+          <div style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--accent)', marginBottom: '0.4rem' }}>
+            Polarization Orbitals (Section 6.3.6)
+          </div>
+
+          <div className="field-row-group">
+            <FieldRow label="PAO.Polarization.NonPerturbative" keyword="PAO.Polarization.NonPerturbative">
+              <SelectInput
+                value={basis['PAO.Polarization.NonPerturbative'] === 'true' ? 'true' : 'false'}
+                onChange={v => setField('basis', 'PAO.Polarization.NonPerturbative', v)}
+                options={[
+                  { value: 'false', label: 'false — Perturbative (electric field, standard)' },
+                  { value: 'true',  label: 'true  — Non-perturbative (explicit shells)' },
+                ]} />
+            </FieldRow>
+
+            <FieldRow label="Rc-Expansion-Factor" keyword="PAO.Polarization.Rc-Expansion-Factor">
+              <TextInput mono placeholder="1.0" value={basis['PAO.Polarization.Rc-Expansion-Factor'] || '1.0'}
+                onChange={v => setField('basis', 'PAO.Polarization.Rc-Expansion-Factor', v)} />
+            </FieldRow>
+          </div>
+
+          <div className="field-row-group">
+            <FieldRow label="NonPerturbative.Fallback" keyword="PAO.Polarization.NonPerturbative.Fallback">
+              <label className="toggle">
+                <input type="checkbox"
+                  checked={basis['PAO.Polarization.NonPerturbative.Fallback'] !== 'false'}
+                  onChange={e => setField('basis', 'PAO.Polarization.NonPerturbative.Fallback', e.target.checked ? 'true' : 'false')} />
+                <span className="toggle-label">Auto-fallback for node conflicts (e.g. Ge 3d)</span>
+              </label>
+            </FieldRow>
+
+            <FieldRow label="Per-Species Polarization" keyword="PAO.Polarization.Scheme">
+              <label className="toggle">
+                <input type="checkbox"
+                  checked={!!basis.usePerSpeciesPolarization}
+                  onChange={e => setField('basis', 'usePerSpeciesPolarization', e.target.checked)} />
+                <span className="toggle-label">%block PAO.Polarization.Scheme</span>
+              </label>
+            </FieldRow>
+          </div>
+
+          {basis.usePerSpeciesPolarization && species.length > 0 && (
+            <div style={{ marginTop: '0.5rem', padding: '0.4rem', background: 'rgba(15,23,42,0.4)', borderRadius: '4px' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '0.5rem' }}>
+                {species.map(sp => (
+                  <div key={sp.idx} style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                    <strong style={{ fontSize: '0.82rem', width: '35px' }}>{sp.label}:</strong>
+                    <SelectInput
+                      value={basis.speciesPolarizationSchemes?.[sp.label] || 'perturbative'}
+                      onChange={v => {
+                        const next = { ...(basis.speciesPolarizationSchemes || {}), [sp.label]: v };
+                        setField('basis', 'speciesPolarizationSchemes', next);
+                      }}
+                      options={[
+                        { value: 'perturbative',     label: 'perturbative' },
+                        { value: 'non-perturbative', label: 'non-perturbative' },
+                      ]}
+                    />
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
         {/* Soft-Confinement & Graphviz Options */}
         <div style={{ marginTop: '0.6rem', padding: '0.6rem', background: 'var(--surface)', borderRadius: '6px', border: '1px solid var(--border)' }}>
           <div style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--accent)', marginBottom: '0.4rem' }}>
