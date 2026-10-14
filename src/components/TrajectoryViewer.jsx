@@ -31,6 +31,7 @@ export function TrajectoryViewer({ aniData, cellVectors }) {
   const [rotX, setRotX] = useState(0.3);
   const [rotY, setRotY] = useState(0.4);
   const [zoom, setZoom] = useState(1.0);
+  const [pan, setPan] = useState({ x: 0, y: 0 });
   const isDraggingRef = useRef(false);
   const lastMouseRef = useRef({ x: 0, y: 0 });
 
@@ -380,8 +381,8 @@ export function TrajectoryViewer({ aniData, cellVectors }) {
       const sc = baseScale * zoom * pers;
 
       return {
-        sx: w / 2 + x1 * sc,
-        sy: h / 2 - y1 * sc,
+        sx: w / 2 + pan.x + x1 * sc,
+        sy: h / 2 + pan.y - y1 * sc,
         depth: z2,
         scale: sc,
       };
@@ -505,7 +506,7 @@ export function TrajectoryViewer({ aniData, cellVectors }) {
       ctx.lineWidth = 0.5;
       ctx.stroke();
     });
-  }, [currentFrame, frames, showBonds, showCell, rotX, rotY, zoom, engineMode, cellVectors]);
+  }, [currentFrame, frames, showBonds, showCell, rotX, rotY, zoom, pan, engineMode, cellVectors]);
 
   // ═══════════════════════════════════════════════════════════════════════════
   // Animation Player Timer
@@ -537,6 +538,7 @@ export function TrajectoryViewer({ aniData, cellVectors }) {
     if (engineMode === 'webgl' && cameraRef.current && controlsRef.current) {
       const camDist = Math.max(18, maxRadiusRef.current * 2.5);
       cameraRef.current.position.set(0, 0, camDist);
+      cameraRef.current.up.set(0, 1, 0);
       cameraRef.current.lookAt(0, 0, 0);
       controlsRef.current.target.set(0, 0, 0);
       controlsRef.current.update();
@@ -544,6 +546,88 @@ export function TrajectoryViewer({ aniData, cellVectors }) {
       setRotX(0.3);
       setRotY(0.4);
       setZoom(1.0);
+      setPan({ x: 0, y: 0 });
+    }
+  };
+
+  const rotateCamera = (deltaYaw, deltaPitch) => {
+    if (engineMode === 'webgl' && cameraRef.current && controlsRef.current) {
+      const camera = cameraRef.current;
+      const target = controlsRef.current.target;
+      const offset = new THREE.Vector3().subVectors(camera.position, target);
+      const spherical = new THREE.Spherical().setFromVector3(offset);
+      spherical.theta += deltaYaw;
+      spherical.phi = Math.max(0.04, Math.min(Math.PI - 0.04, spherical.phi + deltaPitch));
+      offset.setFromSpherical(spherical);
+      camera.position.copy(target).add(offset);
+      camera.lookAt(target);
+      controlsRef.current.update();
+    } else {
+      setRotY(y => y + deltaYaw);
+      setRotX(x => x + deltaPitch);
+    }
+  };
+
+  const panCamera = (deltaX, deltaY) => {
+    if (engineMode === 'webgl' && cameraRef.current && controlsRef.current) {
+      const camera = cameraRef.current;
+      const controls = controlsRef.current;
+      const vRight = new THREE.Vector3(1, 0, 0).applyQuaternion(camera.quaternion);
+      const vUp = new THREE.Vector3(0, 1, 0).applyQuaternion(camera.quaternion);
+      const dist = camera.position.distanceTo(controls.target);
+      const step = Math.max(1.2, dist * 0.08);
+      const panOffset = new THREE.Vector3()
+        .addScaledVector(vRight, deltaX * step)
+        .addScaledVector(vUp, deltaY * step);
+      camera.position.add(panOffset);
+      controls.target.add(panOffset);
+      controls.update();
+    } else {
+      setPan(p => ({ x: p.x + deltaX * 25, y: p.y - deltaY * 25 }));
+    }
+  };
+
+  const zoomCamera = (factor) => {
+    if (engineMode === 'webgl' && cameraRef.current && controlsRef.current) {
+      const camera = cameraRef.current;
+      const target = controlsRef.current.target;
+      const offset = new THREE.Vector3().subVectors(camera.position, target);
+      offset.multiplyScalar(factor);
+      camera.position.copy(target).add(offset);
+      controlsRef.current.update();
+    } else {
+      setZoom(z => Math.max(0.2, Math.min(5.0, z * (factor < 1 ? 1.2 : 0.8))));
+    }
+  };
+
+  const setViewPlane = (plane) => {
+    const camDist = Math.max(18, maxRadiusRef.current * 2.5);
+    if (engineMode === 'webgl' && cameraRef.current && controlsRef.current) {
+      const camera = cameraRef.current;
+      controlsRef.current.target.set(0, 0, 0);
+
+      if (plane === 'xy') {
+        camera.position.set(0, 0, camDist);
+        camera.up.set(0, 1, 0);
+      } else if (plane === 'xz') {
+        camera.position.set(0, -camDist, 0.001);
+        camera.up.set(0, 0, 1);
+      } else if (plane === 'yz') {
+        camera.position.set(camDist, 0, 0.001);
+        camera.up.set(0, 0, 1);
+      }
+      camera.lookAt(0, 0, 0);
+      controlsRef.current.update();
+    } else {
+      setPan({ x: 0, y: 0 });
+      setZoom(1.0);
+      if (plane === 'xy') {
+        setRotX(0); setRotY(0);
+      } else if (plane === 'xz') {
+        setRotX(Math.PI / 2); setRotY(0);
+      } else if (plane === 'yz') {
+        setRotX(Math.PI / 2); setRotY(Math.PI / 2);
+      }
     }
   };
 
@@ -692,6 +776,82 @@ export function TrajectoryViewer({ aniData, cellVectors }) {
             onClick={handleResetCamera}
             title="Reset camera orientation and zoom">
             🎯 Center View
+          </button>
+        </div>
+      </div>
+      {/* Camera Directional Navigation Toolbar (Pan, Rotate, Zoom) */}
+      <div style={{
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        flexWrap: 'wrap',
+        gap: '0.4rem',
+        marginTop: '0.4rem',
+        padding: '0.35rem 0.6rem',
+        background: 'var(--surface2)',
+        borderRadius: '5px',
+        border: '1px solid var(--border)',
+      }}>
+        {/* Move / Slide Controls */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', flexWrap: 'wrap' }}>
+          <span style={{ fontSize: '0.7rem', color: 'var(--muted)', fontWeight: 600 }}>
+            ✋ Slide:
+          </span>
+          <button type="button" className="btn btn-xs btn-secondary" onClick={() => panCamera(-1, 0)} title="Slide Left">
+            ⬅️ Left
+          </button>
+          <button type="button" className="btn btn-xs btn-secondary" onClick={() => panCamera(1, 0)} title="Slide Right">
+            ➡️ Right
+          </button>
+          <button type="button" className="btn btn-xs btn-secondary" onClick={() => panCamera(0, 1)} title="Move Up">
+            ⬆️ Up
+          </button>
+          <button type="button" className="btn btn-xs btn-secondary" onClick={() => panCamera(0, -1)} title="Move Down">
+            ⬇️ Down
+          </button>
+        </div>
+
+        {/* Rotate / Tilt Controls */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', flexWrap: 'wrap' }}>
+          <span style={{ fontSize: '0.7rem', color: 'var(--muted)', fontWeight: 600 }}>
+            🔄 Rotate:
+          </span>
+          <button type="button" className="btn btn-xs btn-secondary" onClick={() => rotateCamera(-0.15, 0)} title="Rotate Left">
+            ↺ Left
+          </button>
+          <button type="button" className="btn btn-xs btn-secondary" onClick={() => rotateCamera(0.15, 0)} title="Rotate Right">
+            ↻ Right
+          </button>
+          <button type="button" className="btn btn-xs btn-secondary" onClick={() => rotateCamera(0, -0.15)} title="Tilt Up / Top">
+            🔼 Top
+          </button>
+          <button type="button" className="btn btn-xs btn-secondary" onClick={() => rotateCamera(0, 0.15)} title="Tilt Down">
+            🔽 Down
+          </button>
+        </div>
+
+        {/* Zoom & View Presets */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', flexWrap: 'wrap' }}>
+          <span style={{ fontSize: '0.7rem', color: 'var(--muted)', fontWeight: 600 }}>
+            🔍 Views:
+          </span>
+          <button type="button" className="btn btn-xs btn-secondary" onClick={() => zoomCamera(0.85)} title="Zoom In">
+            ➕
+          </button>
+          <button type="button" className="btn btn-xs btn-secondary" onClick={() => zoomCamera(1.18)} title="Zoom Out">
+            ➖
+          </button>
+          <button type="button" className="btn btn-xs btn-secondary" onClick={() => setViewPlane('xy')} title="Top View (XY Plane)">
+            XY
+          </button>
+          <button type="button" className="btn btn-xs btn-secondary" onClick={() => setViewPlane('xz')} title="Front View (XZ Plane)">
+            XZ
+          </button>
+          <button type="button" className="btn btn-xs btn-secondary" onClick={() => setViewPlane('yz')} title="Side View (YZ Plane)">
+            YZ
+          </button>
+          <button type="button" className="btn btn-xs btn-secondary" onClick={handleResetCamera} title="Reset Camera to Center">
+            🎯 Reset
           </button>
         </div>
       </div>
