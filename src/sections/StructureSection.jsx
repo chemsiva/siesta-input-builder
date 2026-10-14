@@ -1,4 +1,5 @@
 import { useRef, useState, lazy, Suspense } from 'react';
+import { ErrorBoundary } from '../components/ErrorBoundary.jsx';
 const CrystalViewer = lazy(() => import('../components/CrystalViewer').then(m => ({ default: m.CrystalViewer })));
 import { addVacuumToStructure, centerSlabInCell, buildSupercell } from '../utils/slabBuilder';
 import { useFDFStore } from '../store/fdfStore';
@@ -110,9 +111,11 @@ export function StructureSection() {
       </div>
 
       {showViewer && (
-        <Suspense fallback={<div className="info-box">Loading 3D Visualizer...</div>}>
-          <CrystalViewer structure={structure} />
-        </Suspense>
+        <ErrorBoundary componentName="3D Crystal Visualizer">
+          <Suspense fallback={<div className="info-box">Loading 3D Visualizer...</div>}>
+            <CrystalViewer structure={structure} />
+          </Suspense>
+        </ErrorBoundary>
       )}
       {/* Slab & Vacuum Tools */}
       <div className="subsection">
