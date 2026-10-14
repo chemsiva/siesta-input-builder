@@ -5,18 +5,31 @@ import { serializeFDF } from '../parser/fdfSerializer.js';
 import templates from '../data/templates.json';
 
 const defaultState = {
-  system:    { SystemLabel: 'siesta', SystemName: '', NumberOfAtoms: '', NumberOfSpecies: '' },
+  system:    { SystemLabel: 'silicon', SystemName: 'Bulk Silicon (Diamond)', NumberOfAtoms: '8', NumberOfSpecies: '1' },
   structure: {
-    LatticeConstant: '1.0 Ang',
-    LatticeVectors: [[1,0,0],[0,1,0],[0,0,1]],
+    LatticeConstant: '5.4300 Ang',
+    LatticeVectors: [
+      [1.0, 0.0, 0.0],
+      [0.0, 1.0, 0.0],
+      [0.0, 0.0, 1.0]
+    ],
     LatticeParameters: null,
     _useLatticeParameters: false,
     AtomicCoordinatesFormat: 'Fractional',
-    AtomicCoordinatesOrigin: 'none', // Section 6.4: 'none' | 'COP' | 'COM' | 'MIN' | 'COP-Z' | 'COM-Z' | 'MIN-Z'
-    AtomCoorFormatOut: '',          // Section 6.4: '' | 'Fractional' | 'Ang' | 'Bohr'
-    SuperCell: null,                // Section 6.4: 3x3 integer matrix or null
-    species: [],
-    atoms: [],
+    AtomicCoordinatesOrigin: 'none',
+    AtomCoorFormatOut: '',
+    SuperCell: null,
+    species: [{ idx: 1, z: 14, label: 'Si' }],
+    atoms: [
+      { x: '0.000', y: '0.000', z: '0.000', species: '1', label: 'Si' },
+      { x: '0.000', y: '0.500', z: '0.500', species: '1', label: 'Si' },
+      { x: '0.500', y: '0.000', z: '0.500', species: '1', label: 'Si' },
+      { x: '0.500', y: '0.500', z: '0.000', species: '1', label: 'Si' },
+      { x: '0.250', y: '0.250', z: '0.250', species: '1', label: 'Si' },
+      { x: '0.250', y: '0.750', z: '0.750', species: '1', label: 'Si' },
+      { x: '0.750', y: '0.250', z: '0.750', species: '1', label: 'Si' },
+      { x: '0.750', y: '0.750', z: '0.250', species: '1', label: 'Si' },
+    ],
   },
   dft: {
     'XC.functional': 'GGA', 'XC.authors': 'PBE', MeshCutoff: '300 Ry', Spin: 'none',

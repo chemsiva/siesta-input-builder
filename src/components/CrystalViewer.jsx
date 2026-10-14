@@ -1,13 +1,100 @@
 import { useEffect, useRef, useState, useMemo } from 'react';
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
+import { useFDFStore } from '../store/fdfStore';
 import { ELEMENT_DATA } from '../utils/elementData.js';
 export { ELEMENT_DATA };
 
+const Z_TO_SYMBOL = {
+  1:'H', 2:'He', 3:'Li', 4:'Be', 5:'B', 6:'C', 7:'N', 8:'O', 9:'F', 10:'Ne',
+  11:'Na', 12:'Mg', 13:'Al', 14:'Si', 15:'P', 16:'S', 17:'Cl', 18:'Ar',
+  19:'K', 20:'Ca', 21:'Sc', 22:'Ti', 23:'V', 24:'Cr', 25:'Mn', 26:'Fe',
+  27:'Co', 28:'Ni', 29:'Cu', 30:'Zn', 31:'Ga', 32:'Ge', 33:'As', 34:'Se',
+  35:'Br', 36:'Kr', 37:'Rb', 38:'Sr', 39:'Y', 40:'Zr', 41:'Nb', 42:'Mo',
+  44:'Ru', 45:'Rh', 46:'Pd', 47:'Ag', 48:'Cd', 49:'In', 50:'Sn', 51:'Sb',
+  52:'Te', 53:'I', 55:'Cs', 56:'Ba', 57:'La', 58:'Ce', 72:'Hf', 73:'Ta',
+  74:'W', 75:'Re', 76:'Os', 77:'Ir', 78:'Pt', 79:'Au', 80:'Hg', 81:'Tl',
+  82:'Pb', 83:'Bi'
+};
+
+export const DEMO_STRUCTURES = {
+  si: {
+    label: 'Bulk Silicon (Diamond)',
+    systemLabel: 'silicon',
+    LatticeConstant: '5.4300 Ang',
+    LatticeVectors: [
+      [1.0, 0.0, 0.0],
+      [0.0, 1.0, 0.0],
+      [0.0, 0.0, 1.0],
+    ],
+    AtomicCoordinatesFormat: 'Fractional',
+    species: [{ idx: 1, z: 14, label: 'Si' }],
+    atoms: [
+      { x: '0.000', y: '0.000', z: '0.000', species: '1', label: 'Si' },
+      { x: '0.000', y: '0.500', z: '0.500', species: '1', label: 'Si' },
+      { x: '0.500', y: '0.000', z: '0.500', species: '1', label: 'Si' },
+      { x: '0.500', y: '0.500', z: '0.000', species: '1', label: 'Si' },
+      { x: '0.250', y: '0.250', z: '0.250', species: '1', label: 'Si' },
+      { x: '0.250', y: '0.750', z: '0.750', species: '1', label: 'Si' },
+      { x: '0.750', y: '0.250', z: '0.750', species: '1', label: 'Si' },
+      { x: '0.750', y: '0.750', z: '0.250', species: '1', label: 'Si' },
+    ],
+  },
+  perovskite: {
+    label: 'Cubic Perovskite (CsPbI3)',
+    systemLabel: 'CsPbI3',
+    LatticeConstant: '6.2800 Ang',
+    LatticeVectors: [
+      [1.0, 0.0, 0.0],
+      [0.0, 1.0, 0.0],
+      [0.0, 0.0, 1.0],
+    ],
+    AtomicCoordinatesFormat: 'Fractional',
+    species: [
+      { idx: 1, z: 55, label: 'Cs' },
+      { idx: 2, z: 82, label: 'Pb' },
+      { idx: 3, z: 53, label: 'I' },
+    ],
+    atoms: [
+      { x: '0.000', y: '0.000', z: '0.000', species: '1', label: 'Cs' },
+      { x: '0.500', y: '0.500', z: '0.500', species: '2', label: 'Pb' },
+      { x: '0.500', y: '0.500', z: '0.000', species: '3', label: 'I' },
+      { x: '0.500', y: '0.000', z: '0.500', species: '3', label: 'I' },
+      { x: '0.000', y: '0.500', z: '0.500', species: '3', label: 'I' },
+    ],
+  },
+  h2: {
+    label: 'H2 Molecule in 10 Å Box',
+    systemLabel: 'h2_mol',
+    LatticeConstant: '10.0000 Ang',
+    LatticeVectors: [
+      [1.0, 0.0, 0.0],
+      [0.0, 1.0, 0.0],
+      [0.0, 0.0, 1.0],
+    ],
+    AtomicCoordinatesFormat: 'Ang',
+    species: [{ idx: 1, z: 1, label: 'H' }],
+    atoms: [
+      { x: '4.630', y: '5.000', z: '5.000', species: '1', label: 'H' },
+      { x: '5.370', y: '5.000', z: '5.000', species: '1', label: 'H' },
+    ],
+  },
+};
+
 function getElementInfo(labelOrZ) {
-  if (!labelOrZ) return { color: 0x999999, radius: 1.0, sym: 'X' };
+  if (!labelOrZ) return { color: 0x9ca3af, radius: 1.0, sym: 'Si' };
+
+  // 1. Check if numeric atomic number Z (e.g. 14 -> Si)
+  const numericZ = parseInt(labelOrZ, 10);
+  if (!isNaN(numericZ) && Z_TO_SYMBOL[numericZ]) {
+    const sym = Z_TO_SYMBOL[numericZ];
+    return { ...(ELEMENT_DATA[sym] || { color: 0x9ca3af, radius: 1.0 }), sym };
+  }
+
+  // 2. Check clean string matching
   const clean = String(labelOrZ).replace(/[\d+-_]/g, '').trim();
   if (ELEMENT_DATA[clean]) return { ...ELEMENT_DATA[clean], sym: clean };
+
   if (clean.length >= 2) {
     const candidate = clean[0].toUpperCase() + clean[1].toLowerCase();
     if (ELEMENT_DATA[candidate]) return { ...ELEMENT_DATA[candidate], sym: candidate };
@@ -16,10 +103,13 @@ function getElementInfo(labelOrZ) {
     const candidate = clean[0].toUpperCase();
     if (ELEMENT_DATA[candidate]) return { ...ELEMENT_DATA[candidate], sym: candidate };
   }
-  return { color: 0x888888, radius: 1.0, sym: clean || 'X' };
+
+  return { color: 0x94a3b8, radius: 1.0, sym: clean || 'Si' };
 }
 
 export function CrystalViewer({ structure }) {
+  const setSection = useFDFStore(s => s.setSection);
+  const setField = useFDFStore(s => s.setField);
   const mountRef = useRef(null);
   const canvas2dRef = useRef(null);
   const [engineMode, setEngineMode] = useState('webgl'); // 'webgl' | 'canvas2d'
@@ -55,7 +145,7 @@ export function CrystalViewer({ structure }) {
       const x = parseFloat(a.x) || 0;
       const y = parseFloat(a.y) || 0;
       const z = parseFloat(a.z) || 0;
-      const spTag = speciesMap[a.species] || a.label || a.species || 'X';
+      const spTag = a.label || speciesMap[a.species] || a.species || 'Si';
       const el = getElementInfo(spTag);
 
       let cx = x, cy = y, cz = z;
@@ -76,8 +166,9 @@ export function CrystalViewer({ structure }) {
         z: cz,
         element: el.sym,
         color: el.color,
-        radius: Math.max(0.35, el.radius * 0.45),
-        covalentRadius: el.radius * 0.9,
+        // Visual sphere radius in Angstrom (prominent, beautiful CPK spheres)
+        radius: Math.max(0.55, (el.radius || 1.0) * 0.70),
+        covalentRadius: (el.radius || 1.0) * 1.0,
       };
     });
 
@@ -108,8 +199,25 @@ export function CrystalViewer({ structure }) {
 
   const atoms = useMemo(() => getCartesianAtoms(), [structure, supercell]);
 
+  // Load a demo crystal structure into the application state
+  const handleLoadDemo = (key) => {
+    const demo = DEMO_STRUCTURES[key];
+    if (!demo) return;
+    setField('system', 'SystemLabel', demo.systemLabel);
+    setField('system', 'SystemName', demo.label);
+    setField('system', 'NumberOfAtoms', String(demo.atoms.length));
+    setField('system', 'NumberOfSpecies', String(demo.species.length));
+    setSection('structure', {
+      LatticeConstant: demo.LatticeConstant,
+      LatticeVectors: demo.LatticeVectors,
+      AtomicCoordinatesFormat: demo.AtomicCoordinatesFormat,
+      species: demo.species,
+      atoms: demo.atoms,
+    });
+  };
+
   // ═══════════════════════════════════════════════════════════════════════════
-  // ENGINE 1: Three.js WebGL (Hardware Accelerated with Safe Fallback)
+  // ENGINE 1: Three.js WebGL (Hardware Accelerated with Proper Framing)
   // ═══════════════════════════════════════════════════════════════════════════
   useEffect(() => {
     if (engineMode !== 'webgl') return;
@@ -121,7 +229,6 @@ export function CrystalViewer({ structure }) {
     const width = container.clientWidth || 600;
     const height = 400;
 
-    // Safe WebGL initialization with double fallback to prevent context crashes
     let renderer;
     try {
       renderer = new THREE.WebGLRenderer({
@@ -151,18 +258,19 @@ export function CrystalViewer({ structure }) {
     const scene = new THREE.Scene();
     scene.background = new THREE.Color(0x131620);
 
-    const camera = new THREE.PerspectiveCamera(45, width / height, 0.1, 1000);
+    const camera = new THREE.PerspectiveCamera(45, width / height, 0.1, 2000);
     cameraRef.current = camera;
 
-    const ambientLight = new THREE.AmbientLight(0xffffff, 0.75);
+    // Rich lighting for 3D depth
+    const ambientLight = new THREE.AmbientLight(0xffffff, 0.85);
     scene.add(ambientLight);
 
-    const dirLight1 = new THREE.DirectionalLight(0xffffff, 0.85);
-    dirLight1.position.set(20, 40, 30);
+    const dirLight1 = new THREE.DirectionalLight(0xffffff, 1.1);
+    dirLight1.position.set(30, 45, 35);
     scene.add(dirLight1);
 
-    const dirLight2 = new THREE.DirectionalLight(0x90b0ff, 0.4);
-    dirLight2.position.set(-20, -30, -20);
+    const dirLight2 = new THREE.DirectionalLight(0x90b0ff, 0.5);
+    dirLight2.position.set(-30, -35, -25);
     scene.add(dirLight2);
 
     const controls = new OrbitControls(camera, renderer.domElement);
@@ -170,24 +278,26 @@ export function CrystalViewer({ structure }) {
     controls.dampingFactor = 0.05;
     controlsRef.current = controls;
 
+    const [lcVal] = (structure.LatticeConstant || '1.0 Ang').split(' ');
+    const scale = parseFloat(lcVal) || 1.0;
     const lv = structure.LatticeVectors || [[1,0,0],[0,1,0],[0,0,1]];
-    const v1 = new THREE.Vector3(...lv[0]);
-    const v2 = new THREE.Vector3(...lv[1]);
-    const v3 = new THREE.Vector3(...lv[2]);
-    const cellCenter = new THREE.Vector3().add(v1).add(v2).add(v3).multiplyScalar(supercell ? 1.0 : 0.5);
 
-    // Unit cell wireframe
+    // Real Cartesian unit cell vectors (scaled by LatticeConstant!)
+    const nx = supercell ? 2 : 1;
+    const ny = supercell ? 2 : 1;
+    const nz = supercell ? 2 : 1;
+    const v1 = new THREE.Vector3(...lv[0]).multiplyScalar(scale * nx);
+    const v2 = new THREE.Vector3(...lv[1]).multiplyScalar(scale * ny);
+    const v3 = new THREE.Vector3(...lv[2]).multiplyScalar(scale * nz);
+
+    // 1. Draw Unit Cell Wireframe
     if (showCell) {
-      const boxMat = new THREE.LineBasicMaterial({ color: 0x4f6bba, linewidth: 1.5, transparent: true, opacity: 0.8 });
-      const nx = supercell ? 2 : 1;
-      const ny = supercell ? 2 : 1;
-      const nz = supercell ? 2 : 1;
+      const boxMat = new THREE.LineBasicMaterial({ color: 0x4f6bba, linewidth: 1.5, transparent: true, opacity: 0.85 });
 
       const p0 = new THREE.Vector3(0, 0, 0);
-      const pa = v1.clone().multiplyScalar(nx);
-      const pb = v2.clone().multiplyScalar(ny);
-      const pc = v3.clone().multiplyScalar(nz);
-
+      const pa = v1.clone();
+      const pb = v2.clone();
+      const pc = v3.clone();
       const pab = new THREE.Vector3().add(pa).add(pb);
       const pac = new THREE.Vector3().add(pa).add(pc);
       const pbc = new THREE.Vector3().add(pb).add(pc);
@@ -209,33 +319,35 @@ export function CrystalViewer({ structure }) {
       lineGeom.setAttribute('position', new THREE.Float32BufferAttribute(pts, 3));
       scene.add(new THREE.LineSegments(lineGeom, boxMat));
 
+      // Axes arrows (a1 red, a2 green, a3 blue)
       const origin = new THREE.Vector3(0, 0, 0);
-      scene.add(new THREE.ArrowHelper(v1.clone().normalize(), origin, Math.min(2.5, v1.length()), 0xf87171, 0.4, 0.2));
-      scene.add(new THREE.ArrowHelper(v2.clone().normalize(), origin, Math.min(2.5, v2.length()), 0x34d399, 0.4, 0.2));
-      scene.add(new THREE.ArrowHelper(v3.clone().normalize(), origin, Math.min(2.5, v3.length()), 0x60a5fa, 0.4, 0.2));
+      const arrowLen = Math.min(3.5, Math.max(v1.length(), v2.length(), v3.length()) * 0.3);
+      scene.add(new THREE.ArrowHelper(v1.clone().normalize(), origin, arrowLen, 0xf87171, 0.45, 0.25));
+      scene.add(new THREE.ArrowHelper(v2.clone().normalize(), origin, arrowLen, 0x34d399, 0.45, 0.25));
+      scene.add(new THREE.ArrowHelper(v3.clone().normalize(), origin, arrowLen, 0x60a5fa, 0.45, 0.25));
     }
 
-    // Atoms
-    const sphereGeomCache = {};
+    // 2. Draw Atoms (Solid, prominent, CPK-colored spheres)
+    const sphereCache = {};
     atoms.forEach(atom => {
       const r = atom.radius;
-      if (!sphereGeomCache[r]) {
-        sphereGeomCache[r] = new THREE.SphereGeometry(r, 20, 20);
+      if (!sphereCache[r]) {
+        sphereCache[r] = new THREE.SphereGeometry(r, 24, 24);
       }
       const mat = new THREE.MeshStandardMaterial({
         color: atom.color,
-        roughness: 0.35,
-        metalness: 0.15,
+        roughness: 0.25,
+        metalness: 0.2,
       });
-      const mesh = new THREE.Mesh(sphereGeomCache[r], mat);
+      const mesh = new THREE.Mesh(sphereCache[r], mat);
       mesh.position.set(atom.x, atom.y, atom.z);
       scene.add(mesh);
     });
 
-    // Bonds
+    // 3. Draw Bonds (Between nearby atoms)
     if (showBonds && atoms.length > 1 && atoms.length < 500) {
-      const bondMat = new THREE.MeshStandardMaterial({ color: 0x71799e, roughness: 0.6 });
-      const bondRadius = 0.08;
+      const bondMat = new THREE.MeshStandardMaterial({ color: 0x94a3b8, roughness: 0.45 });
+      const bondRadius = 0.12;
 
       for (let i = 0; i < atoms.length; i++) {
         for (let j = i + 1; j < atoms.length; j++) {
@@ -252,7 +364,7 @@ export function CrystalViewer({ structure }) {
             const p2 = new THREE.Vector3(a2.x, a2.y, a2.z);
             const mid = new THREE.Vector3().addVectors(p1, p2).multiplyScalar(0.5);
 
-            const cylGeom = new THREE.CylinderGeometry(bondRadius, bondRadius, dist, 8);
+            const cylGeom = new THREE.CylinderGeometry(bondRadius, bondRadius, dist, 12);
             const cyl = new THREE.Mesh(cylGeom, bondMat);
             cyl.position.copy(mid);
             cyl.quaternion.setFromUnitVectors(
@@ -265,10 +377,29 @@ export function CrystalViewer({ structure }) {
       }
     }
 
-    const maxDim = Math.max(v1.length(), v2.length(), v3.length(), 10) * (supercell ? 1.6 : 1.2);
-    camera.position.set(cellCenter.x + maxDim * 1.2, cellCenter.y + maxDim * 0.9, cellCenter.z + maxDim * 1.4);
-    camera.lookAt(cellCenter);
-    controls.target.copy(cellCenter);
+    // 4. Bounding Box & Camera Framing (100% guarantees all atoms are visible)
+    const box = new THREE.Box3();
+    if (atoms.length > 0) {
+      atoms.forEach(a => box.expandByPoint(new THREE.Vector3(a.x, a.y, a.z)));
+    }
+    // Expand by cell corners
+    [
+      new THREE.Vector3(0, 0, 0),
+      v1, v2, v3,
+      new THREE.Vector3().add(v1).add(v2),
+      new THREE.Vector3().add(v1).add(v3),
+      new THREE.Vector3().add(v2).add(v3),
+      new THREE.Vector3().add(v1).add(v2).add(v3),
+    ].forEach(c => box.expandByPoint(c));
+
+    const center = box.getCenter(new THREE.Vector3());
+    const size = box.getSize(new THREE.Vector3());
+    const maxDim = Math.max(size.x, size.y, size.z, 6);
+
+    camera.position.set(center.x + maxDim * 1.3, center.y + maxDim * 1.0, center.z + maxDim * 1.6);
+    camera.lookAt(center);
+    controls.target.copy(center);
+    controls.update();
 
     let animId;
     const animate = () => {
@@ -303,7 +434,7 @@ export function CrystalViewer({ structure }) {
   }, [structure, showBonds, showCell, supercell, engineMode, atoms]);
 
   // ═══════════════════════════════════════════════════════════════════════════
-  // ENGINE 2: Interactive 2D Canvas Engine (100% immune to WebGL context limits)
+  // ENGINE 2: Interactive 2D Canvas Engine (Depth-Sorted with Lighting)
   // ═══════════════════════════════════════════════════════════════════════════
   useEffect(() => {
     if (engineMode !== 'canvas2d') return;
@@ -319,26 +450,32 @@ export function CrystalViewer({ structure }) {
     ctx.fillStyle = '#131620';
     ctx.fillRect(0, 0, w, h);
 
-    if (atoms.length === 0) return;
+    const [lcVal] = (structure.LatticeConstant || '1.0 Ang').split(' ');
+    const scale = parseFloat(lcVal) || 1.0;
+    const lv = structure.LatticeVectors || [[1,0,0],[0,1,0],[0,0,1]];
+    const nx = supercell ? 2 : 1;
+    const ny = supercell ? 2 : 1;
+    const nz = supercell ? 2 : 1;
 
-    // Calculate center of mass
-    let cx = 0, cy = 0, cz = 0;
-    atoms.forEach(a => { cx += a.x; cy += a.y; cz += a.z; });
-    cx /= atoms.length; cy /= atoms.length; cz /= atoms.length;
+    const v1 = [lv[0][0] * scale * nx, lv[0][1] * scale * nx, lv[0][2] * scale * nx];
+    const v2 = [lv[1][0] * scale * ny, lv[1][1] * scale * ny, lv[1][2] * scale * ny];
+    const v3 = [lv[2][0] * scale * nz, lv[2][1] * scale * nz, lv[2][2] * scale * nz];
 
-    let maxDist = 6;
-    atoms.forEach(a => {
-      const d = Math.sqrt((a.x - cx) ** 2 + (a.y - cy) ** 2 + (a.z - cz) ** 2);
-      if (d > maxDist) maxDist = d;
-    });
+    // Compute center of unit cell
+    const cc = [
+      (v1[0] + v2[0] + v3[0]) * 0.5,
+      (v1[1] + v2[1] + v3[1]) * 0.5,
+      (v1[2] + v2[2] + v3[2]) * 0.5,
+    ];
 
-    const baseScale = (Math.min(w, h) * 0.38) / Math.max(8, maxDist);
-    const D = 90;
+    const cellLen = Math.sqrt(v1[0]**2 + v1[1]**2 + v1[2]**2);
+    const baseScale = (Math.min(w, h) * 0.36) / Math.max(6, cellLen);
+    const D = 100;
 
     const project = (x, y, z) => {
-      const x0 = x - cx;
-      const y0 = y - cy;
-      const z0 = z - cz;
+      const x0 = x - cc[0];
+      const y0 = y - cc[1];
+      const z0 = z - cc[2];
 
       const x1 = x0 * Math.cos(rotY) + z0 * Math.sin(rotY);
       const z1 = -x0 * Math.sin(rotY) + z0 * Math.cos(rotY);
@@ -359,15 +496,6 @@ export function CrystalViewer({ structure }) {
 
     // 1. Draw Unit Cell Wireframe
     if (showCell) {
-      const lv = structure.LatticeVectors || [[10,0,0],[0,10,0],[0,0,10]];
-      const nx = supercell ? 2 : 1;
-      const ny = supercell ? 2 : 1;
-      const nz = supercell ? 2 : 1;
-
-      const v1 = [lv[0][0] * nx, lv[0][1] * nx, lv[0][2] * nx];
-      const v2 = [lv[1][0] * ny, lv[1][1] * ny, lv[1][2] * ny];
-      const v3 = [lv[2][0] * nz, lv[2][1] * nz, lv[2][2] * nz];
-
       const p0   = project(0, 0, 0);
       const pa   = project(v1[0], v1[1], v1[2]);
       const pb   = project(v2[0], v2[1], v2[2]);
@@ -385,8 +513,8 @@ export function CrystalViewer({ structure }) {
         [pab, pabc], [pac, pabc], [pbc, pabc]
       ];
 
-      ctx.strokeStyle = 'rgba(79, 107, 186, 0.55)';
-      ctx.lineWidth = 1.2;
+      ctx.strokeStyle = 'rgba(79, 107, 186, 0.65)';
+      ctx.lineWidth = 1.3;
       ctx.beginPath();
       cellEdges.forEach(([s1, s2]) => {
         ctx.moveTo(s1.sx, s1.sy);
@@ -397,7 +525,7 @@ export function CrystalViewer({ structure }) {
       // Axis labels
       const drawAxis = (pEnd, color, label) => {
         ctx.strokeStyle = color;
-        ctx.lineWidth = 2.0;
+        ctx.lineWidth = 2.2;
         ctx.beginPath();
         ctx.moveTo(p0.sx, p0.sy);
         ctx.lineTo(pEnd.sx, pEnd.sy);
@@ -411,6 +539,8 @@ export function CrystalViewer({ structure }) {
       drawAxis(pc, '#60a5fa', 'a₃');
     }
 
+    if (atoms.length === 0) return;
+
     // 2. Project Atoms
     const projected = atoms.map(a => ({
       ...a,
@@ -419,8 +549,8 @@ export function CrystalViewer({ structure }) {
 
     // 3. Draw Bonds
     if (showBonds && projected.length > 1 && projected.length < 500) {
-      ctx.strokeStyle = 'rgba(113, 121, 158, 0.6)';
-      ctx.lineWidth = Math.max(1, 2.0 * zoom);
+      ctx.strokeStyle = 'rgba(148, 163, 184, 0.65)';
+      ctx.lineWidth = Math.max(1, 2.5 * zoom);
       ctx.beginPath();
       for (let i = 0; i < projected.length; i++) {
         for (let j = i + 1; j < projected.length; j++) {
@@ -438,14 +568,14 @@ export function CrystalViewer({ structure }) {
       ctx.stroke();
     }
 
-    // 4. Sort atoms back-to-front (depth buffer)
+    // 4. Sort atoms back-to-front
     projected.sort((a, b) => b.p.depth - a.p.depth);
 
     // 5. Draw Atoms with 3D Spherical Shading Gradient
     projected.forEach(a => {
       const sx = a.p.sx;
       const sy = a.p.sy;
-      const r = Math.max(3, a.radius * a.p.scale * 1.2);
+      const r = Math.max(5, a.radius * a.p.scale * 1.15);
       const hex = '#' + a.color.toString(16).padStart(6, '0');
 
       const grad = ctx.createRadialGradient(
@@ -453,16 +583,23 @@ export function CrystalViewer({ structure }) {
         sx, sy, r
       );
       grad.addColorStop(0, '#ffffff');
-      grad.addColorStop(0.25, hex);
+      grad.addColorStop(0.28, hex);
       grad.addColorStop(1, '#05070c');
 
       ctx.beginPath();
       ctx.arc(sx, sy, r, 0, 2 * Math.PI);
       ctx.fillStyle = grad;
       ctx.fill();
-      ctx.strokeStyle = 'rgba(0,0,0,0.4)';
-      ctx.lineWidth = 0.5;
+      ctx.strokeStyle = 'rgba(0,0,0,0.5)';
+      ctx.lineWidth = 0.8;
       ctx.stroke();
+
+      // Atom Symbol
+      ctx.fillStyle = '#ffffff';
+      ctx.font = 'bold 9px sans-serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(a.element, sx, sy);
     });
   }, [engineMode, atoms, showBonds, showCell, supercell, rotX, rotY, zoom, structure]);
 
@@ -490,67 +627,44 @@ export function CrystalViewer({ structure }) {
     setZoom(z => Math.max(0.4, Math.min(3.5, z * (e.deltaY > 0 ? 0.92 : 1.08))));
   };
 
-  // Camera Controls
   const resetCamera = () => {
     setRotX(0.45);
     setRotY(0.65);
     setZoom(1.0);
     if (!controlsRef.current || !cameraRef.current) return;
-    const lv = structure.LatticeVectors || [[1,0,0],[0,1,0],[0,0,1]];
-    const v1 = new THREE.Vector3(...lv[0]);
-    const v2 = new THREE.Vector3(...lv[1]);
-    const v3 = new THREE.Vector3(...lv[2]);
-    const cellCenter = new THREE.Vector3().add(v1).add(v2).add(v3).multiplyScalar(supercell ? 1.0 : 0.5);
-    const maxDim = Math.max(v1.length(), v2.length(), v3.length(), 10) * (supercell ? 1.6 : 1.2);
-    cameraRef.current.position.set(cellCenter.x + maxDim * 1.2, cellCenter.y + maxDim * 0.9, cellCenter.z + maxDim * 1.4);
-    controlsRef.current.target.copy(cellCenter);
-    controlsRef.current.update();
-  };
-
-  const viewAlongAxis = (axis) => {
-    if (engineMode === 'canvas2d') {
-      if (axis === 'a') { setRotX(0); setRotY(Math.PI / 2); }
-      else if (axis === 'b') { setRotX(-Math.PI / 2); setRotY(0); }
-      else if (axis === 'c') { setRotX(0); setRotY(0); }
-      return;
-    }
-    if (!controlsRef.current || !cameraRef.current) return;
-    const lv = structure.LatticeVectors || [[1,0,0],[0,1,0],[0,0,1]];
-    const v1 = new THREE.Vector3(...lv[0]);
-    const v2 = new THREE.Vector3(...lv[1]);
-    const v3 = new THREE.Vector3(...lv[2]);
-    const cellCenter = new THREE.Vector3().add(v1).add(v2).add(v3).multiplyScalar(supercell ? 1.0 : 0.5);
-    const dist = Math.max(v1.length(), v2.length(), v3.length(), 10) * 2;
-
-    if (axis === 'a') cameraRef.current.position.set(cellCenter.x + dist, cellCenter.y, cellCenter.z);
-    else if (axis === 'b') cameraRef.current.position.set(cellCenter.x, cellCenter.y + dist, cellCenter.z);
-    else if (axis === 'c') cameraRef.current.position.set(cellCenter.x, cellCenter.y, cellCenter.z + dist);
-
-    controlsRef.current.target.copy(cellCenter);
-    controlsRef.current.update();
+    controlsRef.current.reset();
   };
 
   const atomsCount = atoms.length;
   const uniqueElements = Array.from(new Set(atoms.map(a => a.element)));
 
   return (
-    <div className="viewer-container">
+    <div className="viewer-container" style={{ position: 'relative' }}>
       {/* Viewer toolbar */}
-      <div className="viewer-toolbar">
-        <div className="viewer-controls-group">
+      <div className="viewer-toolbar" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.4rem' }}>
+        <div className="viewer-controls-group" style={{ display: 'flex', gap: '0.35rem', alignItems: 'center', flexWrap: 'wrap' }}>
           <button className="btn btn-secondary btn-sm" onClick={resetCamera} title="Reset camera">↺ Reset</button>
-          <button className="btn btn-secondary btn-sm" onClick={() => viewAlongAxis('a')}>View a</button>
-          <button className="btn btn-secondary btn-sm" onClick={() => viewAlongAxis('b')}>View b</button>
-          <button className="btn btn-secondary btn-sm" onClick={() => viewAlongAxis('c')}>View c</button>
           <button
             className={`btn btn-sm ${supercell ? 'btn-primary' : 'btn-secondary'}`}
             onClick={() => setSupercell(!supercell)}
             title="Toggle 2x2x2 supercell replication">
             {supercell ? '2×2×2 Supercell' : '1×1×1 Cell'}
           </button>
+
+          {/* Quick Demo Crystals */}
+          <span style={{ fontSize: '0.72rem', color: 'var(--muted)', marginLeft: '0.3rem', fontWeight: 600 }}>Load Demo:</span>
+          <button className="btn btn-secondary btn-xs" onClick={() => handleLoadDemo('si')} title="Load Diamond Silicon (8 atoms)">
+            💎 Si
+          </button>
+          <button className="btn btn-secondary btn-xs" onClick={() => handleLoadDemo('perovskite')} title="Load Cubic Perovskite CsPbI3">
+            ☀️ CsPbI₃
+          </button>
+          <button className="btn btn-secondary btn-xs" onClick={() => handleLoadDemo('h2')} title="Load H2 molecule">
+            🧪 H₂
+          </button>
         </div>
 
-        <div className="viewer-controls-group">
+        <div className="viewer-controls-group" style={{ display: 'flex', gap: '0.4rem', alignItems: 'center' }}>
           <button
             className="btn btn-secondary btn-xs"
             onClick={() => setEngineMode(m => m === 'webgl' ? 'canvas2d' : 'webgl')}
@@ -570,14 +684,14 @@ export function CrystalViewer({ structure }) {
 
       {/* 3D Canvas Mount (WebGL or 2D Fallback) */}
       {engineMode === 'webgl' ? (
-        <div ref={mountRef} className="viewer-canvas" style={{ width: '100%', height: '400px' }} />
+        <div ref={mountRef} className="viewer-canvas" style={{ width: '100%', height: '420px', position: 'relative' }} />
       ) : (
         <canvas
           ref={canvas2dRef}
           width={860}
-          height={400}
+          height={420}
           className="viewer-canvas"
-          style={{ width: '100%', height: '400px', cursor: 'grab', display: 'block' }}
+          style={{ width: '100%', height: '420px', cursor: 'grab', display: 'block' }}
           onMouseDown={handleMouseDown}
           onMouseMove={handleMouseMove}
           onMouseUp={handleMouseUp}
@@ -586,13 +700,53 @@ export function CrystalViewer({ structure }) {
         />
       )}
 
+      {/* Empty State Overlay when atoms.length === 0 */}
+      {atomsCount === 0 && (
+        <div style={{
+          position: 'absolute',
+          top: '55px',
+          left: '10px',
+          right: '10px',
+          bottom: '45px',
+          background: 'rgba(15, 23, 42, 0.85)',
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
+          borderRadius: '6px',
+          border: '1px dashed var(--border)',
+          zIndex: 10,
+          padding: '1.5rem',
+          textAlign: 'center',
+        }}>
+          <div style={{ fontSize: '2rem', marginBottom: '0.5rem' }}>⚛️</div>
+          <div style={{ fontSize: '0.95rem', fontWeight: 600, color: 'var(--fg)', marginBottom: '0.3rem' }}>
+            No atoms defined in unit cell
+          </div>
+          <p style={{ fontSize: '0.82rem', color: 'var(--muted)', maxWidth: '440px', margin: '0 0 1rem' }}>
+            Upload a <strong>CIF file</strong>, add atomic coordinates in the table below, or click a demo crystal to start visualizing:
+          </p>
+          <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', justifyContent: 'center' }}>
+            <button className="btn btn-primary btn-sm" onClick={() => handleLoadDemo('si')}>
+              💎 Load Diamond Silicon (8 atoms)
+            </button>
+            <button className="btn btn-secondary btn-sm" onClick={() => handleLoadDemo('perovskite')}>
+              ☀️ Load Cubic CsPbI₃ Perovskite
+            </button>
+            <button className="btn btn-secondary btn-sm" onClick={() => handleLoadDemo('h2')}>
+              🧪 Load H₂ Molecule
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Legend & Stats */}
       <div className="viewer-footer">
         <div className="viewer-stats">
           <span className="badge badge-accent" style={{ fontSize: '0.7rem' }}>
             {engineMode === 'webgl' ? 'WebGL 3D' : '2D Canvas (Context-Safe)'}
           </span>
-          <span>{atomsCount} atoms</span>
+          <strong style={{ color: atomsCount > 0 ? '#38bdf8' : 'var(--muted)' }}>{atomsCount} atoms</strong>
           <span>•</span>
           <span style={{ color: '#f87171' }}>a₁ (red)</span>
           <span style={{ color: '#34d399' }}>a₂ (green)</span>
@@ -605,7 +759,7 @@ export function CrystalViewer({ structure }) {
             return (
               <span key={el} className="legend-chip">
                 <span className="legend-dot" style={{ backgroundColor: hex }} />
-                {el}
+                <strong>{el}</strong>
               </span>
             );
           })}
