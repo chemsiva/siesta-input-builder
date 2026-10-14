@@ -20,6 +20,7 @@ const ELEMENTS = [
 
 const BASIS_SIZES = ['SZ','SZP','DZ','DZP','DZDP','TZP','TZDP'];
 const BASIS_TYPES = ['split','splitgauss','nodes','nonodes','filteret'];
+const ENERGY_SHIFT_UNITS = ['meV', 'eV', 'Ry'];
 
 export function SpeciesSection() {
   const structure = useFDFStore(s => s.structure);
@@ -33,6 +34,14 @@ export function SpeciesSection() {
   const species = structure.species || [];
   const detectedFiles = pseudoSettings.detectedFiles || [];
 
+  // Parse PAO.EnergyShift number and unit (meV, eV, Ry)
+  const rawES = (basis['PAO.EnergyShift'] || '100 meV').trim();
+  const esMatch = rawES.match(/^([\d.eE+-]+)\s*(\w+)?$/);
+  const esVal = esMatch ? esMatch[1] : (rawES.split(/\s+/)[0] || '100');
+  let esUnit = esMatch && esMatch[2] ? esMatch[2] : 'meV';
+  const matchedUnit = ENERGY_SHIFT_UNITS.find(u => u.toLowerCase() === esUnit.toLowerCase());
+  if (matchedUnit) esUnit = matchedUnit;
+  else esUnit = 'meV';
   const handleScanFolder = (e) => {
     const files = Array.from(e.target.files || []);
     const validPseudos = files
@@ -318,10 +327,20 @@ export function SpeciesSection() {
 
         <div className="field-row-group">
           <FieldRow label="PAO.EnergyShift" keyword="PAO.EnergyShift">
-            <TextInput mono value={basis['PAO.EnergyShift']}
-              onChange={v => setField('basis','PAO.EnergyShift', v)} placeholder="0.01 Ry (or 100 meV)" />
+            <div className="input-with-unit">
+              <TextInput
+                mono
+                value={esVal}
+                onChange={v => setField('basis', 'PAO.EnergyShift', `${v} ${esUnit}`)}
+                placeholder="100"
+              />
+              <SelectInput
+                value={esUnit}
+                onChange={u => setField('basis', 'PAO.EnergyShift', `${esVal} ${u}`)}
+                options={ENERGY_SHIFT_UNITS}
+              />
+            </div>
           </FieldRow>
-
           <FieldRow label="PAO.SplitNorm" keyword="PAO.SplitNorm">
             <TextInput mono value={basis['PAO.SplitNorm']}
               onChange={v => setField('basis','PAO.SplitNorm', v)} placeholder="0.15" />
