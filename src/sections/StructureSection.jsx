@@ -1,6 +1,6 @@
-import { useRef, useState, lazy, Suspense } from 'react';
+import { useRef, useState } from 'react';
 import { ErrorBoundary } from '../components/ErrorBoundary.jsx';
-const CrystalViewer = lazy(() => import('../components/CrystalViewer').then(m => ({ default: m.CrystalViewer })));
+import { CrystalViewer } from '../components/CrystalViewer.jsx';
 import { addVacuumToStructure, centerSlabInCell, buildSupercell } from '../utils/slabBuilder';
 import { useFDFStore } from '../store/fdfStore';
 import { FieldRow, TextInput, SelectInput, SectionHeader } from '../components/FieldRow';
@@ -83,7 +83,10 @@ export function StructureSection() {
             const f = e.target.files[0];
             if (f) {
               const reader = new FileReader();
-              reader.onload = ev => loadFromCIF(ev.target.result);
+              reader.onload = ev => {
+                loadFromCIF(ev.target.result);
+                setShowViewer(true);
+              };
               reader.readAsText(f);
               e.target.value = '';
             }
@@ -112,9 +115,7 @@ export function StructureSection() {
 
       {showViewer && (
         <ErrorBoundary componentName="3D Crystal Visualizer">
-          <Suspense fallback={<div className="info-box">Loading 3D Visualizer...</div>}>
-            <CrystalViewer structure={structure} />
-          </Suspense>
+          <CrystalViewer structure={structure} />
         </ErrorBoundary>
       )}
       {/* Slab & Vacuum Tools */}

@@ -43,7 +43,67 @@ const GENERAL_FLAGS = [
   { key: 'LongOutput',       type: 'bool', label: 'LongOutput', fileExt: 'stdout',
     help: 'Verbose output log: coordinates, forces, eigenvalues, and k-points' },
 ];
+const DEMO_ANI_TEXT = `3
+Frame 1 - H2O relaxation
+O   0.000000   0.000000   0.117400
+H   0.000000   0.757000  -0.469600
+H   0.000000  -0.757000  -0.469600
+3
+Frame 2 - H2O relaxation
+O   0.000000   0.000000   0.119200
+H   0.000000   0.762000  -0.472000
+H   0.000000  -0.762000  -0.472000
+3
+Frame 3 - H2O relaxation
+O   0.000000   0.000000   0.121500
+H   0.000000   0.766000  -0.474000
+H   0.000000  -0.766000  -0.474000
+3
+Frame 4 - H2O relaxation
+O   0.000000   0.000000   0.122800
+H   0.000000   0.768000  -0.475000
+H   0.000000  -0.768000  -0.475000
+3
+Frame 5 - H2O relaxation
+O   0.000000   0.000000   0.123500
+H   0.000000   0.769500  -0.475500
+H   0.000000  -0.769500  -0.475500
+`;
 
+const DEMO_MDE_TEXT = `# Step     T (K)     E_KS (eV)    E_tot (eV)   Vol (A^3)    P (kBar)
+     0      0.00   -468.21000   -468.21000     125.000      12.450
+     1      0.00   -468.28500   -468.28500     125.000       8.320
+     2      0.00   -468.34200   -468.34200     125.000       4.150
+     3      0.00   -468.38000   -468.38000     125.000       1.820
+     4      0.00   -468.40500   -468.40500     125.000       0.450
+     5      0.00   -468.41800   -468.41800     125.000       0.080
+     6      0.00   -468.42200   -468.42200     125.000       0.010
+`;
+
+const DEMO_OUT_TEXT = `Executable      : siesta
+Version         : 5.4.2
+reinit: System Label: h2o_relax
+reinit: System Name: Water Molecule Relaxation
+Species number:   1 Atomic number:    8 Label: O
+Species number:   2 Atomic number:    1 Label: H
+initatomlists: Number of atoms, orbitals, and projectors:      3     23     20
+InitMesh: Mesh cutoff (required, used) =   250.000   254.210 Ry
+outcell: Unit cell vectors (Ang):
+       10.000000    0.000000    0.000000
+        0.000000   10.000000    0.000000
+        0.000000    0.000000   10.000000
+outcell: Cell volume (Ang**3) :   1000.0000
+new_DM -- step:    1
+scf:    1    -465.123400    -468.102300    -468.102300   0.052100  -5.120000   0.082100
+scf:    2    -467.892100    -468.351200    -468.351200   0.018200  -5.125000   0.024300
+scf:    3    -468.398000    -468.415000    -468.415000   0.004100  -5.128000   0.005200
+scf:    4    -468.421500    -468.422000    -468.422000   0.000210  -5.128500   0.000320
+siesta:         Total =    -468.422030
+siesta:         Fermi =      -5.128500
+siesta: Max force =           0.004210
+siesta: Cell volume =      1000.000000 Ang**3
+Job completed
+`;
 export function OutputSection() {
   const output = useFDFStore(s => s.output);
   const structure = useFDFStore(s => s.structure);
@@ -78,6 +138,7 @@ export function OutputSection() {
     }
     setLoadingMsg(`Parsing ${file.name}...`);
     setErrorMsg('');
+    const reader = new FileReader();
     reader.onload = (ev) => {
       try {
         const parsed = parseSiestaOut(ev.target.result);
@@ -102,6 +163,7 @@ export function OutputSection() {
     }
     setLoadingMsg(`Parsing ${file.name}...`);
     setErrorMsg('');
+    const reader = new FileReader();
     reader.onload = (ev) => {
       try {
         const parsed = parseMDE(ev.target.result);
@@ -126,6 +188,7 @@ export function OutputSection() {
     }
     setLoadingMsg(`Parsing ${file.name}...`);
     setErrorMsg('');
+    const reader = new FileReader();
     reader.onload = (ev) => {
       try {
         const parsed = parseANI(ev.target.result);
@@ -138,6 +201,49 @@ export function OutputSection() {
     };
     reader.readAsText(file);
     e.target.value = '';
+  };
+  const handleLoadDemoANI = () => {
+    try {
+      const parsed = parseANI(DEMO_ANI_TEXT);
+      setAniData(parsed);
+      setErrorMsg('');
+    } catch (e) {
+      setErrorMsg(e.message);
+    }
+  };
+
+  const handleLoadDemoMDE = () => {
+    try {
+      const parsed = parseMDE(DEMO_MDE_TEXT);
+      setMdeData(parsed);
+      setErrorMsg('');
+    } catch (e) {
+      setErrorMsg(e.message);
+    }
+  };
+
+  const handleLoadDemoOut = () => {
+    try {
+      const parsed = parseSiestaOut(DEMO_OUT_TEXT);
+      setOutData(parsed);
+      setErrorMsg('');
+    } catch (e) {
+      setErrorMsg(e.message);
+    }
+  };
+
+  const handleLoadAllDemo = () => {
+    handleLoadDemoANI();
+    handleLoadDemoMDE();
+    handleLoadDemoOut();
+  };
+
+  const handleClearAll = () => {
+    setOutData(null);
+    setMdeData(null);
+    setAniData(null);
+    setErrorMsg('');
+    setLoadingMsg('');
   };
 
   // Drag and drop for multi-file upload
@@ -555,6 +661,39 @@ export function OutputSection() {
                 style={{ display: 'none' }}
                 onChange={handleLoadANI}
               />
+            </div>
+
+            {/* 1-Click Demo Buttons */}
+            <div style={{
+              marginTop: '0.8rem',
+              paddingTop: '0.6rem',
+              borderTop: '1px solid var(--border)',
+              display: 'flex',
+              gap: '0.4rem',
+              justifyContent: 'center',
+              flexWrap: 'wrap',
+              alignItems: 'center'
+            }}>
+              <span style={{ fontSize: '0.75rem', color: 'var(--muted)', fontWeight: 600 }}>
+                ✨ Quick Demos:
+              </span>
+              <button type="button" className="btn btn-sm btn-secondary" onClick={handleLoadAllDemo}>
+                🌟 Load All Samples (.out + .MDE + .ANI)
+              </button>
+              <button type="button" className="btn btn-sm btn-secondary" onClick={handleLoadDemoANI}>
+                🎬 Demo .ANI
+              </button>
+              <button type="button" className="btn btn-sm btn-secondary" onClick={handleLoadDemoMDE}>
+                📈 Demo .MDE
+              </button>
+              <button type="button" className="btn btn-sm btn-secondary" onClick={handleLoadDemoOut}>
+                📄 Demo .out
+              </button>
+              {(outData || mdeData || aniData) && (
+                <button type="button" className="btn btn-sm btn-secondary" style={{ color: 'var(--error, #ef4444)' }} onClick={handleClearAll}>
+                  ✕ Reset
+                </button>
+              )}
             </div>
 
             {loadingMsg && <div style={{ color: 'var(--accent)', marginTop: '0.5rem', fontSize: '0.8rem' }}>{loadingMsg}</div>}

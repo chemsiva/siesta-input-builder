@@ -30,11 +30,18 @@ export function ConvergenceChart({ mdeData, scfData }) {
   let unit = '';
   let color = 'var(--accent, #6366f1)';
 
-  if (activeMetric === 'energy' && hasMDE) {
-    series = mdeData.steps.map(s => ({ x: s.step, y: s.eTot }));
-    yLabel = 'Total Energy (E_tot)';
-    unit = 'eV';
-    color = '#10b981'; // Green
+  if (activeMetric === 'energy') {
+    if (hasMDE) {
+      series = mdeData.steps.map(s => ({ x: s.step, y: s.eTot }));
+      yLabel = 'Total Energy (E_tot)';
+      unit = 'eV';
+      color = '#10b981'; // Green
+    } else if (hasSCF) {
+      series = scfData.map((s, idx) => ({ x: idx + 1, y: s.eKs ?? s.freeEng ?? 0 }));
+      yLabel = 'Kohn-Sham Energy (E_KS)';
+      unit = 'eV';
+      color = '#10b981'; // Green
+    }
   } else if (activeMetric === 'energy_rel' && hasMDE) {
     const e0 = mdeData.steps[0].eTot;
     series = mdeData.steps.map(s => ({ x: s.step, y: s.eTot - e0 }));

@@ -41,23 +41,22 @@ export function parseSiestaOut(text) {
     const line = lines[i];
 
     // SystemLabel
-    if (line.includes('SystemLabel') || line.includes('System label:')) {
-      const m = line.match(/(?:SystemLabel|System label:)\s+(\S+)/i);
+    if (/System\s*Label/i.test(line) || /SystemLabel/i.test(line)) {
+      const m = line.match(/(?:System\s*Label\s*:?|SystemLabel)\s*(\S+)/i);
       if (m && !result.systemLabel) result.systemLabel = m[1];
     }
 
     // Number of atoms
-    if (line.includes('NumberOfAtoms') || line.includes('Number of atoms')) {
-      const m = line.match(/(?:NumberOfAtoms|Number of atoms\s*=)\s*(\d+)/i);
+    if (/Number of atoms/i.test(line) || /NumberOfAtoms/i.test(line)) {
+      const m = line.match(/(?:Number of atoms[^\n:=]*[:=]|NumberOfAtoms)\s*(\d+)/i);
       if (m && !result.numberOfAtoms) result.numberOfAtoms = parseInt(m[1], 10);
     }
 
     // Number of species
-    if (line.includes('NumberOfSpecies') || line.includes('Number of species')) {
-      const m = line.match(/(?:NumberOfSpecies|Number of species\s*=)\s*(\d+)/i);
+    if (/Number of species/i.test(line) || /NumberOfSpecies/i.test(line)) {
+      const m = line.match(/(?:Number of species[^\n:=]*[:=]|NumberOfSpecies)\s*(\d+)/i);
       if (m && !result.numberOfSpecies) result.numberOfSpecies = parseInt(m[1], 10);
     }
-
     // Mesh cutoff used
     if (line.includes('Mesh cutoff (required, used) =')) {
       const m = line.match(/Mesh cutoff \(required, used\)\s*=\s*([\d\.]+)\s+([\d\.]+)/);
@@ -109,11 +108,10 @@ export function parseSiestaOut(text) {
     }
 
     // Final total energy
-    if (line.includes('siesta: Total =') || line.includes('siesta: Final energy (eV):')) {
+    if (/siesta:\s*Total\s*=/i.test(line) || /siesta:\s*Final energy/i.test(line)) {
       const m = line.match(/siesta:\s*Total\s*=\s*([-\d\.]+)/);
       if (m) result.finalEnergyTot = parseFloat(m[1]);
     }
-
     // Max force
     if (line.includes('siesta: Max force =') || line.includes('Maximum force component =')) {
       const m = line.match(/(?:Max force\s*=|Maximum force component\s*=)\s*([-\d\.]+)/i);
@@ -139,11 +137,10 @@ export function parseSiestaOut(text) {
     }
 
     // Cell volume
-    if (line.includes('outcell: Cell volume (Ang**3)')) {
-      const m = line.match(/outcell:\s*Cell volume \(Ang\*\*3\)\s*:\s*([\d\.]+)/);
+    if (/Cell volume/i.test(line)) {
+      const m = line.match(/(?:siesta|outcell):\s*Cell volume[^:=]*[:=]\s*([\d\.]+)/i);
       if (m) result.cellVolume = parseFloat(m[1]);
     }
-
     // Cell angles
     if (line.includes('outcell: Cell angles (23,13,12) (deg):')) {
       const parts = line.split(':');

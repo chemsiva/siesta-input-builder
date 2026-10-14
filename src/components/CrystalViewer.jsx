@@ -223,17 +223,24 @@ export function CrystalViewer({ structure }) {
     if (engineMode !== 'webgl') return;
     const container = mountRef.current;
     if (!container) return;
-
-    container.replaceChildren();
+    while (container.firstChild) {
+      container.removeChild(container.firstChild);
+    }
 
     const width = container.clientWidth || 600;
     const height = 400;
 
     let renderer;
     try {
+      const testCanvas = document.createElement('canvas');
+      const testGL = testCanvas.getContext('webgl2') || testCanvas.getContext('webgl') || testCanvas.getContext('experimental-webgl');
+      if (!testGL) {
+        throw new Error('WebGL not supported');
+      }
       renderer = new THREE.WebGLRenderer({
         antialias: true,
         alpha: true,
+        preserveDrawingBuffer: true,
         failIfMajorPerformanceCaveat: false,
       });
     } catch {
@@ -241,10 +248,11 @@ export function CrystalViewer({ structure }) {
         renderer = new THREE.WebGLRenderer({
           antialias: false,
           alpha: false,
+          preserveDrawingBuffer: true,
           failIfMajorPerformanceCaveat: false,
         });
       } catch (err2) {
-        console.warn('WebGL context exhausted in browser. Falling back to 2D Canvas engine:', err2);
+        console.warn('WebGL context unavailable in browser. Falling back to 2D Canvas engine:', err2);
         setEngineMode('canvas2d');
         return;
       }
@@ -400,14 +408,29 @@ export function CrystalViewer({ structure }) {
     camera.lookAt(center);
     controls.target.copy(center);
     controls.update();
+    // Immediately render initial frame synchronously
+    try {
+      renderer.render(scene, camera);
+    } catch (e) {
+      console.warn('Initial WebGL render failed, switching to 2D canvas:', e);
+      setEngineMode('canvas2d');
+      return;
+    }
 
     let animId;
     const animate = () => {
       animId = requestAnimationFrame(animate);
-      controls.update();
-      renderer.render(scene, camera);
+      if (renderer && scene && camera) {
+        try {
+          controls.update();
+          renderer.render(scene, camera);
+        } catch (e) {
+          console.warn('WebGL render issue, auto-switching to 2D Canvas engine:', e);
+          cancelAnimationFrame(animId);
+          setEngineMode('canvas2d');
+        }
+      }
     };
-    animate();
 
     const handleResize = () => {
       if (!container) return;
@@ -422,14 +445,14 @@ export function CrystalViewer({ structure }) {
       cancelAnimationFrame(animId);
       window.removeEventListener('resize', handleResize);
       if (renderer) {
-        renderer.dispose();
-        renderer.forceContextLoss();
-        const gl = renderer.getContext();
-        if (gl && gl.getExtension('WEBGL_lose_context')) {
-          gl.getExtension('WEBGL_lose_context').loseContext();
+        if (renderer.domElement && renderer.domElement.parentNode === container) {
+          container.removeChild(renderer.domElement);
         }
+        renderer.dispose();
       }
-      container.replaceChildren();
+      while (container.firstChild) {
+        container.removeChild(container.firstChild);
+      }
     };
   }, [structure, showBonds, showCell, supercell, engineMode, atoms]);
 
@@ -768,3 +791,5 @@ export function CrystalViewer({ structure }) {
     </div>
   );
 }
+
+export default CrystalViewer;

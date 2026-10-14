@@ -5,8 +5,7 @@ import { parseFDF } from '../parser/fdfParser.js';
 import { interpolateNEBPath } from '../utils/nebInterpolator.js';
 import { generateNEBSuite } from '../utils/nebSuiteGenerator.js';
 import { SectionHeader } from '../components/FieldRow';
-
-const CrystalViewer = lazy(() => import('../components/CrystalViewer').then(m => ({ default: m.CrystalViewer })));
+import { CrystalViewer } from '../components/CrystalViewer.jsx';
 
 export function NEBSection() {
   const currentStructure = useFDFStore(s => s.structure);
@@ -480,9 +479,7 @@ export function NEBSection() {
           </div>
 
           {show3D && activeStructure && (
-            <Suspense fallback={<div className="info-box">Loading 3D Visualizer...</div>}>
-              <CrystalViewer structure={activeStructure} />
-            </Suspense>
+            <CrystalViewer structure={activeStructure} />
           )}
 
           {/* Download NEB Suite Button */}

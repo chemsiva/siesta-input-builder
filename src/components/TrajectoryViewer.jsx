@@ -69,6 +69,7 @@ export function TrajectoryViewer({ aniData, cellVectors }) {
       renderer = new THREE.WebGLRenderer({
         antialias: true,
         alpha: true,
+        preserveDrawingBuffer: true,
         failIfMajorPerformanceCaveat: false,
       });
     } catch {
@@ -76,6 +77,7 @@ export function TrajectoryViewer({ aniData, cellVectors }) {
         renderer = new THREE.WebGLRenderer({
           antialias: false,
           alpha: false,
+          preserveDrawingBuffer: true,
           failIfMajorPerformanceCaveat: false,
         });
       } catch (err2) {
@@ -225,12 +227,28 @@ export function TrajectoryViewer({ aniData, cellVectors }) {
     cellGroup.add(new THREE.ArrowHelper(v1.clone().normalize(), p0, arrowLen, 0xf87171, 0.5, 0.25));
     cellGroup.add(new THREE.ArrowHelper(v2.clone().normalize(), p0, arrowLen, 0x34d399, 0.5, 0.25));
     cellGroup.add(new THREE.ArrowHelper(v3.clone().normalize(), p0, arrowLen, 0x60a5fa, 0.5, 0.25));
+    // Immediately render initial frame synchronously
+    try {
+      renderer.render(scene, camera);
+    } catch (e) {
+      console.warn('Initial trajectory WebGL render failed, switching to 2D canvas:', e);
+      setEngineMode('canvas2d');
+      return;
+    }
 
     let animId;
     const animate = () => {
       animId = requestAnimationFrame(animate);
-      controls.update();
-      renderer.render(scene, camera);
+      if (renderer && scene && camera) {
+        try {
+          controls.update();
+          renderer.render(scene, camera);
+        } catch (e) {
+          console.warn('Trajectory WebGL render issue, falling back to 2D canvas:', e);
+          cancelAnimationFrame(animId);
+          setEngineMode('canvas2d');
+        }
+      }
     };
     animate();
 
@@ -251,7 +269,6 @@ export function TrajectoryViewer({ aniData, cellVectors }) {
           container.removeChild(renderer.domElement);
         }
         renderer.dispose();
-        renderer.forceContextLoss();
       }
       meshesRef.current = [];
     };
@@ -777,3 +794,5 @@ export function TrajectoryViewer({ aniData, cellVectors }) {
     </div>
   );
 }
+
+export default TrajectoryViewer;
