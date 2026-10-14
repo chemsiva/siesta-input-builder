@@ -62,9 +62,7 @@ export function centerSlabInCell(structure) {
     const shift = 0.5 - midZ;
 
     atoms.forEach(a => {
-      let nz = (parseFloat(a.z) || 0) + shift;
-      while (nz < 0) nz += 1.0;
-      while (nz >= 1.0) nz -= 1.0;
+      const nz = (parseFloat(a.z) || 0) + shift;
       a.z = nz.toFixed(8);
     });
   } else {

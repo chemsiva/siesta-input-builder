@@ -82,19 +82,17 @@ export const DEMO_STRUCTURES = {
 };
 
 function getElementInfo(labelOrZ) {
-  if (!labelOrZ) return { color: 0x9ca3af, radius: 1.0, sym: 'Si' };
+  if (!labelOrZ) return { color: 0x9ca3af, radius: 1.0, sym: 'X' };
 
-  // 1. Check if numeric atomic number Z (e.g. 14 -> Si)
-  const numericZ = parseInt(labelOrZ, 10);
-  if (!isNaN(numericZ) && Z_TO_SYMBOL[numericZ]) {
-    const sym = Z_TO_SYMBOL[numericZ];
-    return { ...(ELEMENT_DATA[sym] || { color: 0x9ca3af, radius: 1.0 }), sym };
-  }
+  const rawStr = String(labelOrZ).trim();
+  // 1. Direct match in ELEMENT_DATA (e.g. "C", "Pb", "Si")
+  if (ELEMENT_DATA[rawStr]) return { ...ELEMENT_DATA[rawStr], sym: rawStr };
 
-  // 2. Check clean string matching
-  const clean = String(labelOrZ).replace(/[\d+-_]/g, '').trim();
+  // 2. Strip digits and punctuation safely (note escaped hyphen \-)
+  const clean = rawStr.replace(/[\d+_\-\s]/g, '').trim();
   if (ELEMENT_DATA[clean]) return { ...ELEMENT_DATA[clean], sym: clean };
 
+  // 3. Try standard titlecase (e.g. "pb" -> "Pb", "FE" -> "Fe")
   if (clean.length >= 2) {
     const candidate = clean[0].toUpperCase() + clean[1].toLowerCase();
     if (ELEMENT_DATA[candidate]) return { ...ELEMENT_DATA[candidate], sym: candidate };
@@ -104,7 +102,14 @@ function getElementInfo(labelOrZ) {
     if (ELEMENT_DATA[candidate]) return { ...ELEMENT_DATA[candidate], sym: candidate };
   }
 
-  return { color: 0x94a3b8, radius: 1.0, sym: clean || 'Si' };
+  // 4. Check if numeric atomic number Z (e.g. "82" -> Pb, "53" -> I, "14" -> Si)
+  const numericZ = parseInt(rawStr, 10);
+  if (!isNaN(numericZ) && String(numericZ) === rawStr && Z_TO_SYMBOL[numericZ]) {
+    const sym = Z_TO_SYMBOL[numericZ];
+    return { ...(ELEMENT_DATA[sym] || { color: 0x9ca3af, radius: 1.0 }), sym };
+  }
+
+  return { color: 0x94a3b8, radius: 1.0, sym: clean || rawStr || 'X' };
 }
 
 export function CrystalViewer({ structure }) {
@@ -145,7 +150,12 @@ export function CrystalViewer({ structure }) {
       const x = parseFloat(a.x) || 0;
       const y = parseFloat(a.y) || 0;
       const z = parseFloat(a.z) || 0;
-      const spTag = a.label || speciesMap[a.species] || a.species || 'Si';
+      // Resolve species by index or label first (canonical source of truth)
+      const spObj = (structure.species || []).find(sp =>
+        String(sp.idx) === String(a.species) ||
+        (sp.label && String(sp.label).toLowerCase() === String(a.label).toLowerCase())
+      );
+      const spTag = spObj?.label || (spObj?.z ? Z_TO_SYMBOL[spObj.z] : null) || a.label || a.species || 'Si';
       const el = getElementInfo(spTag);
 
       let cx = x, cy = y, cz = z;
@@ -491,9 +501,14 @@ export function CrystalViewer({ structure }) {
       (v1[2] + v2[2] + v3[2]) * 0.5,
     ];
 
-    const cellLen = Math.sqrt(v1[0]**2 + v1[1]**2 + v1[2]**2);
-    const baseScale = (Math.min(w, h) * 0.36) / Math.max(6, cellLen);
-    const D = 100;
+    const len1 = Math.hypot(v1[0], v1[1], v1[2]);
+    const len2 = Math.hypot(v2[0], v2[1], v2[2]);
+    const len3 = Math.hypot(v3[0], v3[1], v3[2]);
+    const maxCellDim = Math.max(len1, len2, len3, 6);
+
+    // Base scale fits entire cell (even 40+ A tall slabs) cleanly into viewport
+    const baseScale = (Math.min(w, h) * 0.38) / maxCellDim;
+    const D = 120;
 
     const project = (x, y, z) => {
       const x0 = x - cc[0];
@@ -598,7 +613,7 @@ export function CrystalViewer({ structure }) {
     projected.forEach(a => {
       const sx = a.p.sx;
       const sy = a.p.sy;
-      const r = Math.max(5, a.radius * a.p.scale * 1.15);
+      const r = Math.max(4, Math.min(22, a.radius * a.p.scale * 1.15));
       const hex = '#' + a.color.toString(16).padStart(6, '0');
 
       const grad = ctx.createRadialGradient(
@@ -617,12 +632,14 @@ export function CrystalViewer({ structure }) {
       ctx.lineWidth = 0.8;
       ctx.stroke();
 
-      // Atom Symbol
-      ctx.fillStyle = '#ffffff';
-      ctx.font = 'bold 9px sans-serif';
-      ctx.textAlign = 'center';
-      ctx.textBaseline = 'middle';
-      ctx.fillText(a.element, sx, sy);
+      // Atom Symbol — only render text if sphere is large enough to be legible
+      if (r >= 7.5) {
+        ctx.fillStyle = '#ffffff';
+        ctx.font = `bold ${Math.max(7, Math.min(10, Math.floor(r * 0.85)))}px sans-serif`;
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(a.element, sx, sy);
+      }
     });
   }, [engineMode, atoms, showBonds, showCell, supercell, rotX, rotY, zoom, structure]);
 
