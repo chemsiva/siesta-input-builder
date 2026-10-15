@@ -19,6 +19,12 @@ export function DOSSection() {
     set('pdosKgrid', next);
   };
 
+  const ldosK = dos.ldosKgrid || [12, 12, 12];
+  const setLDOSK = (idx, val) => {
+    const next = [...ldosK];
+    next[idx] = parseInt(val) || 1;
+    set('ldosKgrid', next);
+  };
   return (
     <div className="section-pane">
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.8rem', marginBottom: '0.5rem' }}>
@@ -45,10 +51,10 @@ export function DOSSection() {
         Calculate the Total Density of States (DOS) and Projected Density of States (PDOS) on pseudo-atomic orbitals.
       </p>
 
-      {/* Main PDOS Toggle */}
+      {/* Main PDOS Toggle (Section 6.18.2) */}
       <div className="subsection">
         <div className="subsection-title">
-          Projected & Total Density of States
+          Partial &amp; Projected Density of States (Section 6.18.2)
           <label className="toggle">
             <input
               type="checkbox"
@@ -60,6 +66,12 @@ export function DOSSection() {
             </span>
           </label>
         </div>
+        <p className="subsection-desc">
+          Generates <code>SystemLabel.DOS</code> (Total DOS: Energy, Spin-Up, Spin-Down) and{' '}
+          <code>SystemLabel.PDOS</code> / <code>SystemLabel.PDOS.xml</code> (orbital-resolved PDOS).
+          Broadening uses a Gaussian distribution: <code>f(E) = (1 / w√π) exp(-((E - ε)/w)²)</code> with peak width <code>w = σ√2</code>.
+          Energies must be strictly ordered with lowest first (E<sub>min</sub> &lt; E<sub>max</sub>).
+        </p>
 
         {dos.enablePDOS ? (
           <>
@@ -228,23 +240,39 @@ export function DOSSection() {
         {dos.enableLDOS && (
           <>
             <p className="subsection-desc">
-              Computes real-space charge density of states integrated within an energy window [E<sub>min</sub>, E<sub>max</sub>] (stored in <code>SystemLabel.LDOS</code>). Useful for scanning tunneling microscopy (STM) simulations.
+              Integrates real-space wavefunctions over the energy window [E<sub>min</sub>, E<sub>max</sub>] at the DHSCF mesh.
+              Stored in <code>SystemLabel.LDOS</code> (readable by <code>IORHO</code>, used for STM simulation via Tersoff-Hamann approximation in <code>Util/STM/simple-stm</code>).
+              Produces <code>LDOS.grid.nc</code> if NetCDF is enabled. <em>Note: Not compatible with PEXSI.LDOS.</em>
             </p>
+
+            <FieldRow label="Energy Reference" keyword="LocalDensityOfStates">
+              <label className="toggle">
+                <input
+                  type="checkbox"
+                  checked={!!dos.ldosUseEF}
+                  onChange={e => set('ldosUseEF', e.target.checked)}
+                />
+                <span className="toggle-label">
+                  Align to Fermi Level (prefix <code>EF</code>: e.g. <code>EF -3.50 0.00 eV</code> for occupied states down to -3.5 eV below E<sub>F</sub>)
+                </span>
+              </label>
+            </FieldRow>
+
             <div className="field-row-group">
               <FieldRow label="LDOS E_min">
                 <TextInput
                   mono
-                  value={dos.ldosMin ?? '-2.0'}
+                  value={dos.ldosMin ?? '-3.50'}
                   onChange={v => set('ldosMin', v)}
-                  placeholder="-2.0"
+                  placeholder="-3.50"
                 />
               </FieldRow>
               <FieldRow label="LDOS E_max">
                 <TextInput
                   mono
-                  value={dos.ldosMax ?? '0.0'}
+                  value={dos.ldosMax ?? '0.00'}
                   onChange={v => set('ldosMax', v)}
-                  placeholder="0.0"
+                  placeholder="0.00"
                 />
               </FieldRow>
             </div>
@@ -255,6 +283,66 @@ export function DOSSection() {
                 options={ENERGY_UNITS}
               />
             </FieldRow>
+
+            {/* Dedicated LDOS k-grid */}
+            <div className="subsection" style={{ marginTop: '0.8rem' }}>
+              <div className="subsection-title">
+                LDOS k-Point Grid (Section 6.18.3)
+                <label className="toggle">
+                  <input
+                    type="checkbox"
+                    checked={!!dos.useCustomLdosKgrid}
+                    onChange={e => set('useCustomLdosKgrid', e.target.checked)}
+                  />
+                  <span className="toggle-label">
+                    Use dedicated k-grid for LDOS
+                  </span>
+                </label>
+              </div>
+
+              {dos.useCustomLdosKgrid ? (
+                <>
+                  <p className="subsection-desc">
+                    <code>%block LDOS.kgrid_Monkhorst_Pack</code> — fine-tunes k-point sampling for LDOS. SIESTA checks <code>LDOS.kgrid.?</code> → <code>DOS.kgrid.?</code> → default <code>kgrid_Monkhorst_Pack</code>.
+                  </p>
+                  <div className="field-row" style={{ alignItems: 'center' }}>
+                    <span className="field-label" style={{ minWidth: '100px' }}>Grid dimensions:</span>
+                    <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+                      <input
+                        type="number"
+                        min="1"
+                        className="input mono"
+                        style={{ width: '70px', textAlign: 'center' }}
+                        value={ldosK[0]}
+                        onChange={e => setLDOSK(0, e.target.value)}
+                      />
+                      <span>×</span>
+                      <input
+                        type="number"
+                        min="1"
+                        className="input mono"
+                        style={{ width: '70px', textAlign: 'center' }}
+                        value={ldosK[1]}
+                        onChange={e => setLDOSK(1, e.target.value)}
+                      />
+                      <span>×</span>
+                      <input
+                        type="number"
+                        min="1"
+                        className="input mono"
+                        style={{ width: '70px', textAlign: 'center' }}
+                        value={ldosK[2]}
+                        onChange={e => setLDOSK(2, e.target.value)}
+                      />
+                    </div>
+                  </div>
+                </>
+              ) : (
+                <div className="info-box">
+                  Falls back to standard SCF k-grid (or DOS k-grid).
+                </div>
+              )}
+            </div>
           </>
         )}
       </div>

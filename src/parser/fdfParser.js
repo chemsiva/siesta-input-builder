@@ -261,14 +261,33 @@ export function parseFDF(text) {
     }
   }
 
-  // Local Density of States
+  // Local Density of States (Section 6.18.3)
   const ldosBlock = blockMap['localdensityofstates'];
   if (ldosBlock && ldosBlock.length > 0) {
     result.dos.enableLDOS = true;
     const tokens = ldosBlock[0].trim().split(/\s+/);
-    if (tokens[0]) result.dos.ldosMin = tokens[0];
-    if (tokens[1]) result.dos.ldosMax = tokens[1];
-    if (tokens[2]) result.dos.ldosUnits = tokens[2];
+    if (tokens[0]?.toUpperCase() === 'EF') {
+      result.dos.ldosUseEF = true;
+      if (tokens[1]) result.dos.ldosMin = tokens[1];
+      if (tokens[2]) result.dos.ldosMax = tokens[2];
+      if (tokens[3]) result.dos.ldosUnits = tokens[3];
+    } else {
+      result.dos.ldosUseEF = false;
+      if (tokens[0]) result.dos.ldosMin = tokens[0];
+      if (tokens[1]) result.dos.ldosMax = tokens[1];
+      if (tokens[2]) result.dos.ldosUnits = tokens[2];
+    }
+  }
+
+  // LDOS k-grid
+  const ldosKBlock = blockMap['ldos.kgrid_monkhorst_pack'] || blockMap['ldos.kgrid.monkhorstpack'] || blockMap['ldos.kgrid.monkhorst_pack'];
+  if (ldosKBlock && ldosKBlock.length >= 3) {
+    result.dos.useCustomLdosKgrid = true;
+    result.dos.ldosKgrid = [
+      Number(ldosKBlock[0].trim().split(/\s+/)[0]) || 12,
+      Number(ldosKBlock[1].trim().split(/\s+/)[1]) || 12,
+      Number(ldosKBlock[2].trim().split(/\s+/)[2]) || 12,
+    ];
   }
 
   if (g('WriteEigenvalues') === 'true' || g('WriteEigenvalues') === 'T') {

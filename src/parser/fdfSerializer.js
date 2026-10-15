@@ -374,12 +374,24 @@ export function serializeFDF(state) {
       const pdosRow = `  ${efPrefix}${dos.eMin}  ${dos.eMax}  ${dos.peakWidth}  ${dos.numPoints}  ${dos.energyUnits || 'eV'}`;
       dosLines.push(block('ProjectedDensityOfStates', [pdosRow]));
       if (dos.useCustomKgrid && dos.pdosKgrid && dos.pdosKgrid.length === 3) {
-        dosLines.push(`PDOS.kgrid.MonkhorstPack [${dos.pdosKgrid[0]} ${dos.pdosKgrid[1]} ${dos.pdosKgrid[2]}]`);
+        dosLines.push(block('PDOS.kgrid_Monkhorst_Pack', [
+          `  ${dos.pdosKgrid[0]}   0   0   0.0`,
+          `   0  ${dos.pdosKgrid[1]}   0   0.0`,
+          `   0   0  ${dos.pdosKgrid[2]}   0.0`,
+        ]));
       }
     }
     if (dos.enableLDOS) {
-      const ldosRow = `  ${dos.ldosMin}  ${dos.ldosMax}  ${dos.ldosUnits || 'eV'}`;
+      const efPrefix = dos.ldosUseEF ? 'EF ' : '';
+      const ldosRow = `  ${efPrefix}${dos.ldosMin ?? '-3.50'}  ${dos.ldosMax ?? '0.00'}  ${dos.ldosUnits || 'eV'}`;
       dosLines.push(block('LocalDensityOfStates', [ldosRow]));
+      if (dos.useCustomLdosKgrid && dos.ldosKgrid && dos.ldosKgrid.length === 3) {
+        dosLines.push(block('LDOS.kgrid_Monkhorst_Pack', [
+          `  ${dos.ldosKgrid[0]}   0   0   0.0`,
+          `   0  ${dos.ldosKgrid[1]}   0   0.0`,
+          `   0   0  ${dos.ldosKgrid[2]}   0.0`,
+        ]));
+      }
     }
     if (dos.writeEigenvalues) {
       dosLines.push(line('WriteEigenvalues', 'true'));
