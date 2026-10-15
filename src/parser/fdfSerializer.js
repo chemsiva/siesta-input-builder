@@ -342,22 +342,70 @@ export function serializeFDF(state) {
   }
 
   // ── MD / Relaxation ───────────────────────────────────────────────────────
+  const mdType = md['MD.TypeOfRun'] || 'CG';
   const mdLines = [`# ── MD / Relaxation ─────────────────────────────────────`];
-  mdLines.push(line('MD.TypeOfRun',        md['MD.TypeOfRun']));
-  if (md['MD.TypeOfRun'] === 'CG') {
-    mdLines.push(line('MD.NumCGsteps',     md['MD.NumCGsteps']));
-    mdLines.push(line('MD.MaxForceTol',    md['MD.MaxForceTol']));
-    mdLines.push(line('MD.MaxDispl',       md['MD.MaxDispl']));
+  mdLines.push(line('MD.TypeOfRun', mdType));
+
+  const isRelaxation = ['CG', 'Broyden', 'FIRE'].includes(mdType);
+  const isDynamics = ['Verlet', 'Nose', 'ParrinelloRahman', 'NoseParrinelloRahman', 'Anneal'].includes(mdType);
+
+  if (isRelaxation) {
+    const stepsVal = md['MD.NumCGsteps'] || md['MD.Steps'] || '100';
+    if (mdType === 'CG') {
+      mdLines.push(line('MD.NumCGsteps', stepsVal));
+    } else {
+      mdLines.push(line('MD.Steps', stepsVal));
+    }
+
+    if (md['MD.MaxForceTol']) mdLines.push(line('MD.MaxForceTol', md['MD.MaxForceTol']));
+    if (md['MD.MaxDispl']) mdLines.push(line('MD.MaxDispl', md['MD.MaxDispl']));
+
+    // Variable cell relaxation options
     if (bool(md['MD.VariableCell']) === 'true') {
       mdLines.push(line('MD.VariableCell', 'true'));
-      mdLines.push(line('MD.MaxStressTol', md['MD.MaxStressTol']));
-      mdLines.push(line('MD.TargetPressure', md['MD.TargetPressure']));
+      if (md['MD.MaxStressTol']) mdLines.push(line('MD.MaxStressTol', md['MD.MaxStressTol']));
+      const targetP = md['Target.Pressure'] || md['MD.TargetPressure'];
+      if (targetP) mdLines.push(line('Target.Pressure', targetP));
+      if (bool(md['Constant.Volume']) === 'true' || bool(md['MD.ConstantVolume']) === 'true') {
+        mdLines.push(line('Constant.Volume', 'true'));
+      }
+      if (['Broyden', 'FIRE'].includes(mdType) && bool(md['MD.RelaxCellOnly']) === 'true') {
+        mdLines.push(line('MD.RelaxCellOnly', 'true'));
+      }
+      if (md['MD.PreconditionVariableCell']) {
+        mdLines.push(line('MD.PreconditionVariableCell', md['MD.PreconditionVariableCell']));
+      }
     }
-  } else if (['Verlet','Nose','ParrinelloRahman','NoseParrinelloRahman','Anneal'].includes(md['MD.TypeOfRun'])) {
-    mdLines.push(line('MD.Steps',               md['MD.Steps']));
+
+    // Method-specific options
+    if (mdType === 'CG') {
+      if (bool(md['MD.UseSaveCG']) === 'true') mdLines.push(line('MD.UseSaveCG', 'true'));
+    } else if (mdType === 'Broyden') {
+      if (md['MD.Broyden.History.Steps']) mdLines.push(line('MD.Broyden.History.Steps', md['MD.Broyden.History.Steps']));
+      if (bool(md['MD.Broyden.Cycle.On.Maxit']) === 'false') mdLines.push(line('MD.Broyden.Cycle.On.Maxit', 'false'));
+      if (md['MD.Broyden.Initial.Inverse.Jacobian']) mdLines.push(line('MD.Broyden.Initial.Inverse.Jacobian', md['MD.Broyden.Initial.Inverse.Jacobian']));
+    } else if (mdType === 'FIRE') {
+      if (md['MD.FIRE.TimeStep']) mdLines.push(line('MD.FIRE.TimeStep', md['MD.FIRE.TimeStep']));
+    }
+  } else if (isDynamics) {
+    if (md['MD.Steps'] || md['MD.FinalTimeStep']) {
+      mdLines.push(line('MD.FinalTimeStep', md['MD.FinalTimeStep'] || md['MD.Steps']));
+    }
+    if (md['MD.LengthTimeStep']) mdLines.push(line('MD.LengthTimeStep', md['MD.LengthTimeStep']));
     if (md['MD.InitialTemperature']) mdLines.push(line('MD.InitialTemperature', md['MD.InitialTemperature']));
-    if (md['MD.TargetTemperature'])  mdLines.push(line('MD.TargetTemperature',  md['MD.TargetTemperature']));
-  } else if (md['MD.TypeOfRun'] === 'FC') {
+    if (md['MD.TargetTemperature']) mdLines.push(line('MD.TargetTemperature', md['MD.TargetTemperature']));
+    if (md['MD.NoseMass'] && ['Nose', 'NoseParrinelloRahman'].includes(mdType)) {
+      mdLines.push(line('MD.NoseMass', md['MD.NoseMass']));
+    }
+    if (md['MD.ParrinelloRahmanMass'] && ['ParrinelloRahman', 'NoseParrinelloRahman'].includes(mdType)) {
+      mdLines.push(line('MD.ParrinelloRahmanMass', md['MD.ParrinelloRahmanMass']));
+    }
+    if (mdType === 'Anneal') {
+      if (md['MD.AnnealOption']) mdLines.push(line('MD.AnnealOption', md['MD.AnnealOption']));
+      if (md['MD.TauRelax']) mdLines.push(line('MD.TauRelax', md['MD.TauRelax']));
+      if (md['MD.BulkModulus']) mdLines.push(line('MD.BulkModulus', md['MD.BulkModulus']));
+    }
+  } else if (mdType === 'FC') {
     mdLines.push(line('FC.first',        md['FC.first'] || '1'));
     mdLines.push(line('FC.last',         md['FC.last'] || (structure.atoms && structure.atoms.length ? String(structure.atoms.length) : '1')));
     mdLines.push(line('FC.Displacement', md['FC.Displacement'] || '0.04 Bohr'));

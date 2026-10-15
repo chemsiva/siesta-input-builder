@@ -51,8 +51,15 @@ export function MDSection() {
       {isRelax && (
         <>
           <div className="field-row-group">
-            <FieldRow label="MD.NumCGsteps" keyword="MD.NumCGsteps">
-              <TextInput mono value={md['MD.NumCGsteps']} onChange={v => set('MD.NumCGsteps', v)} placeholder="200" />
+            <FieldRow
+              label={mdType === 'CG' ? 'MD.NumCGsteps' : 'MD.Steps (max iterations)'}
+              keyword={mdType === 'CG' ? 'MD.NumCGsteps' : 'MD.Steps'}>
+              <TextInput
+                mono
+                value={md['MD.NumCGsteps'] || md['MD.Steps'] || '100'}
+                onChange={v => { set('MD.NumCGsteps', v); set('MD.Steps', v); }}
+                placeholder="100"
+              />
             </FieldRow>
             <FieldRow label="MD.MaxDispl" keyword="MD.MaxDispl">
               <div className="input-with-unit">
@@ -74,25 +81,90 @@ export function MDSection() {
               <input type="checkbox"
                 checked={md['MD.VariableCell'] === 'true'}
                 onChange={e => set('MD.VariableCell', e.target.checked ? 'true' : 'false')} />
-              <span className="toggle-label">Allow cell shape/volume to relax</span>
+              <span className="toggle-label">Allow cell shape/volume to relax (Section 7.2)</span>
             </label>
           </FieldRow>
 
           {md['MD.VariableCell'] === 'true' && (
-            <div className="field-row-group">
-              <FieldRow label="MD.MaxStressTol" keyword="MD.MaxStressTol">
-                <div className="input-with-unit">
-                  <TextInput mono value={msVal} onChange={v => set('MD.MaxStressTol', `${v} ${msUnit}`)} placeholder="0.1" />
-                  <SelectInput value={msUnit} onChange={u => set('MD.MaxStressTol', `${msVal} ${u}`)} options={STRESS_UNITS} />
-                </div>
+            <>
+              <div className="field-row-group">
+                <FieldRow label="MD.MaxStressTol" keyword="MD.MaxStressTol">
+                  <div className="input-with-unit">
+                    <TextInput mono value={msVal} onChange={v => set('MD.MaxStressTol', `${v} ${msUnit}`)} placeholder="1.0" />
+                    <SelectInput value={msUnit} onChange={u => set('MD.MaxStressTol', `${msVal} ${u}`)} options={STRESS_UNITS} />
+                  </div>
+                </FieldRow>
+                <FieldRow label="Target.Pressure" keyword="Target.Pressure">
+                  <div className="input-with-unit">
+                    <TextInput mono value={mpVal} onChange={v => { set('Target.Pressure', `${v} ${mpUnit}`); set('MD.TargetPressure', `${v} ${mpUnit}`); }} placeholder="0.0" />
+                    <SelectInput value={mpUnit} onChange={u => { set('Target.Pressure', `${mpVal} ${u}`); set('MD.TargetPressure', `${mpVal} ${u}`); }} options={PRESS_UNITS} />
+                  </div>
+                </FieldRow>
+              </div>
+
+              <FieldRow label="Constant.Volume" keyword="Constant.Volume">
+                <label className="toggle">
+                  <input type="checkbox"
+                    checked={md['Constant.Volume'] === 'true'}
+                    onChange={e => set('Constant.Volume', e.target.checked ? 'true' : 'false')} />
+                  <span className="toggle-label">Keep cell volume constant (relax cell shape & atomic coords only)</span>
+                </label>
               </FieldRow>
-              <FieldRow label="MD.TargetPressure" keyword="MD.TargetPressure">
-                <div className="input-with-unit">
-                  <TextInput mono value={mpVal} onChange={v => set('MD.TargetPressure', `${v} ${mpUnit}`)} placeholder="0.0" />
-                  <SelectInput value={mpUnit} onChange={u => set('MD.TargetPressure', `${mpVal} ${u}`)} options={PRESS_UNITS} />
-                </div>
+
+              {['Broyden', 'FIRE'].includes(mdType) && (
+                <FieldRow label="MD.RelaxCellOnly" keyword="MD.RelaxCellOnly">
+                  <label className="toggle">
+                    <input type="checkbox"
+                      checked={md['MD.RelaxCellOnly'] === 'true'}
+                      onChange={e => set('MD.RelaxCellOnly', e.target.checked ? 'true' : 'false')} />
+                    <span className="toggle-label">Relax cell only (rescale atomic coordinates, keeping fractional positions fixed)</span>
+                  </label>
+                </FieldRow>
+              )}
+            </>
+          )}
+
+          {/* Algorithm-Specific Blocks */}
+          {mdType === 'Broyden' && (
+            <div className="subsection" style={{ marginTop: '0.6rem' }}>
+              <div className="subsection-title">Broyden Optimization Parameters (Section 7.2.2)</div>
+              <div className="field-row-group">
+                <FieldRow label="MD.Broyden.History.Steps" keyword="MD.Broyden.History.Steps">
+                  <TextInput mono value={md['MD.Broyden.History.Steps'] || '5'} onChange={v => set('MD.Broyden.History.Steps', v)} placeholder="5" />
+                </FieldRow>
+                <FieldRow label="MD.Broyden.Initial.Inverse.Jacobian" keyword="MD.Broyden.Initial.Inverse.Jacobian">
+                  <TextInput mono value={md['MD.Broyden.Initial.Inverse.Jacobian'] || '1.0'} onChange={v => set('MD.Broyden.Initial.Inverse.Jacobian', v)} placeholder="1.0" />
+                </FieldRow>
+              </div>
+              <FieldRow label="MD.Broyden.Cycle.On.Maxit" keyword="MD.Broyden.Cycle.On.Maxit">
+                <label className="toggle">
+                  <input type="checkbox"
+                    checked={md['MD.Broyden.Cycle.On.Maxit'] !== 'false'}
+                    onChange={e => set('MD.Broyden.Cycle.On.Maxit', e.target.checked ? 'true' : 'false')} />
+                  <span className="toggle-label">Shift history data sets on reaching max (default true)</span>
+                </label>
               </FieldRow>
             </div>
+          )}
+
+          {mdType === 'FIRE' && (
+            <div className="subsection" style={{ marginTop: '0.6rem' }}>
+              <div className="subsection-title">FIRE Relaxation Parameters (Section 7.2.3)</div>
+              <FieldRow label="MD.FIRE.TimeStep" keyword="MD.FIRE.TimeStep">
+                <TextInput mono value={md['MD.FIRE.TimeStep'] || '1.0 fs'} onChange={v => set('MD.FIRE.TimeStep', v)} placeholder="1.0 fs" />
+              </FieldRow>
+            </div>
+          )}
+
+          {mdType === 'CG' && (
+            <FieldRow label="MD.UseSaveCG" keyword="MD.UseSaveCG">
+              <label className="toggle">
+                <input type="checkbox"
+                  checked={md['MD.UseSaveCG'] === 'true'}
+                  onChange={e => set('MD.UseSaveCG', e.target.checked ? 'true' : 'false')} />
+                <span className="toggle-label">Read conjugate-gradient history from SystemLabel.CG (continuation run)</span>
+              </label>
+            </FieldRow>
           )}
         </>
       )}
