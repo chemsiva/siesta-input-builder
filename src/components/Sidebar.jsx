@@ -7,7 +7,7 @@ const SECTIONS = [
   { id: 'dft',       label: '④ DFT / XC',        icon: '⚡' },
   { id: 'scf',       label: '⑤ SCF Control',     icon: '🔄' },
   { id: 'kpoints',   label: '⑥ K-Points',        icon: '🔵' },
-  { id: 'dos',       label: '⑦ DOS / PDOS',      icon: '📊' },
+  { id: 'dos',       label: '⑦ Bands & DOS / PDOS', icon: '📶' },
   { id: 'output',    label: '⑧ Output Flags',    icon: '📄' },
   { id: 'md',        label: '⑨ MD / Relax',      icon: '🏃' },
   { id: 'neb',       label: '⑩ CI-NEB',          icon: '⛰️' },

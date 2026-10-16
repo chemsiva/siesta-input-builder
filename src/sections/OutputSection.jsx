@@ -9,6 +9,7 @@ import { TrajectoryViewer } from '../components/TrajectoryViewer.jsx';
 import { DOSPlotterSuite } from '../components/DOSPlotterSuite.jsx';
 import { DOSComparisonStudio } from '../components/DOSComparisonStudio.jsx';
 import { STMVisualizer } from '../components/STMVisualizer.jsx';
+import { BandStructureChart } from '../components/BandStructureChart.jsx';
 import { ErrorBoundary } from '../components/ErrorBoundary.jsx';
 const TRAJ_FLAGS = [
   { key: 'WriteMDXmol',      type: 'bool', label: 'WriteMDXmol (.ANI)', fileExt: '.ANI',
@@ -114,7 +115,7 @@ export function OutputSection() {
 
   // Mode: 'flags' (configure FDF keywords) vs 'viewer' (upload & analyze .out, .MDE, .ANI)
   const [activeTab, setActiveTab] = useState('flags');
-  const [dosViewMode, setDosViewMode] = useState('single'); // 'single' | 'compare' | 'stm'
+  const [dosViewMode, setDosViewMode] = useState('bands'); // 'bands' | 'single' | 'compare' | 'stm'
   // Uploaded and parsed data states
   const [outData, setOutData] = useState(null);
   const [mdeData, setMdeData] = useState(null);
@@ -784,14 +785,20 @@ export function OutputSection() {
           <div className="subsection" style={{ marginTop: '1.5rem' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.6rem', marginBottom: '0.6rem' }}>
               <div className="subsection-title" style={{ margin: 0 }}>
-                📈 Density of States (DOS) &amp; Projected DOS (PDOS) Suite
+                📶 Electronic Band Structure &amp; DOS Suite
               </div>
-              <div style={{ display: 'flex', gap: '0.35rem' }}>
+              <div style={{ display: 'flex', gap: '0.35rem', flexWrap: 'wrap' }}>
+                <button
+                  type="button"
+                  className={`btn btn-xs ${dosViewMode === 'bands' ? 'btn-primary' : 'btn-secondary'}`}
+                  onClick={() => setDosViewMode('bands')}>
+                  📶 Band Structure (.bands)
+                </button>
                 <button
                   type="button"
                   className={`btn btn-xs ${dosViewMode === 'single' ? 'btn-primary' : 'btn-secondary'}`}
                   onClick={() => setDosViewMode('single')}>
-                  Single Dataset
+                  Single DOS
                 </button>
                 <button
                   type="button"
@@ -803,11 +810,19 @@ export function OutputSection() {
                   type="button"
                   className={`btn btn-xs ${dosViewMode === 'stm' ? 'btn-primary' : 'btn-secondary'}`}
                   onClick={() => setDosViewMode('stm')}>
-                  🔭 Simulated STM (simple-stm)
+                  🔭 Simulated STM
                 </button>
               </div>
             </div>
-            {dosViewMode === 'stm' ? <STMVisualizer /> : dosViewMode === 'compare' ? <DOSComparisonStudio /> : <DOSPlotterSuite />}
+            {dosViewMode === 'bands' ? (
+              <BandStructureChart />
+            ) : dosViewMode === 'stm' ? (
+              <STMVisualizer />
+            ) : dosViewMode === 'compare' ? (
+              <DOSComparisonStudio />
+            ) : (
+              <DOSPlotterSuite />
+            )}
           </div>
           {/* Hint if nothing uploaded yet */}
           {!outData && !mdeData && !aniData && (
