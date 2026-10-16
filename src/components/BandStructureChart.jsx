@@ -1,14 +1,25 @@
 import React, { useState, useRef, useMemo } from 'react';
-import { parseBands, analyzeBandStructure, generateDemoBandStructure } from '../parser/bandsParser.js';
+import { parseBands, analyzeBandStructure, generateDemoBandStructure, generateDatFile } from '../parser/bandsParser.js';
+import { exportSvg, exportPng, exportTiff } from '../utils/imageExport.js';
 
 export function BandStructureChart({ initialBands = null }) {
   const fileInputRef = useRef(null);
+  const svgRef = useRef(null);
 
   const [bandsData, setBandsData] = useState(() => initialBands || generateDemoBandStructure('silicon'));
   const [eMin, setEMin] = useState('-6.0');
   const [eMax, setEMax] = useState('6.0');
   const [shiftEf, setShiftEf] = useState(true);
   const [hoverK, setHoverK] = useState(null);
+
+  // Publication Styling Controls
+  const [plotTheme, setPlotTheme] = useState('white'); // 'white' (publication) vs 'dark' (screen)
+  const [curveColoring, setCurveColoring] = useState('twotone'); // 'twotone' | 'monochrome' | 'spectral'
+  const [lineWidth, setLineWidth] = useState('2.0');
+  const [showVbmCbm, setShowVbmCbm] = useState(true);
+  const [showShading, setShowShading] = useState(true);
+  const [showTopTicks, setShowTopTicks] = useState(true);
+
   const [statusMsg, setStatusMsg] = useState('');
   const [errorMsg, setErrorMsg] = useState('');
 
@@ -18,7 +29,7 @@ export function BandStructureChart({ initialBands = null }) {
     if (!file) return;
 
     setErrorMsg('');
-    setStatusMsg(`Loading ${file.name}...`);
+    setStatusMsg(`Reading ${file.name}...`);
 
     const reader = new FileReader();
     reader.onload = (evt) => {
@@ -49,10 +60,10 @@ export function BandStructureChart({ initialBands = null }) {
     return analyzeBandStructure(bandsData);
   }, [bandsData]);
 
-  // Chart dimensions
-  const width = 860;
-  const height = 440;
-  const margin = { top: 35, right: 35, bottom: 45, left: 65 };
+  // Chart dimensions (Spacious publication proportions)
+  const width = 880;
+  const height = 480;
+  const margin = { top: 45, right: 35, bottom: 50, left: 65 };
   const plotW = width - margin.left - margin.right;
   const plotH = height - margin.top - margin.bottom;
 
@@ -69,6 +80,44 @@ export function BandStructureChart({ initialBands = null }) {
     return margin.top + plotH - ((shiftedE - eminVal) / (emaxVal - eminVal || 1)) * plotH;
   };
 
+  // Theme Colors
+  const theme = useMemo(() => {
+    if (plotTheme === 'white') {
+      return {
+        bg: '#ffffff',
+        border: '#000000',
+        borderWidth: 1.6,
+        text: '#000000',
+        subText: '#475569',
+        gridLine: '#cbd5e1',
+        gridDash: '3,3',
+        kLine: '#334155',
+        kLineWidth: 1.2,
+        fermiLine: '#dc2626',
+        shading: 'rgba(241, 245, 249, 0.75)',
+        valenceColor: '#0284c7', // Sky-600
+        conductionColor: '#d97706', // Amber-600
+        monoColor: '#0f172a', // Solid Black/Navy
+      };
+    }
+    return {
+      bg: '#0f172a',
+      border: 'rgba(148, 163, 184, 0.4)',
+      borderWidth: 1.2,
+      text: '#e2e8f0',
+      subText: '#94a3b8',
+      gridLine: 'rgba(148, 163, 184, 0.12)',
+      gridDash: '2,2',
+      kLine: 'rgba(148, 163, 184, 0.35)',
+      kLineWidth: 1.2,
+      fermiLine: '#ef4444',
+      shading: 'rgba(51, 65, 85, 0.22)',
+      valenceColor: '#38bdf8',
+      conductionColor: '#fbbf24',
+      monoColor: '#f8fafc',
+    };
+  }, [plotTheme]);
+
   // Generate SVG path for a single band dispersion curve
   const createBandPath = (energies) => {
     if (!energies || energies.length === 0 || !bandsData?.kDist) return '';
@@ -82,9 +131,43 @@ export function BandStructureChart({ initialBands = null }) {
     return d;
   };
 
+  // Spectral palette for multi-color mode
+  const spectralColors = ['#e11d48', '#ea580c', '#d97706', '#16a34a', '#0891b2', '#2563eb', '#7c3aed', '#c026d3'];
+
+  // Exports
+  const handleExportSVG = () => {
+    if (!svgRef.current) return;
+    const fname = `${bandsData.title || 'siesta_bands'}.svg`;
+    exportSvg(svgRef.current, fname);
+  };
+
+  const handleExportPNG = async () => {
+    if (!svgRef.current) return;
+    const fname = `${bandsData.title || 'siesta_bands'}_300dpi.png`;
+    await exportPng(svgRef.current, width, height, fname, 3.5, plotTheme);
+  };
+
+  const handleExportTIFF = async () => {
+    if (!svgRef.current) return;
+    const fname = `${bandsData.title || 'siesta_bands'}_300dpi.tif`;
+    await exportTiff(svgRef.current, width, height, fname, 2.8, plotTheme);
+  };
+
+  const handleExportDAT = () => {
+    if (!bandsData) return;
+    const datContent = generateDatFile(bandsData, analysis, shiftEf);
+    const blob = new Blob([datContent], { type: 'text/plain;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${bandsData.title || 'siesta_bands'}.dat`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
   return (
     <div className="band-structure-visualizer" style={{ marginTop: '0.5rem' }}>
-      {/* Visualizer Toolbar */}
+      {/* Visualizer Top Ribbon */}
       <div style={{
         display: 'flex',
         justifyContent: 'space-between',
@@ -97,6 +180,7 @@ export function BandStructureChart({ initialBands = null }) {
         border: '1px solid var(--border)',
         marginBottom: '0.8rem',
       }}>
+        {/* Left: Upload & Demos */}
         <div style={{ display: 'flex', gap: '0.4rem', alignItems: 'center', flexWrap: 'wrap' }}>
           <button className="btn btn-primary btn-sm" onClick={() => fileInputRef.current?.click()}>
             📁 Upload .bands File
@@ -121,29 +205,133 @@ export function BandStructureChart({ initialBands = null }) {
           </button>
         </div>
 
-        {/* Energy Range Controls */}
-        <div style={{ display: 'flex', gap: '0.4rem', alignItems: 'center' }}>
-          <span style={{ fontSize: '0.75rem', color: 'var(--muted)' }}>Energy (eV):</span>
-          <input
-            type="number"
-            step="1.0"
-            className="input mono"
-            style={{ width: '60px', fontSize: '0.75rem', padding: '0.15rem 0.3rem' }}
-            value={eMin}
-            onChange={e => setEMin(e.target.value)}
-          />
-          <span style={{ fontSize: '0.75rem', color: 'var(--muted)' }}>to</span>
-          <input
-            type="number"
-            step="1.0"
-            className="input mono"
-            style={{ width: '60px', fontSize: '0.75rem', padding: '0.15rem 0.3rem' }}
-            value={eMax}
-            onChange={e => setEMax(e.target.value)}
-          />
-          <label className="toggle" style={{ fontSize: '0.75rem', marginLeft: '0.3rem' }}>
+        {/* Right: Export Buttons Suite */}
+        <div style={{ display: 'flex', gap: '0.35rem', alignItems: 'center', flexWrap: 'wrap' }}>
+          <button
+            type="button"
+            className="btn btn-secondary btn-xs"
+            onClick={handleExportDAT}
+            title="Download tabulated .dat data file with k-distances, band eigenvalues, and Gnuplot script">
+            📊 Download .dat Data
+          </button>
+          <button
+            type="button"
+            className="btn btn-secondary btn-xs"
+            onClick={handleExportSVG}
+            title="Download vector SVG figure (for Illustrator, Inkscape, Overleaf)">
+            📐 SVG Vector
+          </button>
+          <button
+            type="button"
+            className="btn btn-secondary btn-xs"
+            onClick={handleExportPNG}
+            title="Download publication-quality 300 DPI PNG figure">
+            📸 PNG (300 DPI)
+          </button>
+          <button
+            type="button"
+            className="btn btn-secondary btn-xs"
+            onClick={handleExportTIFF}
+            title="Download uncompressed 300 DPI TIFF figure (standard for APS/ACS/Nature)">
+            📄 TIFF (300 DPI)
+          </button>
+        </div>
+      </div>
+
+      {/* Publication Styling & Range Toolbar */}
+      <div style={{
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        flexWrap: 'wrap',
+        gap: '0.6rem',
+        padding: '0.45rem 0.8rem',
+        background: 'var(--surface)',
+        borderRadius: '6px',
+        border: '1px solid var(--border)',
+        marginBottom: '0.8rem',
+      }}>
+        {/* Style Controls */}
+        <div style={{ display: 'flex', gap: '0.6rem', alignItems: 'center', flexWrap: 'wrap' }}>
+          {/* Theme switcher */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
+            <span style={{ fontSize: '0.72rem', color: 'var(--muted)', fontWeight: 600 }}>Theme:</span>
+            <button
+              type="button"
+              className={`btn btn-xs ${plotTheme === 'white' ? 'btn-primary' : 'btn-secondary'}`}
+              onClick={() => setPlotTheme('white')}
+              title="Publication White background (ideal for papers and articles)">
+              🌞 Publication White
+            </button>
+            <button
+              type="button"
+              className={`btn btn-xs ${plotTheme === 'dark' ? 'btn-primary' : 'btn-secondary'}`}
+              onClick={() => setPlotTheme('dark')}
+              title="Dark screen canvas">
+              🌙 Dark Canvas
+            </button>
+          </div>
+
+          {/* Color mode */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
+            <span style={{ fontSize: '0.72rem', color: 'var(--muted)', fontWeight: 600 }}>Curves:</span>
+            <select
+              className="input select"
+              style={{ fontSize: '0.72rem', height: '24px' }}
+              value={curveColoring}
+              onChange={e => setCurveColoring(e.target.value)}>
+              <option value="twotone">Two-Tone (Valence Blue / Conduction Gold)</option>
+              <option value="monochrome">Publication Monochrome (Solid Black)</option>
+              <option value="spectral">Spectral (Multi-Color)</option>
+            </select>
+          </div>
+
+          {/* Line width */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
+            <span style={{ fontSize: '0.72rem', color: 'var(--muted)', fontWeight: 600 }}>Width:</span>
+            <select
+              className="input select"
+              style={{ fontSize: '0.72rem', height: '24px' }}
+              value={lineWidth}
+              onChange={e => setLineWidth(e.target.value)}>
+              <option value="1.5">1.5 pt (Thin)</option>
+              <option value="2.0">2.0 pt (Standard)</option>
+              <option value="2.5">2.5 pt (Bold)</option>
+            </select>
+          </div>
+        </div>
+
+        {/* Range and Toggles */}
+        <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', flexWrap: 'wrap' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
+            <span style={{ fontSize: '0.72rem', color: 'var(--muted)' }}>Energy (eV):</span>
+            <input
+              type="number"
+              step="1.0"
+              className="input mono"
+              style={{ width: '55px', fontSize: '0.72rem', padding: '0.1rem 0.25rem' }}
+              value={eMin}
+              onChange={e => setEMin(e.target.value)}
+            />
+            <span style={{ fontSize: '0.72rem', color: 'var(--muted)' }}>to</span>
+            <input
+              type="number"
+              step="1.0"
+              className="input mono"
+              style={{ width: '55px', fontSize: '0.72rem', padding: '0.1rem 0.25rem' }}
+              value={eMax}
+              onChange={e => setEMax(e.target.value)}
+            />
+          </div>
+
+          <label className="toggle" style={{ fontSize: '0.72rem' }}>
             <input type="checkbox" checked={shiftEf} onChange={e => setShiftEf(e.target.checked)} />
             <span className="toggle-label">E − E_F = 0</span>
+          </label>
+
+          <label className="toggle" style={{ fontSize: '0.72rem' }}>
+            <input type="checkbox" checked={showVbmCbm} onChange={e => setShowVbmCbm(e.target.checked)} />
+            <span className="toggle-label">VBM/CBM Dots</span>
           </label>
         </div>
       </div>
@@ -151,17 +339,19 @@ export function BandStructureChart({ initialBands = null }) {
       {statusMsg && <div style={{ color: 'var(--success, #10b981)', marginBottom: '0.5rem', fontSize: '0.78rem' }}>{statusMsg}</div>}
       {errorMsg && <div style={{ color: 'var(--error, #ef4444)', marginBottom: '0.5rem', fontSize: '0.78rem' }}>{errorMsg}</div>}
 
-      {/* Main SVG Band Structure Plot */}
+      {/* Main SVG Publication Band Structure Plot */}
       <div style={{
-        background: '#0f172a',
+        background: theme.bg,
         borderRadius: '8px',
         border: '1px solid var(--border)',
         padding: '1rem',
         position: 'relative',
+        boxShadow: plotTheme === 'white' ? '0 4px 12px rgba(0,0,0,0.08)' : 'none',
       }}>
         <svg
+          ref={svgRef}
           viewBox={`0 0 ${width} ${height}`}
-          style={{ width: '100%', height: 'auto', display: 'block' }}
+          style={{ width: '100%', height: 'auto', display: 'block', background: theme.bg }}
           onMouseMove={(e) => {
             const rect = e.currentTarget.getBoundingClientRect();
             const svgX = ((e.clientX - rect.left) / rect.width) * width;
@@ -172,31 +362,72 @@ export function BandStructureChart({ initialBands = null }) {
           }}
           onMouseLeave={() => setHoverK(null)}>
 
-          {/* Shaded Valence Band Region (E <= 0) */}
-          <rect
-            x={margin.left}
-            y={getY(ef)}
-            width={plotW}
-            height={Math.max(0, margin.top + plotH - getY(ef))}
-            fill="rgba(51, 65, 85, 0.20)"
-          />
+          {/* Background fill */}
+          <rect x="0" y="0" width={width} height={height} fill={theme.bg} />
 
-          {/* High-Symmetry K-Point Ticks & Vertical Lines */}
+          {/* Shaded Valence Band Region (E <= 0) */}
+          {showShading && (
+            <rect
+              x={margin.left}
+              y={getY(ef)}
+              width={plotW}
+              height={Math.max(0, margin.top + plotH - getY(ef))}
+              fill={theme.shading}
+            />
+          )}
+
+          {/* Vertical K-Path High-Symmetry Boundary Lines (Top to Bottom of box) */}
           {bandsData?.ticks?.map((t, idx) => {
             const x = getX(t.k);
             return (
               <g key={idx}>
+                {/* Full-height vertical line connecting bottom to top border */}
                 <line
                   x1={x} y1={margin.top}
                   x2={x} y2={margin.top + plotH}
-                  stroke="rgba(148, 163, 184, 0.35)"
-                  strokeWidth="1.2"
+                  stroke={theme.kLine}
+                  strokeWidth={theme.kLineWidth}
+                  strokeDasharray={idx === 0 || idx === bandsData.ticks.length - 1 ? 'none' : '3,2'}
                 />
+
+                {/* Top tick mark */}
+                {showTopTicks && (
+                  <line
+                    x1={x} y1={margin.top}
+                    x2={x} y2={margin.top + 6}
+                    stroke={theme.border}
+                    strokeWidth="1.5"
+                  />
+                )}
+
+                {/* Top High-Symmetry Label */}
+                {showTopTicks && (
+                  <text
+                    x={x}
+                    y={margin.top - 8}
+                    fill={theme.text}
+                    fontSize="12"
+                    fontWeight="700"
+                    fontFamily="sans-serif"
+                    textAnchor="middle">
+                    {t.label}
+                  </text>
+                )}
+
+                {/* Bottom tick mark */}
+                <line
+                  x1={x} y1={margin.top + plotH - 6}
+                  x2={x} y2={margin.top + plotH}
+                  stroke={theme.border}
+                  strokeWidth="1.5"
+                />
+
+                {/* Bottom High-Symmetry Label */}
                 <text
                   x={x}
-                  y={margin.top + plotH + 18}
-                  fill="#e2e8f0"
-                  fontSize="12"
+                  y={margin.top + plotH + 20}
+                  fill={theme.text}
+                  fontSize="13"
                   fontWeight="700"
                   fontFamily="sans-serif"
                   textAnchor="middle">
@@ -210,14 +441,14 @@ export function BandStructureChart({ initialBands = null }) {
           <line
             x1={margin.left} y1={getY(ef)}
             x2={margin.left + plotW} y2={getY(ef)}
-            stroke="#ef4444"
-            strokeWidth="1.5"
+            stroke={theme.fermiLine}
+            strokeWidth="1.6"
             strokeDasharray="5,3"
           />
           <text
             x={margin.left + plotW - 6}
             y={getY(ef) - 6}
-            fill="#ef4444"
+            fill={theme.fermiLine}
             fontSize="10"
             fontFamily="monospace"
             fontWeight="700"
@@ -225,23 +456,31 @@ export function BandStructureChart({ initialBands = null }) {
             E_F = {bandsData?.ef?.toFixed(3)} eV
           </text>
 
-          {/* Y-Axis Energy Grid Ticks */}
+          {/* Y-Axis Energy Grid Ticks (Left & Right borders) */}
           {[-6, -4, -2, 0, 2, 4, 6].map(eVal => {
             if (eVal < eminVal || eVal > emaxVal) return null;
             const y = getY(ef + eVal);
             return (
               <g key={eVal}>
+                {/* Horizontal grid line */}
                 <line
                   x1={margin.left} y1={y}
                   x2={margin.left + plotW} y2={y}
-                  stroke="rgba(148, 163, 184, 0.12)"
-                  strokeDasharray="2,2"
+                  stroke={theme.gridLine}
+                  strokeDasharray={theme.gridDash}
+                  strokeWidth="0.8"
                 />
+                {/* Left tick mark */}
+                <line x1={margin.left} y1={y} x2={margin.left + 5} y2={y} stroke={theme.border} strokeWidth="1.2" />
+                {/* Right tick mark */}
+                <line x1={margin.left + plotW - 5} y1={y} x2={margin.left + plotW} y2={y} stroke={theme.border} strokeWidth="1.2" />
+
+                {/* Left label */}
                 <text
                   x={margin.left - 8}
-                  y={y + 3}
-                  fill="#94a3b8"
-                  fontSize="10"
+                  y={y + 3.5}
+                  fill={theme.text}
+                  fontSize="11"
                   fontFamily="monospace"
                   textAnchor="end">
                   {eVal > 0 ? `+${eVal}` : eVal}
@@ -253,7 +492,14 @@ export function BandStructureChart({ initialBands = null }) {
           {/* Band Dispersion Curves */}
           {bandsData?.bandsUp?.map((bEnergies, ib) => {
             const isValence = Math.max(...bEnergies) <= ef + 0.05;
-            const strokeColor = isValence ? '#38bdf8' : '#fbbf24';
+            let strokeColor = theme.monoColor;
+
+            if (curveColoring === 'twotone') {
+              strokeColor = isValence ? theme.valenceColor : theme.conductionColor;
+            } else if (curveColoring === 'spectral') {
+              strokeColor = spectralColors[ib % spectralColors.length];
+            }
+
             const pathD = createBandPath(bEnergies);
             return (
               <path
@@ -261,65 +507,85 @@ export function BandStructureChart({ initialBands = null }) {
                 d={pathD}
                 fill="none"
                 stroke={strokeColor}
-                strokeWidth="2.0"
+                strokeWidth={lineWidth}
                 strokeLinecap="round"
                 strokeLinejoin="round"
-                opacity="0.9"
               />
             );
           })}
 
-          {/* VBM and CBM Indicator Dots */}
-          {analysis && !analysis.isMetal && (
+          {/* VBM and CBM Marker Dots */}
+          {showVbmCbm && analysis && !analysis.isMetal && (
             <g>
               {/* VBM Dot */}
               <circle
                 cx={getX(analysis.vbmK)}
                 cy={getY(analysis.vbm)}
-                r="4.5"
-                fill="#38bdf8"
-                stroke="#fff"
-                strokeWidth="1.5"
+                r="5.0"
+                fill="#0284c7"
+                stroke="#ffffff"
+                strokeWidth="1.8"
               />
+              <text
+                x={getX(analysis.vbmK)}
+                y={getY(analysis.vbm) + 16}
+                fill="#0284c7"
+                fontSize="10"
+                fontFamily="monospace"
+                fontWeight="700"
+                textAnchor="middle">
+                VBM ({analysis.vbm.toFixed(2)} eV)
+              </text>
+
               {/* CBM Dot */}
               <circle
                 cx={getX(analysis.cbmK)}
                 cy={getY(analysis.cbm)}
-                r="4.5"
-                fill="#fbbf24"
-                stroke="#fff"
-                strokeWidth="1.5"
+                r="5.0"
+                fill="#d97706"
+                stroke="#ffffff"
+                strokeWidth="1.8"
               />
+              <text
+                x={getX(analysis.cbmK)}
+                y={getY(analysis.cbm) - 10}
+                fill="#d97706"
+                fontSize="10"
+                fontFamily="monospace"
+                fontWeight="700"
+                textAnchor="middle">
+                CBM ({analysis.cbm.toFixed(2)} eV)
+              </text>
             </g>
           )}
 
-          {/* Axes Borders */}
+          {/* Outer Box Borders (Publication 4-sided frame) */}
           <rect
             x={margin.left}
             y={margin.top}
             width={plotW}
             height={plotH}
             fill="none"
-            stroke="rgba(148, 163, 184, 0.4)"
-            strokeWidth="1.2"
+            stroke={theme.border}
+            strokeWidth={theme.borderWidth}
           />
 
-          {/* Axis Labels */}
+          {/* Axis Titles */}
           <text
             x={margin.left + plotW / 2}
-            y={height - 8}
-            fill="#e2e8f0"
-            fontSize="12"
-            fontWeight="600"
+            y={height - 10}
+            fill={theme.text}
+            fontSize="13"
+            fontWeight="700"
             textAnchor="middle">
             Wavevector k (Brillouin Zone Path)
           </text>
           <text
             x={-height / 2}
             y={18}
-            fill="#e2e8f0"
-            fontSize="12"
-            fontWeight="600"
+            fill={theme.text}
+            fontSize="13"
+            fontWeight="700"
             textAnchor="middle"
             transform="rotate(-90)">
             {shiftEf ? 'Energy E − E_F (eV)' : 'Energy (eV)'}
@@ -343,21 +609,23 @@ export function BandStructureChart({ initialBands = null }) {
             position: 'absolute',
             top: '15px',
             right: '15px',
-            background: 'rgba(15, 23, 42, 0.94)',
+            background: plotTheme === 'white' ? 'rgba(255, 255, 255, 0.95)' : 'rgba(15, 23, 42, 0.94)',
             border: '1px solid var(--border)',
+            boxShadow: '0 2px 8px rgba(0,0,0,0.15)',
             borderRadius: '6px',
             padding: '0.4rem 0.65rem',
             fontSize: '0.72rem',
             fontFamily: 'monospace',
+            color: theme.text,
             pointerEvents: 'none',
             zIndex: 10,
           }}>
-            <div style={{ color: '#ec4899', fontWeight: 700 }}>k-distance: {hoverK.toFixed(3)}</div>
+            <div style={{ color: '#ec4899', fontWeight: 700 }}>k-distance: {hoverK.toFixed(3)} Å⁻¹</div>
           </div>
         )}
       </div>
 
-      {/* Band Structure Analysis Card */}
+      {/* Band Structure Metrics Card */}
       {analysis && (
         <div style={{
           marginTop: '0.8rem',

@@ -331,3 +331,59 @@ export function generateDemoBandStructure(presetKey = 'silicon') {
     ticks,
   };
 }
+
+/**
+ * Generate publication-grade tabulated .dat file with full metadata and plotting script
+ */
+export function generateDatFile(bandsData, analysis, shiftEf = true) {
+  const { title, ef, nband, nk, kDist, bandsUp, ticks } = bandsData;
+  const efShift = shiftEf ? (ef || 0) : 0;
+
+  let text = `# ==============================================================================\n`;
+  text += `# SIESTA Electronic Band Structure Data File (.dat)\n`;
+  text += `# System: ${title || 'SIESTA Calculation'}\n`;
+  text += `# Fermi Energy (E_F): ${(ef || 0).toFixed(4)} eV (${shiftEf ? 'Shifted: E - E_F = 0' : 'Absolute Energies'})\n`;
+  text += `# Number of Bands: ${nband}\n`;
+  text += `# Number of k-points: ${nk}\n`;
+  if (analysis) {
+    text += `# Electronic Nature: ${analysis.type}\n`;
+    text += `# Band Gap (E_g): ${analysis.bandGap.toFixed(4)} eV\n`;
+    text += `# Valence Band Maximum (VBM): ${analysis.vbm.toFixed(4)} eV at k = ${analysis.vbmK.toFixed(4)} (${analysis.vbmLabel})\n`;
+    text += `# Conduction Band Minimum (CBM): ${analysis.cbm.toFixed(4)} eV at k = ${analysis.cbmK.toFixed(4)} (${analysis.cbmLabel})\n`;
+  }
+  text += `#\n`;
+  text += `# High-Symmetry K-Path Ticks:\n`;
+  (ticks || []).forEach(t => {
+    text += `#   k = ${t.k.toFixed(6).padStart(10)}   Label: ${t.label}\n`;
+  });
+  text += `#\n`;
+  text += `# Quick Plotting Script for Gnuplot:\n`;
+  text += `#   set xlabel "Wavevector k"\n`;
+  text += `#   set ylabel "Energy E - E_F (eV)"\n`;
+  text += `#   set zeroaxis lt -1\n`;
+  if (ticks && ticks.length > 0) {
+    const xticsStr = ticks.map(t => `"${t.label.replace('Γ', '{/Symbol G}')}" ${t.k.toFixed(4)}`).join(', ');
+    text += `#   set xtics (${xticsStr})\n`;
+  }
+  text += `#   plot for [col=2:${nband + 1}] 'bands.dat' using 1:col with lines lw 2 notitle\n`;
+  text += `# ==============================================================================\n`;
+
+  // Column headers
+  let header = `# ${'k_dist(1/Ang)'.padEnd(16)}`;
+  for (let b = 1; b <= nband; b++) {
+    header += ` ${(`Band_${b}(eV)`).padStart(14)}`;
+  }
+  text += `${header}\n`;
+
+  // Rows
+  for (let ik = 0; ik < nk; ik++) {
+    let row = `  ${kDist[ik].toFixed(8).padStart(14)}`;
+    for (let ib = 0; ib < nband; ib++) {
+      const e = bandsUp[ib][ik] - efShift;
+      row += ` ${e.toFixed(6).padStart(14)}`;
+    }
+    text += `${row}\n`;
+  }
+
+  return text;
+}
