@@ -362,18 +362,32 @@ export function BandStructureChart({ initialBands = null }) {
           }}
           onMouseLeave={() => setHoverK(null)}>
 
+          {/* Definitions for Clean SVG Clipping to keep lines inside the box */}
+          <defs>
+            <clipPath id="band-plot-clip">
+              <rect
+                x={margin.left}
+                y={margin.top}
+                width={plotW}
+                height={plotH}
+              />
+            </clipPath>
+          </defs>
+
           {/* Background fill */}
           <rect x="0" y="0" width={width} height={height} fill={theme.bg} />
 
           {/* Shaded Valence Band Region (E <= 0) */}
           {showShading && (
-            <rect
-              x={margin.left}
-              y={getY(ef)}
-              width={plotW}
-              height={Math.max(0, margin.top + plotH - getY(ef))}
-              fill={theme.shading}
-            />
+            <g clipPath="url(#band-plot-clip)">
+              <rect
+                x={margin.left}
+                y={getY(ef)}
+                width={plotW}
+                height={Math.max(0, margin.top + plotH - getY(ef))}
+                fill={theme.shading}
+              />
+            </g>
           )}
 
           {/* Vertical K-Path High-Symmetry Boundary Lines (Top to Bottom of box) */}
@@ -489,76 +503,77 @@ export function BandStructureChart({ initialBands = null }) {
             );
           })}
 
-          {/* Band Dispersion Curves */}
-          {bandsData?.bandsUp?.map((bEnergies, ib) => {
-            const isValence = Math.max(...bEnergies) <= ef + 0.05;
-            let strokeColor = theme.monoColor;
+          {/* Band Dispersion Curves & Markers strictly clipped inside the box! */}
+          <g clipPath="url(#band-plot-clip)">
+            {bandsData?.bandsUp?.map((bEnergies, ib) => {
+              const isValence = Math.max(...bEnergies) <= ef + 0.05;
+              let strokeColor = theme.monoColor;
 
-            if (curveColoring === 'twotone') {
-              strokeColor = isValence ? theme.valenceColor : theme.conductionColor;
-            } else if (curveColoring === 'spectral') {
-              strokeColor = spectralColors[ib % spectralColors.length];
-            }
+              if (curveColoring === 'twotone') {
+                strokeColor = isValence ? theme.valenceColor : theme.conductionColor;
+              } else if (curveColoring === 'spectral') {
+                strokeColor = spectralColors[ib % spectralColors.length];
+              }
 
-            const pathD = createBandPath(bEnergies);
-            return (
-              <path
-                key={ib}
-                d={pathD}
-                fill="none"
-                stroke={strokeColor}
-                strokeWidth={lineWidth}
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-            );
-          })}
+              const pathD = createBandPath(bEnergies);
+              return (
+                <path
+                  key={ib}
+                  d={pathD}
+                  fill="none"
+                  stroke={strokeColor}
+                  strokeWidth={lineWidth}
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              );
+            })}
 
-          {/* VBM and CBM Marker Dots */}
-          {showVbmCbm && analysis && !analysis.isMetal && (
-            <g>
-              {/* VBM Dot */}
-              <circle
-                cx={getX(analysis.vbmK)}
-                cy={getY(analysis.vbm)}
-                r="5.0"
-                fill="#0284c7"
-                stroke="#ffffff"
-                strokeWidth="1.8"
-              />
-              <text
-                x={getX(analysis.vbmK)}
-                y={getY(analysis.vbm) + 16}
-                fill="#0284c7"
-                fontSize="10"
-                fontFamily="monospace"
-                fontWeight="700"
-                textAnchor="middle">
-                VBM ({analysis.vbm.toFixed(2)} eV)
-              </text>
+            {/* VBM and CBM Marker Dots */}
+            {showVbmCbm && analysis && !analysis.isMetal && (
+              <g>
+                {/* VBM Dot */}
+                <circle
+                  cx={getX(analysis.vbmK)}
+                  cy={getY(analysis.vbm)}
+                  r="5.0"
+                  fill="#0284c7"
+                  stroke="#ffffff"
+                  strokeWidth="1.8"
+                />
+                <text
+                  x={getX(analysis.vbmK)}
+                  y={getY(analysis.vbm) + 16}
+                  fill="#0284c7"
+                  fontSize="10"
+                  fontFamily="monospace"
+                  fontWeight="700"
+                  textAnchor="middle">
+                  VBM ({analysis.vbm.toFixed(2)} eV)
+                </text>
 
-              {/* CBM Dot */}
-              <circle
-                cx={getX(analysis.cbmK)}
-                cy={getY(analysis.cbm)}
-                r="5.0"
-                fill="#d97706"
-                stroke="#ffffff"
-                strokeWidth="1.8"
-              />
-              <text
-                x={getX(analysis.cbmK)}
-                y={getY(analysis.cbm) - 10}
-                fill="#d97706"
-                fontSize="10"
-                fontFamily="monospace"
-                fontWeight="700"
-                textAnchor="middle">
-                CBM ({analysis.cbm.toFixed(2)} eV)
-              </text>
-            </g>
-          )}
-
+                {/* CBM Dot */}
+                <circle
+                  cx={getX(analysis.cbmK)}
+                  cy={getY(analysis.cbm)}
+                  r="5.0"
+                  fill="#d97706"
+                  stroke="#ffffff"
+                  strokeWidth="1.8"
+                />
+                <text
+                  x={getX(analysis.cbmK)}
+                  y={getY(analysis.cbm) - 10}
+                  fill="#d97706"
+                  fontSize="10"
+                  fontFamily="monospace"
+                  fontWeight="700"
+                  textAnchor="middle">
+                  CBM ({analysis.cbm.toFixed(2)} eV)
+                </text>
+              </g>
+            )}
+          </g>
           {/* Outer Box Borders (Publication 4-sided frame) */}
           <rect
             x={margin.left}
