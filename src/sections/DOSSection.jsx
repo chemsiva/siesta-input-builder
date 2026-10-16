@@ -3,6 +3,7 @@ import { useFDFStore } from '../store/fdfStore';
 import { FieldRow, SelectInput, TextInput, SectionHeader } from '../components/FieldRow';
 import { DOSPlotterSuite } from '../components/DOSPlotterSuite.jsx';
 import { DOSComparisonStudio } from '../components/DOSComparisonStudio.jsx';
+import { STMVisualizer } from '../components/STMVisualizer.jsx';
 
 const ENERGY_UNITS = ['eV', 'Ry', 'Hartree'];
 
@@ -44,12 +45,19 @@ export function DOSSection() {
           <button
             className={`btn ${activeTab === 'comparison' ? 'btn-primary' : 'btn-secondary'} btn-sm`}
             onClick={() => setActiveTab('comparison')}>
-            🔬 Multi-DOS Comparison Studio
+            🔬 Multi-DOS Comparison
+          </button>
+          <button
+            className={`btn ${activeTab === 'stm' ? 'btn-primary' : 'btn-secondary'} btn-sm`}
+            onClick={() => setActiveTab('stm')}>
+            🔭 Simulated STM (simple-stm)
           </button>
         </div>
       </div>
 
-      {activeTab === 'comparison' ? (
+      {activeTab === 'stm' ? (
+        <STMVisualizer />
+      ) : activeTab === 'comparison' ? (
         <DOSComparisonStudio />
       ) : activeTab === 'plotter' ? (
         <DOSPlotterSuite />

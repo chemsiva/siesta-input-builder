@@ -8,6 +8,7 @@ import { ConvergenceChart } from '../components/ConvergenceChart.jsx';
 import { TrajectoryViewer } from '../components/TrajectoryViewer.jsx';
 import { DOSPlotterSuite } from '../components/DOSPlotterSuite.jsx';
 import { DOSComparisonStudio } from '../components/DOSComparisonStudio.jsx';
+import { STMVisualizer } from '../components/STMVisualizer.jsx';
 import { ErrorBoundary } from '../components/ErrorBoundary.jsx';
 const TRAJ_FLAGS = [
   { key: 'WriteMDXmol',      type: 'bool', label: 'WriteMDXmol (.ANI)', fileExt: '.ANI',
@@ -113,7 +114,7 @@ export function OutputSection() {
 
   // Mode: 'flags' (configure FDF keywords) vs 'viewer' (upload & analyze .out, .MDE, .ANI)
   const [activeTab, setActiveTab] = useState('flags');
-  const [dosViewMode, setDosViewMode] = useState('single'); // 'single' | 'compare'
+  const [dosViewMode, setDosViewMode] = useState('single'); // 'single' | 'compare' | 'stm'
   // Uploaded and parsed data states
   const [outData, setOutData] = useState(null);
   const [mdeData, setMdeData] = useState(null);
@@ -798,11 +799,16 @@ export function OutputSection() {
                   onClick={() => setDosViewMode('compare')}>
                   🔬 Multi-DOS Comparison
                 </button>
+                <button
+                  type="button"
+                  className={`btn btn-xs ${dosViewMode === 'stm' ? 'btn-primary' : 'btn-secondary'}`}
+                  onClick={() => setDosViewMode('stm')}>
+                  🔭 Simulated STM (simple-stm)
+                </button>
               </div>
             </div>
-            {dosViewMode === 'single' ? <DOSPlotterSuite /> : <DOSComparisonStudio />}
+            {dosViewMode === 'stm' ? <STMVisualizer /> : dosViewMode === 'compare' ? <DOSComparisonStudio /> : <DOSPlotterSuite />}
           </div>
-
           {/* Hint if nothing uploaded yet */}
           {!outData && !mdeData && !aniData && (
             <div className="info-box" style={{ marginTop: '1rem' }}>
