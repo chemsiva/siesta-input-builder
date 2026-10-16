@@ -7,6 +7,7 @@ import { parseSiestaOut } from '../parser/outParser.js';
 import { ConvergenceChart } from '../components/ConvergenceChart.jsx';
 import { TrajectoryViewer } from '../components/TrajectoryViewer.jsx';
 import { DOSPlotterSuite } from '../components/DOSPlotterSuite.jsx';
+import { DOSComparisonStudio } from '../components/DOSComparisonStudio.jsx';
 import { ErrorBoundary } from '../components/ErrorBoundary.jsx';
 const TRAJ_FLAGS = [
   { key: 'WriteMDXmol',      type: 'bool', label: 'WriteMDXmol (.ANI)', fileExt: '.ANI',
@@ -112,7 +113,7 @@ export function OutputSection() {
 
   // Mode: 'flags' (configure FDF keywords) vs 'viewer' (upload & analyze .out, .MDE, .ANI)
   const [activeTab, setActiveTab] = useState('flags');
-
+  const [dosViewMode, setDosViewMode] = useState('single'); // 'single' | 'compare'
   // Uploaded and parsed data states
   const [outData, setOutData] = useState(null);
   const [mdeData, setMdeData] = useState(null);
@@ -780,10 +781,26 @@ export function OutputSection() {
           )}
           {/* DOS & PDOS Electronic Structure Analysis Suite */}
           <div className="subsection" style={{ marginTop: '1.5rem' }}>
-            <div className="subsection-title">
-              📈 Density of States (DOS) & Projected DOS (PDOS) Visualizer
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.6rem', marginBottom: '0.6rem' }}>
+              <div className="subsection-title" style={{ margin: 0 }}>
+                📈 Density of States (DOS) &amp; Projected DOS (PDOS) Suite
+              </div>
+              <div style={{ display: 'flex', gap: '0.35rem' }}>
+                <button
+                  type="button"
+                  className={`btn btn-xs ${dosViewMode === 'single' ? 'btn-primary' : 'btn-secondary'}`}
+                  onClick={() => setDosViewMode('single')}>
+                  Single Dataset
+                </button>
+                <button
+                  type="button"
+                  className={`btn btn-xs ${dosViewMode === 'compare' ? 'btn-primary' : 'btn-secondary'}`}
+                  onClick={() => setDosViewMode('compare')}>
+                  🔬 Multi-DOS Comparison
+                </button>
+              </div>
             </div>
-            <DOSPlotterSuite />
+            {dosViewMode === 'single' ? <DOSPlotterSuite /> : <DOSComparisonStudio />}
           </div>
 
           {/* Hint if nothing uploaded yet */}

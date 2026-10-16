@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useFDFStore } from '../store/fdfStore';
 import { FieldRow, SelectInput, TextInput, SectionHeader } from '../components/FieldRow';
 import { DOSPlotterSuite } from '../components/DOSPlotterSuite.jsx';
+import { DOSComparisonStudio } from '../components/DOSComparisonStudio.jsx';
 
 const ENERGY_UNITS = ['eV', 'Ry', 'Hartree'];
 
@@ -29,7 +30,7 @@ export function DOSSection() {
     <div className="section-pane">
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.8rem', marginBottom: '0.5rem' }}>
         <SectionHeader title="Density of States (DOS / PDOS)" />
-        <div style={{ display: 'flex', gap: '0.4rem' }}>
+        <div style={{ display: 'flex', gap: '0.4rem', flexWrap: 'wrap' }}>
           <button
             className={`btn ${activeTab === 'input' ? 'btn-primary' : 'btn-secondary'} btn-sm`}
             onClick={() => setActiveTab('input')}>
@@ -38,12 +39,19 @@ export function DOSSection() {
           <button
             className={`btn ${activeTab === 'plotter' ? 'btn-primary' : 'btn-secondary'} btn-sm`}
             onClick={() => setActiveTab('plotter')}>
-            📈 Plot DOS / PDOS Graph
+            📈 Single-Dataset Visualizer
+          </button>
+          <button
+            className={`btn ${activeTab === 'comparison' ? 'btn-primary' : 'btn-secondary'} btn-sm`}
+            onClick={() => setActiveTab('comparison')}>
+            🔬 Multi-DOS Comparison Studio
           </button>
         </div>
       </div>
 
-      {activeTab === 'plotter' ? (
+      {activeTab === 'comparison' ? (
+        <DOSComparisonStudio />
+      ) : activeTab === 'plotter' ? (
         <DOSPlotterSuite />
       ) : (
         <>
