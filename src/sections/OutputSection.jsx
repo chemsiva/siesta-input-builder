@@ -10,6 +10,9 @@ import { DOSPlotterSuite } from '../components/DOSPlotterSuite.jsx';
 import { DOSComparisonStudio } from '../components/DOSComparisonStudio.jsx';
 import { STMVisualizer } from '../components/STMVisualizer.jsx';
 import { BandStructureChart } from '../components/BandStructureChart.jsx';
+import { WorkFunctionChart } from '../components/WorkFunctionChart.jsx';
+import { WorkFunctionComparisonStudio } from '../components/WorkFunctionComparisonStudio.jsx';
+import { parse1DPotentialData, parsePotentialCube, generatePotentialFromOut, generateDemoPotential } from '../parser/workFunctionParser.js';
 import { ErrorBoundary } from '../components/ErrorBoundary.jsx';
 const TRAJ_FLAGS = [
   { key: 'WriteMDXmol',      type: 'bool', label: 'WriteMDXmol (.ANI)', fileExt: '.ANI',
@@ -105,6 +108,7 @@ siesta:         Total =    -468.422030
 siesta:         Fermi =      -5.128500
 siesta: Max force =           0.004210
 siesta: Cell volume =      1000.000000 Ang**3
+dhscf: Vacuum level (max, mean) =    0.892311    0.851461 eV
 Job completed
 `;
 export function OutputSection() {
@@ -116,11 +120,14 @@ export function OutputSection() {
   // Mode: 'flags' (configure FDF keywords) vs 'viewer' (upload & analyze .out, .MDE, .ANI)
   const [activeTab, setActiveTab] = useState('flags');
   const [dosViewMode, setDosViewMode] = useState('bands'); // 'bands' | 'single' | 'compare' | 'stm'
+  const [wfViewMode, setWfViewMode] = useState('profile'); // 'profile' | 'compare'
+  const [potData, setPotData] = useState(() => generateDemoPotential());
+  const potInputRef = useRef(null);
+
   // Uploaded and parsed data states
   const [outData, setOutData] = useState(null);
   const [mdeData, setMdeData] = useState(null);
   const [aniData, setAniData] = useState(null);
-
   const [loadingMsg, setLoadingMsg] = useState('');
   const [errorMsg, setErrorMsg] = useState('');
 
@@ -146,6 +153,9 @@ export function OutputSection() {
       try {
         const parsed = parseSiestaOut(ev.target.result);
         setOutData(parsed);
+        if (parsed.vacuumLevelMax !== null && parsed.fermiEnergy !== null) {
+          setPotData(generatePotentialFromOut(parsed.vacuumLevelMax, parsed.vacuumLevelMean, parsed.fermiEnergy));
+        }
         setLoadingMsg('');
       } catch (err) {
         setErrorMsg(`Failed to parse ${file.name}: ${err.message}`);
@@ -270,7 +280,23 @@ export function OutputSection() {
         reader.readAsText(file);
       } else if (name.endsWith('.out') || name.endsWith('.log')) {
         reader.onload = (ev) => {
-          try { setOutData(parseSiestaOut(ev.target.result)); } catch (err) { setErrorMsg(err.message); }
+          try {
+            const parsed = parseSiestaOut(ev.target.result);
+            setOutData(parsed);
+            if (parsed.vacuumLevelMax !== null && parsed.fermiEnergy !== null) {
+              setPotData(generatePotentialFromOut(parsed.vacuumLevelMax, parsed.vacuumLevelMean, parsed.fermiEnergy));
+            }
+          } catch (err) { setErrorMsg(err.message); }
+        };
+        reader.readAsText(file);
+      } else if (name.endsWith('.cube')) {
+        reader.onload = (ev) => {
+          try { setPotData(parsePotentialCube(ev.target.result, outData?.fermiEnergy || -4.35)); } catch (err) { setErrorMsg(err.message); }
+        };
+        reader.readAsText(file);
+      } else if (name.endsWith('.dat') || (name.includes('pot') && name.endsWith('.txt'))) {
+        reader.onload = (ev) => {
+          try { setPotData(parse1DPotentialData(ev.target.result, outData?.fermiEnergy || -4.35)); } catch (err) { setErrorMsg(err.message); }
         };
         reader.readAsText(file);
       }
@@ -823,6 +849,125 @@ export function OutputSection() {
             ) : (
               <DOSPlotterSuite />
             )}
+          </div>
+
+          {/* ═══════════════════════════════════════════════════════════════════ */}
+          {/* 5. ELECTROSTATIC POTENTIAL, VACUUM LEVEL & WORK FUNCTION (MACROAVE) */}
+          {/* ═══════════════════════════════════════════════════════════════════ */}
+          <div className="subsection" style={{ marginTop: '1.5rem' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.6rem', marginBottom: '0.6rem' }}>
+              <div>
+                <div className="subsection-title" style={{ margin: 0 }}>
+                  ⚡ Electrostatic Potential &amp; Vacuum Level / Work Function (Macroave)
+                </div>
+                <span className="hint" style={{ fontSize: '0.74rem' }}>
+                  Planar average potential profile V̄(z), vacuum level V_vac, and work function Φ = V_vac − E_F (SIESTA Util/Macroave &amp; grid2cube)
+                </span>
+              </div>
+              <div style={{ display: 'flex', gap: '0.35rem', alignItems: 'center', flexWrap: 'wrap' }}>
+                <button
+                  type="button"
+                  className={`btn btn-xs ${wfViewMode === 'profile' ? 'btn-primary' : 'btn-secondary'}`}
+                  onClick={() => setWfViewMode('profile')}>
+                  📊 Potential Profile V̄(z)
+                </button>
+                <button
+                  type="button"
+                  className={`btn btn-xs ${wfViewMode === 'compare' ? 'btn-primary' : 'btn-secondary'}`}
+                  onClick={() => setWfViewMode('compare')}>
+                  🔬 Multi-Surface Comparison
+                </button>
+                <button
+                  type="button"
+                  className="btn btn-primary btn-xs"
+                  onClick={() => potInputRef.current?.click()}
+                  title="Upload 1D planar potential (.dat from Macroave) or 3D Gaussian Cube (.cube from grid2cube SystemLabel.VH)">
+                  📁 Upload Macroave .dat / .cube
+                </button>
+                <input
+                  ref={potInputRef}
+                  type="file"
+                  accept=".dat,.cube,.txt,.out"
+                  style={{ display: 'none' }}
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (!file) return;
+                    const reader = new FileReader();
+                    reader.onload = (evt) => {
+                      try {
+                        const text = evt.target.result;
+                        const lower = file.name.toLowerCase();
+                        let analyzed;
+                        const efVal = outData?.fermiEnergy || -4.35;
+                        if (lower.endsWith('.cube')) {
+                          analyzed = parsePotentialCube(text, efVal);
+                        } else if (text.includes('dhscf:') || text.includes('siesta:') || lower.endsWith('.out')) {
+                          const parsed = parseSiestaOut(text);
+                          if (parsed.vacuumLevelMax != null && parsed.fermiEnergy != null) {
+                            analyzed = generatePotentialFromOut(parsed.vacuumLevelMax, parsed.vacuumLevelMean, parsed.fermiEnergy);
+                          }
+                        } else {
+                          analyzed = parse1DPotentialData(text, efVal);
+                        }
+                        if (analyzed) setPotData(analyzed);
+                      } catch (err) {
+                        setErrorMsg(`Failed to parse potential file: ${err.message}`);
+                      }
+                    };
+                    reader.readAsText(file);
+                    e.target.value = '';
+                  }}
+                />
+              </div>
+            </div>
+
+            {wfViewMode === 'compare' ? (
+              <WorkFunctionComparisonStudio />
+            ) : (
+              <>
+                {potData ? (
+                  <WorkFunctionChart
+                    potData={potData}
+                    title="Electrostatic Potential Profile V̄(z) & Vacuum Barrier (Φ = V_vac − E_F)"
+                  />
+                ) : (
+                  <div className="info-box" style={{ marginTop: '0.5rem' }}>
+                    Upload a 1D planar average potential file (<code>.dat</code> from Macroave or <code>average_z.m</code>), a 3D Gaussian Cube (<code>.cube</code> from <code>grid2cube SystemLabel.VH</code>), or load a SIESTA <code>.out</code> log to plot the electrostatic potential profile and determine the work function Φ.
+                  </div>
+                )}
+              </>
+            )}
+
+            {/* Official Macroave & grid2cube Terminal Commands Drawer */}
+            <div style={{
+              marginTop: '0.8rem',
+              padding: '0.65rem 0.85rem',
+              background: 'var(--surface)',
+              borderRadius: '8px',
+              border: '1px solid var(--border)',
+            }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.5rem' }}>
+                <div style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--accent)', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                  <span>💻</span> Official SIESTA Potential &amp; Work Function Utilities (Util/Macroave &amp; Util/Grid)
+                </div>
+                <span style={{ fontSize: '0.72rem', color: '#10b981', fontWeight: 600 }}>
+                  ✓ Macroave &amp; grid2cube Supported
+                </span>
+              </div>
+              <p style={{ margin: '0.3rem 0', fontSize: '0.75rem', color: 'var(--muted)', lineHeight: '1.5' }}>
+                To compute planar averages from real-space potential grids (<code>SaveElectrostaticPotential true</code> → <code>SystemLabel.VH</code>), run either Macroave or convert to Gaussian Cube:
+              </p>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '0.4rem', marginTop: '0.3rem' }}>
+                <code style={{ fontSize: '0.7rem', padding: '0.35rem 0.5rem', background: '#090d16', borderRadius: '4px', color: '#e2e8f0', display: 'block' }}>
+                  # 1. Macroave planar average:<br />
+                  ~/softwares/material_science/siesta-5.4.2/build/Util/Macroave/Src/macroave &lt; macroave.in
+                </code>
+                <code style={{ fontSize: '0.7rem', padding: '0.35rem 0.5rem', background: '#090d16', borderRadius: '4px', color: '#e2e8f0', display: 'block' }}>
+                  # 2. Gaussian Cube conversion:<br />
+                  ~/softwares/material_science/siesta-5.4.2/build/Util/Grid/grid2cube SystemLabel.VH
+                </code>
+              </div>
+            </div>
           </div>
           {/* Hint if nothing uploaded yet */}
           {!outData && !mdeData && !aniData && (
