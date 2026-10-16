@@ -6,6 +6,7 @@ import { parse1DPotentialData, parsePotentialCube, analyzeWorkFunction, generate
 import { PlanarCDDChart } from '../components/PlanarCDDChart.jsx';
 import { WorkFunctionChart } from '../components/WorkFunctionChart.jsx';
 import { BandAlignmentChart, BAND_PRESETS } from '../components/BandAlignmentChart.jsx';
+import { WorkFunctionComparisonStudio } from '../components/WorkFunctionComparisonStudio.jsx';
 
 export function AdsorptionSection() {
   const [activeTab, setActiveTab] = useState('energy'); // 'energy', 'cdd', 'workfunction', 'bandalignment', 'workflow'
@@ -85,6 +86,7 @@ export function AdsorptionSection() {
   const [cleanPhiInput, setCleanPhiInput] = useState('');
   const [potStatus, setPotStatus] = useState('');
   const [potError, setPotError] = useState('');
+  const [wfSubTab, setWfSubTab] = useState('compare'); // 'compare' | 'single'
 
   // Process text from a SIESTA .out log file
   const processSiestaOutText = (text, fileName) => {
@@ -731,6 +733,32 @@ export function AdsorptionSection() {
       {/* ═════════════════════════════════════════════════════════════════════ */}
       {activeTab === 'workfunction' && (
         <div className="work-function-pane">
+          {/* Sub-Tab Navigation Switcher */}
+          <div style={{
+            display: 'flex',
+            gap: '0.4rem',
+            marginBottom: '1rem',
+            borderBottom: '2px solid var(--border)',
+            paddingBottom: '0.5rem',
+          }}>
+            <button
+              type="button"
+              className={`btn btn-sm ${wfSubTab === 'compare' ? 'btn-primary' : 'btn-secondary'}`}
+              onClick={() => setWfSubTab('compare')}>
+              🔬 Multi-Surface / Ligand Comparison Studio (Before vs After)
+            </button>
+            <button
+              type="button"
+              className={`btn btn-sm ${wfSubTab === 'single' ? 'btn-primary' : 'btn-secondary'}`}
+              onClick={() => setWfSubTab('single')}>
+              📊 Single-Slab Potential Profile
+            </button>
+          </div>
+
+          {wfSubTab === 'compare' ? (
+            <WorkFunctionComparisonStudio />
+          ) : (
+            <>
           {/* Upload & Controls Card */}
           <div style={{
             background: 'rgba(15, 23, 42, 0.65)',
@@ -977,6 +1005,8 @@ export function AdsorptionSection() {
               potData={potData}
               title="Electrostatic Potential Profile V̄(z) & Vacuum Barrier (Φ = V_vac − E_F)"
             />
+          )}
+            </>
           )}
         </div>
       )}
