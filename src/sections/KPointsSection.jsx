@@ -1,8 +1,6 @@
 import { useFDFStore } from '../store/fdfStore';
 import { BAND_PATH_PRESETS, detectCrystalSystem } from '../utils/bandPathGenerator';
 import { FieldRow, SelectInput, TextInput, SectionHeader } from '../components/FieldRow';
-import { BandStructureChart } from '../components/BandStructureChart.jsx';
-import { useState } from 'react';
 
 const BAND_SCALE = ['pi/a', 'ReciprocalLatticeVectors'];
 
@@ -11,7 +9,6 @@ export function KPointsSection() {
   const structure = useFDFStore(s => s.structure);
   const setSection = useFDFStore(s => s.setSection);
   const set = (k, v) => setSection('kpoints', { [k]: v });
-  const [activeTab, setActiveTab] = useState('settings'); // 'settings' | 'visualizer'
   const mp = kpoints.mp || [[8,0,0,0],[0,8,0,0],[0,0,8,0]];
   const setMP = (row, col, val) => {
     const next = mp.map((r, i) => i === row ? r.map((c, j) => j === col ? (parseFloat(val)||0) : c) : r);
@@ -30,31 +27,9 @@ export function KPointsSection() {
   };
   const addBandLine = () => set('BandLines', [...bandLines, [20, 0, 0, 0, 'Γ']]);
   const removeBandLine = (i) => set('BandLines', bandLines.filter((_, idx) => idx !== i));
-
   return (
     <div className="section-pane">
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.8rem', marginBottom: '0.5rem' }}>
-        <SectionHeader title="K-Point Sampling & Band Structure (Section 6.16)" />
-        <div style={{ display: 'flex', gap: '0.4rem', flexWrap: 'wrap' }}>
-          <button
-            type="button"
-            className={`btn btn-sm ${activeTab === 'settings' ? 'btn-primary' : 'btn-secondary'}`}
-            onClick={() => setActiveTab('settings')}>
-            ⚙️ K-Point &amp; BandLines Settings
-          </button>
-          <button
-            type="button"
-            className={`btn btn-sm ${activeTab === 'visualizer' ? 'btn-primary' : 'btn-secondary'}`}
-            onClick={() => setActiveTab('visualizer')}>
-            📈 Electronic Band Structure Plotter (.bands)
-          </button>
-        </div>
-      </div>
-
-      {activeTab === 'visualizer' ? (
-        <BandStructureChart />
-      ) : (
-        <>
+      <SectionHeader title="K-Point Sampling" />
       {/* Mode selector */}
       <div className="kmode-tabs">
         {['mp','cutoff','none'].map(m => (
@@ -260,8 +235,6 @@ export function KPointsSection() {
           </div>
         </div>
       </div>
-        </>
-      )}
     </div>
   );
 }
