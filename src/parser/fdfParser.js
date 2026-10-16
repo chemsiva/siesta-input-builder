@@ -169,6 +169,17 @@ export function parseFDF(text) {
       if (trimmed.startsWith('direction')) result.dft['Slab.DipoleCorrection.Vacuum.direction'] = trimmed.replace(/^direction\s+/, '');
     });
   }
+  // Geometry.Hartree & Geometry.Charge (Section 6.23)
+  const hartreeBlock = blockMap['geometry.hartree'];
+  if (hartreeBlock && hartreeBlock.length > 0) {
+    result.dft['Geometry.Hartree.enabled'] = true;
+    result.dft['Geometry.Hartree.text'] = hartreeBlock.join('\n');
+  }
+  const chargeGeoBlock = blockMap['geometry.charge'];
+  if (chargeGeoBlock && chargeGeoBlock.length > 0) {
+    result.dft['Geometry.Charge.enabled'] = true;
+    result.dft['Geometry.Charge.text'] = chargeGeoBlock.join('\n');
+  }
   // Compatibility mapping
   if (result.dft['DFTD3']) {
     result.dft['DFTD3'] = result.dft['DFTD3'].toLowerCase() === 'true' ? 'true' : 'false';

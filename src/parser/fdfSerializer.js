@@ -191,6 +191,17 @@ export function serializeFDF(state) {
       sections.push(block('Slab.DipoleCorrection.Vacuum', vacRows));
     }
   }
+  // Geometry.Hartree block (Section 6.23)
+  if ((dft['Geometry.Hartree.enabled'] === true || dft['Geometry.Hartree.enabled'] === 'true') && dft['Geometry.Hartree.text']?.trim()) {
+    const rows = dft['Geometry.Hartree.text'].trim().split(/\r?\n/).map(l => `  ${l}`);
+    sections.push(block('Geometry.Hartree', rows));
+  }
+
+  // Geometry.Charge block (Section 6.23)
+  if ((dft['Geometry.Charge.enabled'] === true || dft['Geometry.Charge.enabled'] === 'true') && dft['Geometry.Charge.text']?.trim()) {
+    const rows = dft['Geometry.Charge.text'].trim().split(/\r?\n/).map(l => `  ${l}`);
+    sections.push(block('Geometry.Charge', rows));
+  }
   // ── DFT+U ────────────────────────────────────────────────────────────────
   if (dft.dfu && dft.dfu.length > 0) {
     const dfuRows = [];

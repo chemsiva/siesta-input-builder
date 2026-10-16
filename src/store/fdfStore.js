@@ -58,6 +58,11 @@ const defaultState = {
     'Slab.DipoleCorrection.Vacuum.position': '',
     'Slab.DipoleCorrection.Vacuum.tolerance': '',
     'Slab.DipoleCorrection.Vacuum.direction': '0.000 0.000 1.000',
+    // Section 6.23: Geometry.Hartree and Geometry.Charge
+    'Geometry.Hartree.enabled': false,
+    'Geometry.Hartree.text': '',
+    'Geometry.Charge.enabled': false,
+    'Geometry.Charge.text': '',
     // Section 6.26: DFT-D3
     'DFTD3': 'false',
     'DFTD3.BJdamping': 'true',

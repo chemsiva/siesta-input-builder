@@ -585,6 +585,67 @@ export function DFTSection() {
             </div>
           )}
         </div>
+
+        {/* Geometry.Hartree & Geometry.Charge Blocks (Section 6.23) */}
+        <div style={{ marginTop: '0.75rem', paddingTop: '0.75rem', borderTop: '1px solid var(--border)' }}>
+          <div className="field-row-group">
+            <FieldRow label="%block Geometry.Hartree" keyword="Geometry.Hartree">
+              <label className="toggle">
+                <input type="checkbox"
+                  checked={!!dft['Geometry.Hartree.enabled']}
+                  onChange={e => set('Geometry.Hartree.enabled', e.target.checked)} />
+                <span className="toggle-label">Regions with changed Hartree potential (repulsion / attraction)</span>
+              </label>
+            </FieldRow>
+
+            <FieldRow label="%block Geometry.Charge" keyword="Geometry.Charge">
+              <label className="toggle">
+                <input type="checkbox"
+                  checked={!!dft['Geometry.Charge.enabled']}
+                  onChange={e => set('Geometry.Charge.enabled', e.target.checked)} />
+                <span className="toggle-label">Regions with spread charge (gate doping with charge neutrality)</span>
+              </label>
+            </FieldRow>
+          </div>
+
+          {dft['Geometry.Hartree.enabled'] && (
+            <div style={{ marginTop: '0.5rem', padding: '0.5rem', background: 'var(--surface)', borderRadius: '4px', border: '1px solid var(--border)' }}>
+              <label style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--fg)', display: 'block', marginBottom: '0.2rem' }}>
+                %block Geometry.Hartree Lines (plane, square, box, coords/spheres):
+              </label>
+              <textarea
+                className="input mono"
+                rows={4}
+                style={{ width: '100%', fontSize: '0.75rem', resize: 'vertical' }}
+                placeholder={`plane 1. eV\ndelta\n1.0 1.0 1.0 Ang\n0.0 0.0 1.0`}
+                value={dft['Geometry.Hartree.text'] || ''}
+                onChange={e => set('Geometry.Hartree.text', e.target.value)}
+              />
+              <span className="hint" style={{ display: 'block', color: 'var(--muted)', marginTop: '0.2rem' }}>
+                Section 6.23: 4 geometries allowed: infinite plane (delta, gauss, exp), bounded plane (square), box, or spheres.
+              </span>
+            </div>
+          )}
+
+          {dft['Geometry.Charge.enabled'] && (
+            <div style={{ marginTop: '0.5rem', padding: '0.5rem', background: 'var(--surface)', borderRadius: '4px', border: '1px solid var(--border)' }}>
+              <label style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--fg)', display: 'block', marginBottom: '0.2rem' }}>
+                %block Geometry.Charge Lines (electrons spread on geometry):
+              </label>
+              <textarea
+                className="input mono"
+                rows={4}
+                style={{ width: '100%', fontSize: '0.75rem', resize: 'vertical' }}
+                placeholder={`plane 0.5\ndelta\n1.0 1.0 1.0 Ang\n0.0 0.0 1.0`}
+                value={dft['Geometry.Charge.text'] || ''}
+                onChange={e => set('Geometry.Charge.text', e.target.value)}
+              />
+              <span className="hint" style={{ display: 'block', color: 'var(--muted)', marginTop: '0.2rem' }}>
+                Section 6.23: Similar to Geometry.Hartree, input value is number of electrons, ensuring charge-neutrality.
+              </span>
+            </div>
+          )}
+        </div>
       </div>
 
       {/* ── DFT+U ── */}
