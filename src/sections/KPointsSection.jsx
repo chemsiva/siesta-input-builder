@@ -1,6 +1,8 @@
 import { useFDFStore } from '../store/fdfStore';
 import { BAND_PATH_PRESETS, detectCrystalSystem } from '../utils/bandPathGenerator';
 import { FieldRow, SelectInput, TextInput, SectionHeader } from '../components/FieldRow';
+import { BandStructureChart } from '../components/BandStructureChart.jsx';
+import { useState } from 'react';
 
 const BAND_SCALE = ['pi/a', 'ReciprocalLatticeVectors'];
 
@@ -9,7 +11,7 @@ export function KPointsSection() {
   const structure = useFDFStore(s => s.structure);
   const setSection = useFDFStore(s => s.setSection);
   const set = (k, v) => setSection('kpoints', { [k]: v });
-
+  const [activeTab, setActiveTab] = useState('settings'); // 'settings' | 'visualizer'
   const mp = kpoints.mp || [[8,0,0,0],[0,8,0,0],[0,0,8,0]];
   const setMP = (row, col, val) => {
     const next = mp.map((r, i) => i === row ? r.map((c, j) => j === col ? (parseFloat(val)||0) : c) : r);
@@ -31,8 +33,28 @@ export function KPointsSection() {
 
   return (
     <div className="section-pane">
-      <SectionHeader title="K-Point Sampling" />
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.8rem', marginBottom: '0.5rem' }}>
+        <SectionHeader title="K-Point Sampling & Band Structure (Section 6.16)" />
+        <div style={{ display: 'flex', gap: '0.4rem', flexWrap: 'wrap' }}>
+          <button
+            type="button"
+            className={`btn btn-sm ${activeTab === 'settings' ? 'btn-primary' : 'btn-secondary'}`}
+            onClick={() => setActiveTab('settings')}>
+            ⚙️ K-Point &amp; BandLines Settings
+          </button>
+          <button
+            type="button"
+            className={`btn btn-sm ${activeTab === 'visualizer' ? 'btn-primary' : 'btn-secondary'}`}
+            onClick={() => setActiveTab('visualizer')}>
+            📈 Electronic Band Structure Plotter (.bands)
+          </button>
+        </div>
+      </div>
 
+      {activeTab === 'visualizer' ? (
+        <BandStructureChart />
+      ) : (
+        <>
       {/* Mode selector */}
       <div className="kmode-tabs">
         {['mp','cutoff','none'].map(m => (
@@ -174,7 +196,72 @@ export function KPointsSection() {
           First row: Npts=1, coordinates of starting point. Subsequent rows: Npts = points
           along segment FROM previous point TO this one. Use <code>\Gamma</code> for Γ label.
         </div>
+        {/* Output Options for Bands (Section 6.16 & 6.16.2) */}
+        <div className="subsection" style={{ marginTop: '1rem' }}>
+          <div className="subsection-title">Band Output &amp; Wavefunctions (Section 6.16)</div>
+          <div className="field-row-group">
+            <FieldRow label="WriteKbands" keyword="WriteKbands">
+              <label className="toggle">
+                <input
+                  type="checkbox"
+                  checked={kpoints['WriteKbands'] === 'true'}
+                  onChange={e => set('WriteKbands', e.target.checked ? 'true' : 'false')}
+                />
+                <span className="toggle-label">Write k-vectors to stdout</span>
+              </label>
+            </FieldRow>
+
+            <FieldRow label="WriteBands" keyword="WriteBands">
+              <label className="toggle">
+                <input
+                  type="checkbox"
+                  checked={kpoints['WriteBands'] === 'true'}
+                  onChange={e => set('WriteBands', e.target.checked ? 'true' : 'false')}
+                />
+                <span className="toggle-label">Write band eigenvalues to stdout</span>
+              </label>
+            </FieldRow>
+          </div>
+
+          {/* WFS for Bands */}
+          <FieldRow label="WFS.Write.For.Bands" keyword="WFS.Write.For.Bands">
+            <label className="toggle">
+              <input
+                type="checkbox"
+                checked={kpoints['WFS.Write.For.Bands'] === 'true'}
+                onChange={e => set('WFS.Write.For.Bands', e.target.checked ? 'true' : 'false')}
+              />
+              <span className="toggle-label">Save wavefunctions to SystemLabel.WFSX (for "fatbands" orbital plots)</span>
+            </label>
+          </FieldRow>
+
+          {kpoints['WFS.Write.For.Bands'] === 'true' && (
+            <div className="field-row-group" style={{ marginTop: '0.4rem' }}>
+              <FieldRow label="WFS.Band.Min" keyword="WFS.Band.Min">
+                <TextInput
+                  mono
+                  value={kpoints['WFS.Band.Min'] || '1'}
+                  onChange={v => set('WFS.Band.Min', v)}
+                  placeholder="1"
+                />
+              </FieldRow>
+              <FieldRow label="WFS.Band.Max" keyword="WFS.Band.Max">
+                <TextInput
+                  mono
+                  value={kpoints['WFS.Band.Max'] || ''}
+                  onChange={v => set('WFS.Band.Max', v)}
+                  placeholder="all orbitals (default)"
+                />
+              </FieldRow>
+            </div>
+          )}
+          <div className="info-box" style={{ marginTop: '0.5rem' }}>
+            Wavefunctions written to <code>SystemLabel.WFSX</code> can be processed with <code>Util/COOP/fat</code> to generate publication-grade fatbands plots resolved by atomic orbital contributions.
+          </div>
+        </div>
       </div>
+        </>
+      )}
     </div>
   );
 }

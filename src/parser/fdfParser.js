@@ -211,6 +211,13 @@ export function parseFDF(text) {
     });
   }
 
+  // Band Structure Analysis Options (Section 6.16)
+  if (g('WriteKbands')) result.kpoints.WriteKbands = g('WriteKbands');
+  if (g('WriteBands')) result.kpoints.WriteBands = g('WriteBands');
+  if (g('WFS.Write.For.Bands')) result.kpoints['WFS.Write.For.Bands'] = g('WFS.Write.For.Bands');
+  if (g('WFS.Band.Min')) result.kpoints['WFS.Band.Min'] = g('WFS.Band.Min');
+  if (g('WFS.Band.Max')) result.kpoints['WFS.Band.Max'] = g('WFS.Band.Max');
+
   // Output
   ['WriteMullikenPop','WriteForces','WriteCoorStep','WriteCoorXmol',
    'WriteMDXmol','WriteMDhistory',

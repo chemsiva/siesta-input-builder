@@ -286,10 +286,27 @@ export function serializeFDF(state) {
   }
   if (kpoints.BandLines && kpoints.BandLines.length > 0) {
     kLines.push(pad('BandLinesScale', kpoints.BandLinesScale || 'pi/a'));
-    const blRows = kpoints.BandLines.map(b =>
-      `${String(b[0]).padStart(3)}  ${Number(b[1]).toFixed(4).padStart(8)}  ${Number(b[2]).toFixed(4).padStart(8)}  ${Number(b[3]).toFixed(4).padStart(8)}  ${b[4]||''}`
-    );
+    const blRows = kpoints.BandLines.map((b, idx) => {
+      // First column of first line must always be 1 per Section 6.16
+      const npts = idx === 0 ? 1 : (Number(b[0]) || 20);
+      const lbl = b[4] ? (b[4] === 'Γ' ? '\\Gamma' : (b[4].startsWith('\\') ? b[4] : b[4])) : '';
+      return `${String(npts).padStart(3)}  ${Number(b[1]).toFixed(4).padStart(8)}  ${Number(b[2]).toFixed(4).padStart(8)}  ${Number(b[3]).toFixed(4).padStart(8)}  ${lbl}`;
+    });
     kLines.push(block('BandLines', blRows));
+
+    if (bool(kpoints['WriteKbands']) === 'true') {
+      kLines.push(line('WriteKbands', 'true'));
+    }
+    if (bool(kpoints['WriteBands']) === 'true') {
+      kLines.push(line('WriteBands', 'true'));
+    }
+
+    // Section 6.16.2: Output of wavefunctions associated to bands (.WFSX for fatbands)
+    if (bool(kpoints['WFS.Write.For.Bands']) === 'true') {
+      kLines.push(line('WFS.Write.For.Bands', 'true'));
+      if (kpoints['WFS.Band.Min']) kLines.push(line('WFS.Band.Min', kpoints['WFS.Band.Min']));
+      if (kpoints['WFS.Band.Max']) kLines.push(line('WFS.Band.Max', kpoints['WFS.Band.Max']));
+    }
   }
   sections.push(kLines.join('\n'));
 
