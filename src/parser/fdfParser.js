@@ -134,60 +134,6 @@ export function parseFDF(text) {
     });
   }
 
-  // Geometry.Constraints (Section 7.7)
-  const cBlock = blockMap['geometry.constraints'];
-  if (cBlock && cBlock.length > 0) {
-    result.constraints = {
-      enabled: true,
-      fixedAtomIndices: [],
-      directionMode: 'all',
-      cellVectors: [],
-      cellAngles: [],
-      stressComponents: [],
-      customLines: '',
-    };
-    const fixedIndices = new Set();
-    const cellVecs = [];
-    const cellAngs = [];
-    const stressComps = [];
-    const custom = [];
-
-    cBlock.forEach(rawLine => {
-      const line = rawLine.trim();
-      if (!line || line.startsWith('#')) return;
-      const tokens = line.split(/\s+/);
-      const kw = tokens[0].toLowerCase();
-
-      if (kw === 'atom' || kw === 'position') {
-        if (tokens[1]?.toLowerCase() === 'from' && tokens[3]?.toLowerCase() === 'to') {
-          const from = parseInt(tokens[2], 10);
-          const to = parseInt(tokens[4], 10);
-          const step = tokens[5]?.toLowerCase() === 'step' ? parseInt(tokens[6], 10) || 1 : 1;
-          for (let i = from; i <= to; i += step) fixedIndices.add(i);
-        } else {
-          for (let i = 1; i < tokens.length; i++) {
-            const num = parseInt(tokens[i], 10);
-            if (!isNaN(num) && num > 0) fixedIndices.add(num);
-          }
-        }
-      } else if (kw === 'cell-vector') {
-        tokens.slice(1).forEach(v => cellVecs.push(v));
-      } else if (kw === 'cell-angle') {
-        tokens.slice(1).forEach(a => cellAngs.push(a));
-      } else if (kw === 'stress') {
-        tokens.slice(1).forEach(s => stressComps.push(s));
-      } else {
-        custom.push(line);
-      }
-    });
-
-    result.constraints.fixedAtomIndices = Array.from(fixedIndices).sort((a, b) => a - b);
-    if (cellVecs.length > 0) result.constraints.cellVectors = cellVecs;
-    if (cellAngs.length > 0) result.constraints.cellAngles = cellAngs;
-    if (stressComps.length > 0) result.constraints.stressComponents = stressComps;
-    if (custom.length > 0) result.constraints.customLines = custom.join('\n');
-  }
-
   // DFT
   ['XC.functional','XC.authors','MeshCutoff','Spin',
    'NetCharge','SimulateDoping','Slab.DipoleCorrection','SlabDipoleDirection',

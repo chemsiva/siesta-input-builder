@@ -84,7 +84,6 @@
   "Slab.DipoleCorrection.Vacuum": { "type": "block", "default": "", "help": "Section 6.23: Vacuum electric field determination (position, tolerance, direction)." },
   "Geometry.Hartree": { "type": "block", "default": "", "help": "Section 6.23: Introduces regions with changed Hartree potential (repulsion/attraction) defined as infinite planes, bounded planes, boxes, or spheres." },
   "Geometry.Charge": { "type": "block", "default": "", "help": "Section 6.23: Specifies total charge spread on geometrical regions (electrons) while maintaining charge-neutrality for gate simulations." },
-  "Geometry.Constraints": { "type": "block", "default": "", "help": "Section 7.7: Constrain certain atomic coordinates or cell parameters during geometry relaxation (atom, atom from A to B, atom all, directional constraints, stress, cell-vector)." },
   "SlabDipoleDirection": { "type": "string", "default": "z", "help": "Direction of slab dipole correction: z (standard for slabs), +z, -z, x, y." },
   "AtomicCoordinatesOrigin": { "type": "string", "default": "none", "help": "Section 6.4.1: Rigid coordinate shift: COP (center in cell), COM (center of mass), MIN (min=0), COP-Z (center in z for slabs)." },
   "AtomCoorFormatOut": { "type": "string", "default": "Fractional", "help": "Section 6.4.1: Format of output coordinates in stdout / STRUCT_OUT (Fractional, Ang, Bohr, ScaledCartesian)." },

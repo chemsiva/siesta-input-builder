@@ -2,10 +2,8 @@ import { useRef, useState } from 'react';
 import { ErrorBoundary } from '../components/ErrorBoundary.jsx';
 import { CrystalViewer } from '../components/CrystalViewer.jsx';
 import { addVacuumToStructure, centerSlabInCell, buildSupercell } from '../utils/slabBuilder';
-import { getBottomLayerIndices, getTopLayerIndices, getIndicesByZCutoff, getIndicesBySpecies, generateAseScript } from '../utils/constraintUtils';
 import { useFDFStore } from '../store/fdfStore';
 import { FieldRow, TextInput, SelectInput, SectionHeader } from '../components/FieldRow';
-import { useMemo } from 'react';
 
 const COORD_FORMATS = [
   'Fractional',
@@ -25,61 +23,6 @@ export function StructureSection() {
   const cifInputRef = useRef();
   const [showViewer, setShowViewer] = useState(false); // default OFF per user requirement
 
-  // Constraints state from store
-  const constraints = useFDFStore(s => s.constraints || {});
-  const setConstraintField = useFDFStore(s => s.setConstraintField);
-  const toggleFixAtom = useFDFStore(s => s.toggleFixAtom);
-  const setFixedAtoms = useFDFStore(s => s.setFixedAtoms);
-  const clearConstraints = useFDFStore(s => s.clearConstraints);
-  const fixedSet = useMemo(() => new Set(constraints.fixedAtomIndices || []), [constraints]);
-
-  const [zCutoffInput, setZCutoffInput] = useState('10.0');
-  const [selectedSpeciesToFix, setSelectedSpeciesToFix] = useState('');
-  const [copyAseStatus, setCopyAseStatus] = useState('');
-
-  const handleFixBottom1Layer = () => {
-    const indices = getBottomLayerIndices(structure.atoms || [], 1);
-    setFixedAtoms(indices);
-  };
-
-  const handleFixBottom2Layers = () => {
-    const indices = getBottomLayerIndices(structure.atoms || [], 2);
-    setFixedAtoms(indices);
-  };
-
-  const handleFixTopLayer = () => {
-    const indices = getTopLayerIndices(structure.atoms || [], 1);
-    setFixedAtoms(indices);
-  };
-
-  const handleInvertSelection = () => {
-    const total = (structure.atoms || []).length;
-    const inverted = [];
-    for (let i = 1; i <= total; i++) {
-      if (!fixedSet.has(i)) inverted.push(i);
-    }
-    setFixedAtoms(inverted);
-  };
-
-  const handleApplyZCutoff = () => {
-    const indices = getIndicesByZCutoff(structure.atoms || [], zCutoffInput);
-    setFixedAtoms(indices);
-  };
-
-  const handleApplySpeciesFix = () => {
-    const target = selectedSpeciesToFix || structure.species?.[0]?.label;
-    if (!target) return;
-    const indices = getIndicesBySpecies(structure.atoms || [], target, structure.species || []);
-    setFixedAtoms([...fixedSet, ...indices]);
-  };
-
-  const handleCopyAseScript = () => {
-    const script = generateAseScript(structure.atoms || [], Array.from(fixedSet), constraints.directionMode || 'all');
-    navigator.clipboard.writeText(script).then(() => {
-      setCopyAseStatus('✓ Copied Python ASE FixAtoms script to clipboard!');
-      setTimeout(() => setCopyAseStatus(''), 3000);
-    });
-  };
   const setStr = (k, v) => setField('structure', k, v);
   const [vacuumThick, setVacuumThick] = useState('15.0');
   const [scNx, setScNx] = useState('2');
@@ -247,162 +190,6 @@ export function StructureSection() {
         </div>
       </div>
 
-      {/* ═══════════════════════════════════════════════════════════════════ */}
-      {/* ATOMIC & LAYER CONSTRAINTS (ASE GUI / %block Geometry.Constraints) */}
-      {/* ═══════════════════════════════════════════════════════════════════ */}
-      <div className="subsection">
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.6rem' }}>
-          <div className="subsection-title" style={{ margin: 0 }}>
-            🔒 Atomic &amp; Layer Constraints (ASE GUI / %block Geometry.Constraints)
-          </div>
-          <div style={{ display: 'flex', gap: '0.4rem', alignItems: 'center' }}>
-            <label className="toggle">
-              <input
-                type="checkbox"
-                checked={!!constraints.enabled}
-                onChange={e => setConstraintField('enabled', e.target.checked)}
-              />
-              <span className="toggle-label">
-                {constraints.enabled ? '✓ Constraints ON' : 'Off'}
-              </span>
-            </label>
-            {constraints.enabled && (
-              <span style={{
-                fontSize: '0.75rem',
-                padding: '0.15rem 0.45rem',
-                borderRadius: '4px',
-                background: fixedSet.size > 0 ? 'rgba(245, 158, 11, 0.2)' : 'var(--border)',
-                color: fixedSet.size > 0 ? '#f59e0b' : 'var(--muted)',
-                fontWeight: 700,
-              }}>
-                🔒 {fixedSet.size} / {atoms.length} Atoms Fixed
-              </span>
-            )}
-          </div>
-        </div>
-
-        <p className="subsection-desc" style={{ marginTop: '0.3rem' }}>
-          Fix substrate layers or selective coordinates during geometry relaxation (SIESTA <code>%block Geometry.Constraints</code> &amp; ASE <code>FixAtoms</code>).
-          Fixed atoms are marked with 🔒 in the 3D viewer and coordinate table.
-        </p>
-
-        {constraints.enabled && (
-          <div style={{ background: 'var(--surface)', padding: '0.8rem', borderRadius: '6px', border: '1px solid var(--border)', marginTop: '0.5rem', display: 'flex', flexDirection: 'column', gap: '0.7rem' }}>
-            {/* Quick Action Ribbon */}
-            <div style={{ display: 'flex', gap: '0.4rem', flexWrap: 'wrap', alignItems: 'center' }}>
-              <span style={{ fontSize: '0.75rem', color: 'var(--muted)', fontWeight: 600 }}>Quick Actions:</span>
-              <button
-                type="button"
-                className="btn btn-secondary btn-xs"
-                onClick={handleFixBottom1Layer}
-                title="Detect bottom layer by z-coordinate and fix all atoms in it">
-                🔒 Fix Bottom 1 Layer
-              </button>
-              <button
-                type="button"
-                className="btn btn-secondary btn-xs"
-                onClick={handleFixBottom2Layers}
-                title="Detect bottom 2 layers by z-coordinate and fix all atoms in them">
-                🔒 Fix Bottom 2 Layers
-              </button>
-              <button
-                type="button"
-                className="btn btn-secondary btn-xs"
-                onClick={handleFixTopLayer}
-                title="Fix top layer">
-                🔒 Fix Top Layer
-              </button>
-              <button
-                type="button"
-                className="btn btn-secondary btn-xs"
-                onClick={handleInvertSelection}
-                title="Invert selection (make fixed atoms free, and free atoms fixed)">
-                🔄 Invert
-              </button>
-              <button
-                type="button"
-                className="btn btn-secondary btn-xs"
-                style={{ color: 'var(--error, #ef4444)' }}
-                onClick={clearConstraints}
-                title="Clear all constraints (free all atoms to relax)">
-                🔓 Relax All (Clear)
-              </button>
-            </div>
-
-            {/* Cutoff, Species & Direction Filters */}
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(210px, 1fr))', gap: '0.6rem', paddingTop: '0.4rem', borderTop: '1px solid var(--border)' }}>
-              {/* Fix by Z Cutoff */}
-              <div style={{ display: 'flex', gap: '0.3rem', alignItems: 'center' }}>
-                <span style={{ fontSize: '0.75rem', color: 'var(--muted)' }}>Fix z &le;</span>
-                <input
-                  type="number"
-                  step="0.5"
-                  className="input mono"
-                  style={{ width: '60px', fontSize: '0.75rem', padding: '0.15rem 0.3rem' }}
-                  placeholder="10.0"
-                  value={zCutoffInput}
-                  onChange={e => setZCutoffInput(e.target.value)}
-                />
-                <span style={{ fontSize: '0.75rem', color: 'var(--muted)' }}>Å</span>
-                <button type="button" className="btn btn-secondary btn-xs" onClick={handleApplyZCutoff}>
-                  Apply
-                </button>
-              </div>
-
-              {/* Fix by Element */}
-              {structure.species && structure.species.length > 0 && (
-                <div style={{ display: 'flex', gap: '0.3rem', alignItems: 'center' }}>
-                  <span style={{ fontSize: '0.75rem', color: 'var(--muted)' }}>Fix Element:</span>
-                  <select
-                    className="input select"
-                    style={{ fontSize: '0.75rem', height: '26px' }}
-                    value={selectedSpeciesToFix}
-                    onChange={e => setSelectedSpeciesToFix(e.target.value)}>
-                    {structure.species.map(sp => (
-                      <option key={sp.idx} value={sp.label || sp.z}>{sp.label || `Z=${sp.z}`}</option>
-                    ))}
-                  </select>
-                  <button type="button" className="btn btn-secondary btn-xs" onClick={handleApplySpeciesFix}>
-                    Fix
-                  </button>
-                </div>
-              )}
-
-              {/* Direction Mode */}
-              <div style={{ display: 'flex', gap: '0.3rem', alignItems: 'center' }}>
-                <span style={{ fontSize: '0.75rem', color: 'var(--muted)' }}>Fix Mode:</span>
-                <select
-                  className="input select"
-                  style={{ fontSize: '0.75rem', height: '26px' }}
-                  value={constraints.directionMode || 'all'}
-                  onChange={e => setConstraintField('directionMode', e.target.value)}>
-                  <option value="all">Fix X, Y, Z (All directions)</option>
-                  <option value="z">Fix Z only (Allow in-plane XY)</option>
-                  <option value="xy">Fix In-Plane XY (Allow Z)</option>
-                </select>
-              </div>
-
-              {/* ASE Script Snippet Button */}
-              <div style={{ display: 'flex', gap: '0.3rem', alignItems: 'center', justifyContent: 'flex-end' }}>
-                <button
-                  type="button"
-                  className="btn btn-secondary btn-xs"
-                  onClick={handleCopyAseScript}
-                  title="Copy exact Python ASE FixAtoms script to clipboard">
-                  📋 Copy ASE Python Script
-                </button>
-              </div>
-            </div>
-
-            {copyAseStatus && (
-              <span style={{ fontSize: '0.72rem', color: 'var(--success, #10b981)', fontWeight: 600 }}>
-                {copyAseStatus}
-              </span>
-            )}
-          </div>
-        )}
-      </div>
-
 
 
 
@@ -504,9 +291,7 @@ export function StructureSection() {
               <tr>
                 <th>#</th><th>x</th><th>y</th><th>z</th>
                 <th title="Species index from ChemicalSpeciesLabel">Sp.</th>
-                <th>Label (opt)</th>
-                <th title="Fix/Relax atom during geometry relaxation (ASE FixAtoms style)">Status</th>
-                <th></th>
+                <th>Label (opt)</th><th></th>
               </tr>
             </thead>
             <tbody>
@@ -526,25 +311,6 @@ export function StructureSection() {
                   <td>
                     <input type="text" className="input atom-label"
                       value={a.label} onChange={e => setAtom(i, 'label', e.target.value)} placeholder="Fe, O, …" />
-                  </td>
-                  <td>
-                    <button
-                      type="button"
-                      className="btn btn-xs"
-                      style={{
-                        fontSize: '0.68rem',
-                        padding: '0.1rem 0.35rem',
-                        background: fixedSet.has(i + 1) ? '#f59e0b' : 'transparent',
-                        border: `1px solid ${fixedSet.has(i + 1) ? '#f59e0b' : 'var(--border)'}`,
-                        color: fixedSet.has(i + 1) ? '#000000' : 'var(--muted)',
-                        fontWeight: 700,
-                        borderRadius: '3px',
-                        cursor: 'pointer',
-                      }}
-                      onClick={() => toggleFixAtom(i + 1)}
-                      title={fixedSet.has(i + 1) ? 'Atom is FIXED (Click to free/relax)' : 'Atom is FREE (Click to fix)'}>
-                      {fixedSet.has(i + 1) ? '🔒 Fixed' : 'Free'}
-                    </button>
                   </td>
                   <td>
                     <button className="btn btn-danger-sm" onClick={() => removeAtom(i)}>✕</button>

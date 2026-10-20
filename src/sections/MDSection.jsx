@@ -21,14 +21,13 @@ const PRESS_UNITS  = ['GPa','kBar'];
 const TEMP_UNITS   = ['K','eV'];
 
 export function MDSection() {
-  const md = useFDFStore(s => s.md);
+  const md     = useFDFStore(s => s.md);
   const output = useFDFStore(s => s.output);
-  const constraints = useFDFStore(s => s.constraints || {});
-  const setActiveSection = useFDFStore(s => s.setActiveSection);
-  const setField = useFDFStore(s => s.setField);
+  const setField   = useFDFStore(s => s.setField);
   const setSection = useFDFStore(s => s.setSection);
-  const set = (k, v) => setField('md', k, v);
+  const set       = (k, v) => setField('md', k, v);
   const setOutput = (k, v) => setField('output', k, v);
+
   const mdType = md['MD.TypeOfRun'] || 'CG';
   const isRelax  = ['CG','FIRE','Broyden'].includes(mdType);
   const isMD     = ['Verlet','Nose','ParrinelloRahman','NoseParrinelloRahman','Anneal'].includes(mdType);
@@ -167,40 +166,6 @@ export function MDSection() {
               </label>
             </FieldRow>
           )}
-
-          {/* Active Constraints Summary (ASE FixAtoms & %block Geometry.Constraints) */}
-          <div style={{
-            marginTop: '0.6rem',
-            padding: '0.5rem 0.8rem',
-            background: 'var(--surface)',
-            borderRadius: '6px',
-            border: '1px solid var(--border)',
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-            flexWrap: 'wrap',
-            gap: '0.5rem',
-          }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', fontSize: '0.8rem' }}>
-              <span>🔒</span>
-              <strong>Geometry Constraints (%block Geometry.Constraints):</strong>
-              <span style={{
-                color: constraints.enabled && constraints.fixedAtomIndices?.length ? '#f59e0b' : 'var(--muted)',
-                fontWeight: 700,
-              }}>
-                {constraints.enabled && constraints.fixedAtomIndices?.length
-                  ? `${constraints.fixedAtomIndices.length} atoms fixed (${constraints.directionMode === 'all' ? 'X,Y,Z' : constraints.directionMode})`
-                  : 'All atoms free to relax'}
-              </span>
-            </div>
-            <button
-              type="button"
-              className="btn btn-secondary btn-xs"
-              onClick={() => setActiveSection('structure')}
-              title="Open Section ② Structure to visually select and fix layers / atoms">
-              ⚙️ Configure in Section ②
-            </button>
-          </div>
         </>
       )}
 

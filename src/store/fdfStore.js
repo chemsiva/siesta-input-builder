@@ -177,15 +177,6 @@ const defaultState = {
     ldosKgrid: [12, 12, 12],
     writeEigenvalues: false,
   },
-  constraints: {
-    enabled: false,
-    fixedAtomIndices: [], // 1-based indices [1, 2, 3...]
-    directionMode: 'all', // 'all' (X, Y, Z), 'z' (Z only), 'xy' (XY in-plane only)
-    cellVectors: [],      // ['A', 'B', 'C']
-    cellAngles: [],       // ['alpha', 'beta', 'gamma']
-    stressComponents: [], // ['1', '2', '3'] or ['XX', 'YY']
-    customLines: '',
-  },
   pseudoSettings: {
     directory: '',       // browser-scanned folder name (read-only, from webkitRelativePath)
     pseudoPath: '',      // full server-side absolute path typed by user (used in SIESTA_PS_PATH)
@@ -208,42 +199,6 @@ export const useFDFStore = create((set, get) => ({
 
   setField: (section, key, value) => set(state => ({
     [section]: { ...state[section], [key]: value },
-  })),
-  setConstraintField: (field, value) => set(state => ({
-    constraints: { ...state.constraints, [field]: value }
-  })),
-
-  toggleFixAtom: (atomIndex) => set(state => {
-    const current = state.constraints.fixedAtomIndices || [];
-    const exists = current.includes(atomIndex);
-    const updated = exists ? current.filter(i => i !== atomIndex) : [...current, atomIndex];
-    return {
-      constraints: {
-        ...state.constraints,
-        enabled: updated.length > 0 || state.constraints.enabled,
-        fixedAtomIndices: updated.sort((a, b) => a - b),
-      }
-    };
-  }),
-
-  setFixedAtoms: (indices) => set(state => ({
-    constraints: {
-      ...state.constraints,
-      enabled: indices.length > 0,
-      fixedAtomIndices: [...new Set(indices)].sort((a, b) => a - b),
-    }
-  })),
-
-  clearConstraints: () => set(state => ({
-    constraints: {
-      ...state.constraints,
-      enabled: false,
-      fixedAtomIndices: [],
-      cellVectors: [],
-      cellAngles: [],
-      stressComponents: [],
-      customLines: '',
-    }
   })),
 
   loadFromText: (text) => {
