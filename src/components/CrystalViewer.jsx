@@ -115,6 +115,8 @@ function getElementInfo(labelOrZ) {
 export function CrystalViewer({ structure }) {
   const setSection = useFDFStore(s => s.setSection);
   const setField = useFDFStore(s => s.setField);
+  const constraints = useFDFStore(s => s.constraints || {});
+  const fixedSet = useMemo(() => new Set(constraints.fixedAtomIndices || []), [constraints]);
   const mountRef = useRef(null);
   const canvas2dRef = useRef(null);
   const [engineMode, setEngineMode] = useState('webgl'); // 'webgl' | 'canvas2d'
@@ -170,6 +172,7 @@ export function CrystalViewer({ structure }) {
         cx = x * scale; cy = y * scale; cz = z * scale;
       }
 
+      const isFixed = (constraints.enabled || false) && fixedSet.has(i + 1);
       return {
         idx: i + 1,
         x: cx,
@@ -180,6 +183,7 @@ export function CrystalViewer({ structure }) {
         // Visual sphere radius in Angstrom (prominent, beautiful CPK spheres)
         radius: Math.max(0.55, (el.radius || 1.0) * 0.70),
         covalentRadius: (el.radius || 1.0) * 1.0,
+        isFixed,
       };
     });
 
@@ -208,7 +212,7 @@ export function CrystalViewer({ structure }) {
     return baseAtoms;
   };
 
-  const atoms = useMemo(() => getCartesianAtoms(), [structure, supercell]);
+  const atoms = useMemo(() => getCartesianAtoms(), [structure, supercell, constraints]);
 
   // Load a demo crystal structure into the application state
   const handleLoadDemo = (key) => {
@@ -361,8 +365,17 @@ export function CrystalViewer({ structure }) {
       const mesh = new THREE.Mesh(sphereCache[r], mat);
       mesh.position.set(atom.x, atom.y, atom.z);
       scene.add(mesh);
-    });
 
+      // Visual indicator for constrained / fixed atoms in WebGL (Amber ring)
+      if (atom.isFixed) {
+        const ringGeom = new THREE.TorusGeometry(r * 1.3, 0.08, 12, 24);
+        const ringMat = new THREE.MeshBasicMaterial({ color: 0xf59e0b });
+        const ringMesh = new THREE.Mesh(ringGeom, ringMat);
+        ringMesh.position.set(atom.x, atom.y, atom.z);
+        ringMesh.rotation.x = Math.PI / 2;
+        scene.add(ringMesh);
+      }
+    });
     // 3. Draw Bonds (Between nearby atoms)
     if (showBonds && atoms.length > 1 && atoms.length < 500) {
       const bondMat = new THREE.MeshStandardMaterial({ color: 0x94a3b8, roughness: 0.45 });
@@ -641,6 +654,23 @@ export function CrystalViewer({ structure }) {
         ctx.textBaseline = 'middle';
         ctx.fillText(a.element, sx, sy);
       }
+
+      // Visual indicator for constrained / fixed atoms in 2D Canvas (Dashed Amber ring & lock icon)
+      if (a.isFixed) {
+        ctx.strokeStyle = '#f59e0b';
+        ctx.lineWidth = 2.0;
+        ctx.setLineDash([3, 2]);
+        ctx.beginPath();
+        ctx.arc(sx, sy, r + 4, 0, 2 * Math.PI);
+        ctx.stroke();
+        ctx.setLineDash([]);
+
+        ctx.fillStyle = '#f59e0b';
+        ctx.font = 'bold 9px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText('🔒', sx + r * 0.85, sy - r * 0.85);
+      }
     });
   }, [engineMode, atoms, showBonds, showCell, supercell, rotX, rotY, zoom, pan, structure]);
 
@@ -797,6 +827,12 @@ export function CrystalViewer({ structure }) {
             🧪 H₂
           </button>
         </div>
+          {/* Constraints indicator badge */}
+          {constraints.enabled && fixedSet.size > 0 && (
+            <span style={{ fontSize: '0.72rem', padding: '0.1rem 0.35rem', borderRadius: '3px', background: 'rgba(245, 158, 11, 0.25)', color: '#f59e0b', fontWeight: 700 }}>
+              🔒 {fixedSet.size} Fixed
+            </span>
+          )}
 
         <div className="viewer-controls-group" style={{ display: 'flex', gap: '0.4rem', alignItems: 'center' }}>
           <button

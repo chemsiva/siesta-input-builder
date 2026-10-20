@@ -86,6 +86,56 @@ export function serializeFDF(state) {
   }
   sections.push(coordLines.join('\n'));
 
+  // ── Geometry Constraints (Section 7.7 / ASE FixAtoms) ──────────────────────
+  const constraints = state.constraints || {};
+  if (constraints.enabled && (
+    (constraints.fixedAtomIndices && constraints.fixedAtomIndices.length > 0) ||
+    (constraints.cellVectors && constraints.cellVectors.length > 0) ||
+    (constraints.cellAngles && constraints.cellAngles.length > 0) ||
+    (constraints.stressComponents && constraints.stressComponents.length > 0) ||
+    (constraints.customLines && constraints.customLines.trim())
+  )) {
+    const cRows = [];
+    const dirMode = constraints.directionMode || 'all';
+
+    if (constraints.fixedAtomIndices && constraints.fixedAtomIndices.length > 0) {
+      const sorted = [...new Set(constraints.fixedAtomIndices)].sort((a, b) => a - b);
+
+      if (dirMode === 'all') {
+        const chunkSize = 10;
+        for (let i = 0; i < sorted.length; i += chunkSize) {
+          const chunk = sorted.slice(i, i + chunkSize);
+          cRows.push(`  atom ${chunk.join(' ')}`);
+        }
+      } else if (dirMode === 'z') {
+        sorted.forEach(idx => {
+          cRows.push(`  atom ${idx}  0.  0.  1.`);
+        });
+      } else if (dirMode === 'xy') {
+        sorted.forEach(idx => {
+          cRows.push(`  atom ${idx}  1.  1.  0.`);
+        });
+      }
+    }
+
+    if (constraints.cellVectors && constraints.cellVectors.length > 0) {
+      cRows.push(`  cell-vector ${constraints.cellVectors.join(' ')}`);
+    }
+    if (constraints.cellAngles && constraints.cellAngles.length > 0) {
+      cRows.push(`  cell-angle ${constraints.cellAngles.join(' ')}`);
+    }
+    if (constraints.stressComponents && constraints.stressComponents.length > 0) {
+      cRows.push(`  stress ${constraints.stressComponents.join(' ')}`);
+    }
+    if (constraints.customLines && constraints.customLines.trim()) {
+      constraints.customLines.trim().split(/\r?\n/).forEach(l => cRows.push(`  ${l.trim()}`));
+    }
+
+    if (cRows.length > 0) {
+      sections.push(block('Geometry.Constraints', cRows));
+    }
+  }
+
   // ── XC / DFT ──────────────────────────────────────────────────────────────
   const d3Lines = [];
   if (bool(dft['DFTD3']) === 'true' || bool(dft['d3.dispersion']) === 'true') {
