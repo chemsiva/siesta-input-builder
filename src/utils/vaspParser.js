@@ -245,10 +245,16 @@ export function convertVaspToFdf(vaspParsed, options = {}) {
   const fixedZ = options.fixedZ || [];           // e.g. [6, 82] for C, Pb
   const rigidMolecules = options.rigidMolecules || ''; // custom range string
   const centerRange = options.centerRange || '';       // center string
+  const pseudoDir = (options.pseudoDir || '').trim().replace(/\/+$/, '');
+  const psFormat = options.pseudoFormat || 'psf';
 
   let fdf = `# ══════════════════════════════════════════════════════════════════════\n`;
   fdf += `# SIESTA 5.x Input File — Converted from VASP POSCAR (ASE GUI)\n`;
   fdf += `# System: ${title}\n`;
+  if (pseudoDir) {
+    fdf += `# SIESTA_PS_PATH: ${pseudoDir}\n`;
+    fdf += `# Run command: export SIESTA_PS_PATH="${pseudoDir}" && mpirun -np 4 siesta < ${label}.fdf\n`;
+  }
   fdf += `# Selective Dynamics: ${hasSelectiveDynamics ? 'Detected (' + fixedConstraints.length + ' constrained atoms)' : 'None (All atoms free)'}\n`;
   fdf += `# Section 7.7 General Constraints: ${fixedConstraints.length > 0 || cellVectors.length > 0 || stress.length > 0 ? 'Active' : 'None'}\n`;
   fdf += `# ══════════════════════════════════════════════════════════════════════\n\n`;
@@ -263,7 +269,8 @@ export function convertVaspToFdf(vaspParsed, options = {}) {
   speciesNames.forEach((rawName, i) => {
     const name = rawName.charAt(0).toUpperCase() + rawName.slice(1).toLowerCase();
     const z = ELEMENT_Z[name] || (i + 1);
-    fdf += `  ${String(i + 1).padStart(2)}  ${String(z).padStart(3)}  ${name.padEnd(4)}    ${name}.psf\n`;
+    const psFile = pseudoDir ? `${pseudoDir}/${name}.${psFormat}` : `${name}.${psFormat}`;
+    fdf += `  ${String(i + 1).padStart(2)}  ${String(z).padStart(3)}  ${name.padEnd(4)}    ${psFile}\n`;
   });
   fdf += `%endblock ChemicalSpeciesLabel\n\n`;
 

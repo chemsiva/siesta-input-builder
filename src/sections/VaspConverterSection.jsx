@@ -6,11 +6,14 @@ import { parseVaspPoscar, convertVaspToFdf, VASP_DEMOS, ELEMENT_Z } from '../uti
 export function VaspConverterSection() {
   const setSection = useFDFStore(s => s.setSection);
   const setActiveSection = useFDFStore(s => s.setActiveSection);
+  const globalPseudoPath = useFDFStore(s => s.pseudoSettings.pseudoPath || '');
+  const setPseudoSettings = useFDFStore(s => s.setPseudoSettings);
 
   const [vaspText, setVaspText] = useState(VASP_DEMOS.perovskite_slab.poscar);
   const [meshCutoff, setMeshCutoff] = useState('350 Ry');
   const [xcFunc, setXcFunc] = useState('GGA');
   const [xcAuthor, setXcAuthor] = useState('PBE');
+  const [pseudoDir, setPseudoDir] = useState(globalPseudoPath);
   const [customLabel, setCustomLabel] = useState('');
   const [copyStatus, setCopyStatus] = useState('');
   const [loadStatus, setLoadStatus] = useState('');
@@ -76,11 +79,12 @@ export function VaspConverterSection() {
         stress: stressArray,
         fixedZ: customZ,
         rigidMolecules: rigidStr,
+        pseudoDir,
       });
     } catch (err) {
       return `# Conversion error: ${err.message}`;
     }
-  }, [vaspParsed, meshCutoff, xcFunc, xcAuthor, customLabel, constraintSyntax, cellVectors, cellAngle, stressArray, customZ, rigidStr]);
+  }, [vaspParsed, meshCutoff, xcFunc, xcAuthor, customLabel, constraintSyntax, cellVectors, cellAngle, stressArray, customZ, rigidStr, pseudoDir]);
 
   // Handle file upload
   const handleFileUpload = (e) => {
@@ -169,7 +173,9 @@ export function VaspConverterSection() {
         'XC.authors': xcAuthor,
         MeshCutoff: meshCutoff,
       });
-
+      if (pseudoDir && pseudoDir.trim()) {
+        setPseudoSettings({ pseudoPath: pseudoDir.trim() });
+      }
       setLoadStatus('Successfully loaded into active workspace! Switching to Structure...');
       setTimeout(() => {
         setLoadStatus('');
@@ -552,10 +558,21 @@ export function VaspConverterSection() {
               <input
                 className="input mono"
                 type="text"
-                style={{ width: '100px', fontSize: '0.75rem', padding: '0.15rem 0.4rem' }}
+                style={{ width: '90px', fontSize: '0.75rem', padding: '0.15rem 0.4rem' }}
                 value={customLabel}
                 onChange={e => setCustomLabel(e.target.value)}
                 placeholder="auto"
+              />
+            </label>
+            <label style={{ display: 'flex', alignItems: 'center', gap: '0.3rem', flex: 1, minWidth: '160px' }}>
+              <span style={{ color: 'var(--muted)', whiteSpace: 'nowrap' }}>PP Folder:</span>
+              <input
+                className="input mono"
+                type="text"
+                style={{ flex: 1, fontSize: '0.75rem', padding: '0.15rem 0.4rem' }}
+                value={pseudoDir}
+                onChange={e => setPseudoDir(e.target.value)}
+                placeholder="/path/to/pseudos"
               />
             </label>
           </div>

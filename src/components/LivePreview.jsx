@@ -8,7 +8,8 @@ export function LivePreview() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
     state.system, state.structure, state.dft, state.basis,
-    state.scf, state.kpoints, state.output, state.md
+    state.scf, state.kpoints, state.output, state.md,
+    state.pseudoSettings, state.dos
   ]);
 
   const lines = text.split('\n');

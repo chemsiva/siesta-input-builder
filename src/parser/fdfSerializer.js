@@ -25,8 +25,6 @@ export function serializeFDF(state) {
   // ── Species ──────────────────────────────────────────────────────────────
   // SIESTA supports 4th column for pseudopotential file or full absolute path!
   // e.g.:  1  82  Pb  /scratch/pseudos/Pb.psf
-  // Note: libfdf has a hard limit of 132 chars per line in Fortran. If full path fits
-  // (<= 115 chars), we embed it directly; if longer, we keep filename and rely on SIESTA_PS_PATH.
   if (structure.species && structure.species.length > 0) {
     const rows = structure.species.map(s => {
       let psSpec = (s.psfile || '').trim();
@@ -38,13 +36,7 @@ export function serializeFDF(state) {
       }
 
       const baseLine = `  ${s.idx.toString().padStart(2)}  ${s.z.toString().padStart(3)}  ${s.label.padEnd(4)}`;
-      let psPart = '';
-      if (fullCandidate && (baseLine.length + 4 + fullCandidate.length) <= 115) {
-        psPart = `    ${fullCandidate}`;
-      } else if (fullCandidate) {
-        const fnameOnly = fullCandidate.split('/').pop();
-        psPart = `    ${fnameOnly}`;
-      }
+      const psPart = fullCandidate ? `    ${fullCandidate}` : '';
       return `${baseLine}${psPart}`;
     });
     sections.push(block('ChemicalSpeciesLabel', rows));
