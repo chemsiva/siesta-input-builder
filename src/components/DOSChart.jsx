@@ -1,6 +1,5 @@
 import React, { useState, useRef, useMemo } from 'react';
-
-// Scientific color palette for curves
+import { exportSvg, exportPng, exportTiff } from '../utils/imageExport.js';
 const PALETTE = [
   '#38bdf8', // sky-400 (Total)
   '#f87171', // red-400 (Species 1)
@@ -27,9 +26,10 @@ export function DOSChart({
   yLabel = 'DOS (states / eV)',
 }) {
   const containerRef = useRef(null);
+  const svgRef = useRef(null);
   const [hoverIndex, setHoverIndex] = useState(null);
   const [hiddenSeries, setHiddenSeries] = useState({});
-  const [orientation, setOrientation] = useState('horizontal'); // 'horizontal' or 'vertical'
+  const [plotTheme, setPlotTheme] = useState('white'); // 'white' | 'dark'
 
   const width = 860;
   const height = 400;
@@ -160,34 +160,74 @@ export function DOSChart({
   };
 
   // Export data as .DAT / .CSV
-  const handleExportData = () => {
+  // Export data as formatted .DAT file
+  const handleExportDAT = () => {
     if (energies.length === 0) return;
-    const headers = ['Energy_eV', ...series.map(s => s.name)];
+    let text = `# ==============================================================================\n`;
+    text += `# SIESTA Density of States Data File (.dat)\n`;
+    text += `# Title: ${title}\n`;
+    text += `# Fermi Energy (E_F): ${fermiEnergy.toFixed(4)} eV (${isShifted ? 'Shifted: E - E_F = 0' : 'Absolute Energies'})\n`;
+    text += `# Spin Polarized: ${isSpinPol ? 'Yes (Spin Up & Spin Down)' : 'No'}\n`;
+    text += `# Number of Energy Points: ${nPoints}\n`;
+    text += `# Energy Range: ${eMin.toFixed(4)} to ${eMax.toFixed(4)} eV\n`;
+    text += `# Columns:\n`;
+    text += `#   Col 1: Energy (eV)\n`;
+    let colIdx = 2;
+    series.forEach(s => {
+      text += `#   Col ${colIdx++}: ${s.name} (states/eV)\n`;
+    });
     if (isSpinPol) {
-      headers.push(...series.map(s => `${s.name}_down`));
+      series.forEach(s => {
+        text += `#   Col ${colIdx++}: ${s.name} [Spin Down] (states/eV)\n`;
+      });
     }
-    const rows = [headers.join('\t')];
+    text += `#\n`;
+    text += `# Gnuplot Command:\n`;
+    text += `#   plot for [col=2:${colIdx - 1}] 'dos.dat' using 1:col with lines lw 2 title columnhead\n`;
+    text += `# ==============================================================================\n`;
+
+    const headers = ['# Energy_eV', ...series.map(s => `"${s.name}"`)];
+    if (isSpinPol) {
+      headers.push(...series.map(s => `"${s.name}_Down"`));
+    }
+    text += `${headers.join('\t')}\n`;
 
     for (let i = 0; i < nPoints; i++) {
-      const cols = [energies[i].toFixed(4)];
+      const cols = [energies[i].toFixed(6)];
       series.forEach(s => {
-        cols.push((s.dataUp ? s.dataUp[i] : 0).toFixed(5));
+        cols.push((s.dataUp ? s.dataUp[i] : 0).toFixed(6));
       });
       if (isSpinPol) {
         series.forEach(s => {
-          cols.push((s.dataDown ? s.dataDown[i] : 0).toFixed(5));
+          cols.push((s.dataDown ? s.dataDown[i] : 0).toFixed(6));
         });
       }
-      rows.push(cols.join('\t'));
+      text += `${cols.join('\t')}\n`;
     }
 
-    const blob = new Blob([rows.join('\n')], { type: 'text/plain;charset=utf-8' });
+    const blob = new Blob([text], { type: 'text/plain;charset=utf-8' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `${title.toLowerCase().replace(/\s+/g, '_')}_data.dat`;
+    a.download = `${title.toLowerCase().replace(/[^a-z0-9]/g, '_')}_dos.dat`;
     a.click();
     URL.revokeObjectURL(url);
+  };
+
+  // Export image formats (SVG, PNG 300 DPI, TIFF 300 DPI)
+  const handleExportSVG = () => {
+    if (!svgRef.current) return;
+    exportSvg(svgRef.current, `${title.toLowerCase().replace(/[^a-z0-9]/g, '_')}_dos.svg`);
+  };
+
+  const handleExportPNG = async () => {
+    if (!svgRef.current) return;
+    await exportPng(svgRef.current, width, height, `${title.toLowerCase().replace(/[^a-z0-9]/g, '_')}_dos_300dpi.png`, 3.5, plotTheme);
+  };
+
+  const handleExportTIFF = async () => {
+    if (!svgRef.current) return;
+    await exportTiff(svgRef.current, width, height, `${title.toLowerCase().replace(/[^a-z0-9]/g, '_')}_dos_300dpi.tif`, 2.8, plotTheme);
   };
 
   // Generate nice tick marks for axes
@@ -236,12 +276,51 @@ export function DOSChart({
           )}
         </div>
 
-        <div style={{ display: 'flex', gap: '0.4rem' }}>
+        <div style={{ display: 'flex', gap: '0.35rem', alignItems: 'center', flexWrap: 'wrap' }}>
+          {/* Theme switcher */}
           <button
-            className="btn btn-secondary btn-sm"
-            onClick={handleExportData}
-            title="Export full numeric curve columns to .DAT file">
-            📥 Download .DAT Data
+            type="button"
+            className={`btn btn-xs ${plotTheme === 'white' ? 'btn-primary' : 'btn-secondary'}`}
+            onClick={() => setPlotTheme('white')}
+            title="Publication White background">
+            🌞 White
+          </button>
+          <button
+            type="button"
+            className={`btn btn-xs ${plotTheme === 'dark' ? 'btn-primary' : 'btn-secondary'}`}
+            onClick={() => setPlotTheme('dark')}
+            title="Dark screen background">
+            🌙 Dark
+          </button>
+
+          {/* Export suite */}
+          <button
+            type="button"
+            className="btn btn-secondary btn-xs"
+            onClick={handleExportDAT}
+            title="Download tabulated .dat data file with Gnuplot script">
+            📊 Download .dat Data
+          </button>
+          <button
+            type="button"
+            className="btn btn-secondary btn-xs"
+            onClick={handleExportSVG}
+            title="Download vector SVG figure">
+            📐 SVG Vector
+          </button>
+          <button
+            type="button"
+            className="btn btn-secondary btn-xs"
+            onClick={handleExportPNG}
+            title="Download publication-grade 300 DPI PNG">
+            📸 PNG (300 DPI)
+          </button>
+          <button
+            type="button"
+            className="btn btn-secondary btn-xs"
+            onClick={handleExportTIFF}
+            title="Download 300 DPI TIFF figure for journal submission">
+            📄 TIFF (300 DPI)
           </button>
         </div>
       </div>
@@ -309,9 +388,15 @@ export function DOSChart({
           cursor: 'crosshair',
         }}>
         <svg
+          ref={svgRef}
           viewBox={`0 0 ${width} ${height}`}
-          style={{ width: '100%', height: 'auto', display: 'block' }}>
-          {/* Grid lines */}
+          style={{ width: '100%', height: 'auto', display: 'block', background: plotTheme === 'white' ? '#ffffff' : '#0f172a' }}>
+          <defs>
+            <clipPath id="dos-plot-clip">
+              <rect x={margin.left} y={margin.top} width={plotW} height={plotH} />
+            </clipPath>
+          </defs>
+          <rect x="0" y="0" width={width} height={height} fill={plotTheme === 'white' ? '#ffffff' : '#0f172a'} />
           {xTicks.map(val => {
             const x = getX(val);
             return (

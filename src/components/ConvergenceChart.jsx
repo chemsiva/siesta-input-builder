@@ -1,5 +1,5 @@
-import { useState } from 'react';
-
+import { useState, useRef } from 'react';
+import { exportSvg, exportPng, exportTiff } from '../utils/imageExport.js';
 /**
  * Interactive SVG Convergence & Thermodynamic Chart.
  * Supports:
@@ -12,6 +12,7 @@ import { useState } from 'react';
 export function ConvergenceChart({ mdeData, scfData }) {
   const [activeMetric, setActiveMetric] = useState('energy');
   const [hoverIndex, setHoverIndex] = useState(null);
+  const svgRef = useRef(null);
 
   const hasMDE = mdeData && mdeData.steps && mdeData.steps.length > 0;
   const hasSCF = scfData && scfData.length > 0;
@@ -108,11 +109,51 @@ export function ConvergenceChart({ mdeData, scfData }) {
   });
 
   const activePoint = hoverIndex !== null && series[hoverIndex] ? series[hoverIndex] : null;
+  const handleExportDAT = () => {
+    if (series.length === 0) return;
+    let text = `# ==============================================================================\n`;
+    text += `# SIESTA Convergence & Thermodynamic History Data (.dat)\n`;
+    text += `# Metric: ${yLabel} (${unit})\n`;
+    text += `# Total Data Points: ${series.length}\n`;
+    text += `#\n`;
+    text += `# Quick Plotting Script for Gnuplot:\n`;
+    text += `#   set xlabel "Step / Iteration"\n`;
+    text += `#   set ylabel "${yLabel} (${unit})"\n`;
+    text += `#   plot 'convergence.dat' using 1:2 with lines lw 2 title "${yLabel}"\n`;
+    text += `# ==============================================================================\n`;
+    text += `# Step\t${yLabel.replace(/\s+/g, '_')}_${unit.replace(/[^a-zA-Z0-9]/g, '')}\n`;
+    series.forEach(pt => {
+      text += `  ${pt.x}\t${pt.y.toFixed(6)}\n`;
+    });
+    const blob = new Blob([text], { type: 'text/plain;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `convergence_${activeMetric}.dat`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const handleExportSVG = () => {
+    if (!svgRef.current) return;
+    exportSvg(svgRef.current, `convergence_${activeMetric}.svg`);
+  };
+
+  const handleExportPNG = async () => {
+    if (!svgRef.current) return;
+    await exportPng(svgRef.current, width, height, `convergence_${activeMetric}_300dpi.png`, 3, 'dark');
+  };
+
+  const handleExportTIFF = async () => {
+    if (!svgRef.current) return;
+    await exportTiff(svgRef.current, width, height, `convergence_${activeMetric}_300dpi.tif`, 2.5, 'white');
+  };
 
   return (
     <div className="convergence-chart-container" style={{ marginTop: '0.5rem' }}>
-      {/* Metric Selector Tabs */}
-      <div style={{ display: 'flex', gap: '0.4rem', flexWrap: 'wrap', marginBottom: '0.6rem' }}>
+      {/* Metric Selector Tabs & Export Toolbar */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.4rem', marginBottom: '0.6rem' }}>
+        <div style={{ display: 'flex', gap: '0.4rem', flexWrap: 'wrap' }}>
         {hasMDE && (
           <>
             <button
@@ -149,11 +190,26 @@ export function ConvergenceChart({ mdeData, scfData }) {
             🔄 SCF Convergence
           </button>
         )}
+        </div>
+        <div style={{ display: 'flex', gap: '0.35rem', alignItems: 'center', flexWrap: 'wrap' }}>
+          <button type="button" className="btn btn-secondary btn-xs" onClick={handleExportDAT} title="Download tabulated .dat data">
+            📊 Download .dat Data
+          </button>
+          <button type="button" className="btn btn-secondary btn-xs" onClick={handleExportSVG} title="Download vector SVG figure">
+            📐 SVG Vector
+          </button>
+          <button type="button" className="btn btn-secondary btn-xs" onClick={handleExportPNG} title="Download 300 DPI PNG figure">
+            📸 PNG (300 DPI)
+          </button>
+          <button type="button" className="btn btn-secondary btn-xs" onClick={handleExportTIFF} title="Download 300 DPI TIFF figure">
+            📄 TIFF (300 DPI)
+          </button>
+        </div>
       </div>
-
       {/* SVG Chart */}
       <div style={{ position: 'relative', width: '100%', overflowX: 'auto', background: 'var(--surface, #1e293b)', borderRadius: '6px', border: '1px solid var(--border)' }}>
         <svg
+          ref={svgRef}
           viewBox={`0 0 ${width} ${height}`}
           style={{ width: '100%', minWidth: '480px', display: 'block' }}
           onMouseLeave={() => setHoverIndex(null)}

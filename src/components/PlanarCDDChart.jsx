@@ -1,5 +1,5 @@
 import React, { useState, useRef, useMemo } from 'react';
-
+import { exportSvg, exportPng, exportTiff } from '../utils/imageExport.js';
 export function PlanarCDDChart({
   cddData,
   title = 'Planar Average Charge Density Difference Δρ̄(z)',
@@ -8,6 +8,7 @@ export function PlanarCDDChart({
   onInterfaceChange = null,
 }) {
   const containerRef = useRef(null);
+  const svgRef = useRef(null);
   const [hoverIdx, setHoverIdx] = useState(null);
   const [showDeltaQ, setShowDeltaQ] = useState(true);
 
@@ -136,18 +137,49 @@ export function PlanarCDDChart({
   };
 
   // Export .DAT file
+  // Export formatted .DAT file
   const handleExportDAT = () => {
-    const rows = ['# z(Angstrom)\tDeltaRho(e/A)\tDeltaQ(e)'];
+    let text = `# ==============================================================================\n`;
+    text += `# SIESTA Planar Average Charge Density Difference Data (.dat)\n`;
+    text += `# Title: ${title}\n`;
+    text += `# Net Charge Transfer (DeltaQ): ${netChargeTransfer.toFixed(4)} e\n`;
+    text += `# Interface Dipole: ${dipoleDebye.toFixed(3)} Debye\n`;
+    text += `# Work Function Shift: ${workFunctionShiftEV.toFixed(4)} eV\n`;
+    text += `# Interface Position (z): ${zInterface.toFixed(2)} Angstrom\n`;
+    text += `# Total Data Points: ${nPoints}\n`;
+    text += `#\n`;
+    text += `# Quick Plotting Script for Gnuplot:\n`;
+    text += `#   set xlabel "Distance normal to surface z (Angstrom)"\n`;
+    text += `#   set ylabel "Charge Density Difference DeltaRho (e/A)"\n`;
+    text += `#   plot 'planar_cdd.dat' using 1:2 with lines lw 2 title "DeltaRho(z)", \\\n`;
+    text += `#        'planar_cdd.dat' using 1:3 with lines lw 2 axes x1y2 title "DeltaQ(z)"\n`;
+    text += `# ==============================================================================\n`;
+    text += `# z(Angstrom)\tDeltaRho(e/A)\tDeltaQ(e)\n`;
     for (let i = 0; i < nPoints; i++) {
-      rows.push(`${z[i].toFixed(4)}\t${deltaRho[i].toFixed(6)}\t${deltaQ[i].toFixed(6)}`);
+      text += `  ${z[i].toFixed(4)}\t${deltaRho[i].toFixed(6)}\t${deltaQ[i].toFixed(6)}\n`;
     }
-    const blob = new Blob([rows.join('\n')], { type: 'text/plain;charset=utf-8' });
+    const blob = new Blob([text], { type: 'text/plain;charset=utf-8' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
     a.download = 'planar_cdd_profile.dat';
     a.click();
     URL.revokeObjectURL(url);
+  };
+
+  const handleExportSVG = () => {
+    if (!svgRef.current) return;
+    exportSvg(svgRef.current, 'planar_cdd_profile.svg');
+  };
+
+  const handleExportPNG = async () => {
+    if (!svgRef.current) return;
+    await exportPng(svgRef.current, width, height, 'planar_cdd_profile_300dpi.png', 3, 'dark');
+  };
+
+  const handleExportTIFF = async () => {
+    if (!svgRef.current) return;
+    await exportTiff(svgRef.current, width, height, 'planar_cdd_profile_300dpi.tif', 2.5, 'white');
   };
 
   // X ticks
@@ -261,16 +293,39 @@ export function PlanarCDDChart({
           </label>
         </div>
 
-        <div style={{ display: 'flex', gap: '0.5rem' }}>
+        <div style={{ display: 'flex', gap: '0.35rem', alignItems: 'center', flexWrap: 'wrap' }}>
           <button
-            className="btn btn-secondary btn-sm"
+            type="button"
+            className="btn btn-secondary btn-xs"
             onClick={handleExportDAT}
-            title="Download profile as 3-column DAT file">
-            📥 Download .DAT Profile
+            title="Download tabulated .dat data with Gnuplot script">
+            📊 Download .dat Data
+          </button>
+          <button
+            type="button"
+            className="btn btn-secondary btn-xs"
+            onClick={handleExportSVG}
+            title="Download vector SVG figure">
+            📐 SVG Vector
+          </button>
+          <button
+            type="button"
+            className="btn btn-secondary btn-xs"
+            onClick={handleExportPNG}
+            title="Download 300 DPI PNG figure">
+            📸 PNG (300 DPI)
+          </button>
+          <button
+            type="button"
+            className="btn btn-secondary btn-xs"
+            onClick={handleExportTIFF}
+            title="Download 300 DPI TIFF figure">
+            📄 TIFF (300 DPI)
           </button>
         </div>
       </div>
 
+      {/* SVG Canvas Mount */}
       {/* SVG Canvas Mount */}
       <div
         ref={containerRef}
@@ -286,6 +341,7 @@ export function PlanarCDDChart({
           cursor: 'crosshair',
         }}>
         <svg
+          ref={svgRef}
           viewBox={`0 0 ${width} ${height}`}
           style={{ width: '100%', height: 'auto', display: 'block' }}>
           {/* Grid lines */}
