@@ -13,6 +13,7 @@ const SECTIONS = [
   { id: 'neb',       label: '⑩ CI-NEB',          icon: '⛰️' },
   { id: 'phonon',    label: '⑪ Phonons',         icon: '〰️' },
   { id: 'adsorption', label: '⑫ Surface & Work Function', icon: '🌊' },
+  { id: 'vasp',       label: '⑬ VASP to FDF Converter',   icon: '🔄' },
 ];
 
 export function Sidebar() {

@@ -16,6 +16,7 @@ import { MDSection }        from './sections/MDSection';
 import { NEBSection }       from './sections/NEBSection';
 import { PhononSection }    from './sections/PhononSection';
 import { AdsorptionSection } from './sections/AdsorptionSection';
+import { VaspConverterSection } from './sections/VaspConverterSection';
 const SECTION_MAP = {
   system:    <SystemSection />,
   structure: <StructureSection />,
@@ -29,6 +30,7 @@ const SECTION_MAP = {
   neb:       <NEBSection />,
   phonon:    <PhononSection />,
   adsorption: <AdsorptionSection />,
+  vasp:       <VaspConverterSection />,
 };
 
 export default function App() {
