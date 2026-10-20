@@ -1,4 +1,5 @@
 // VASP (POSCAR / CONTCAR) Parser and SIESTA FDF Converter
+// Fully supports SIESTA Manual Section 7.7: "Use of general constraints" (%block Geometry.Constraints).
 // Supports VASP 4 & VASP 5, Direct / Cartesian, and Selective Dynamics constraints (ASE GUI output).
 
 export const ELEMENT_Z = {
@@ -41,7 +42,6 @@ export function parseVaspPoscar(text) {
     if (parts.length < 3 || parts.some(isNaN)) {
       throw new Error(`Invalid lattice vector on line ${i + 1}: "${lines[i]}"`);
     }
-    // Multiply by scaling factor if positive
     const factor = scale > 0 ? scale : 1.0;
     lv.push([parts[0] * factor, parts[1] * factor, parts[2] * factor]);
   }
@@ -64,7 +64,6 @@ export function parseVaspPoscar(text) {
     // VASP 4: atom counts on line 5, species names inferred or generic
     speciesCounts = tok5.map(v => parseInt(v, 10));
     lineIdx++;
-    // Infer species names from title words if possible, else Sp1, Sp2...
     const titleWords = title.split(/[\s_-]+/).filter(w => ELEMENT_Z[w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()]);
     speciesNames = speciesCounts.map((_, idx) => titleWords[idx] || `Sp${idx + 1}`);
   }
@@ -86,7 +85,7 @@ export function parseVaspPoscar(text) {
 
   // Coordinate type
   const coordTypeLine = lines[lineIdx].toLowerCase();
-  const isDirect = coordTypeLine.startsWith('d'); // 'Direct' or 'Direct coordinates'
+  const isDirect = coordTypeLine.startsWith('d');
   const coordFormat = isDirect ? 'Fractional' : 'NotScaledCartesianAng';
   lineIdx++;
 
@@ -106,7 +105,6 @@ export function parseVaspPoscar(text) {
     const z = parseFloat(tokens[2]);
     if (isNaN(x) || isNaN(y) || isNaN(z)) break;
 
-    // Track species progression
     while (countInSpecies >= speciesCounts[currentSpeciesIdx] && currentSpeciesIdx < speciesNames.length - 1) {
       currentSpeciesIdx++;
       countInSpecies = 0;
@@ -115,8 +113,8 @@ export function parseVaspPoscar(text) {
     const elem = elemRaw.charAt(0).toUpperCase() + elemRaw.slice(1).toLowerCase();
     countInSpecies++;
 
-    // Parse selective dynamics flags if present
-    let fx = false; // true if constrained (Fixed)
+    // Parse selective dynamics flags
+    let fx = false; // true if constrained (Fixed / False)
     let fy = false;
     let fz = false;
     let flagsStr = '';
@@ -138,6 +136,8 @@ export function parseVaspPoscar(text) {
         isFullFixed: fx && fy && fz,
         isZOnly: fz && !fx && !fy,
         isXYOnly: fx && fy && !fz,
+        isXOnly: fx && !fy && !fz,
+        isYOnly: fy && !fx && !fz,
       });
     }
 
@@ -169,6 +169,57 @@ export function parseVaspPoscar(text) {
   };
 }
 
+/**
+ * Format atom indices according to SIESTA Manual Section 7.7 variants:
+ * 1. 'list': atom 1 2 3 4 5
+ * 2. 'from_to': atom from 1 to 12 step 1
+ * 3. 'bracket': atom [1 -- 12, 15]
+ */
+export function formatAtomConstraints(indices, syntax = 'bracket') {
+  if (!indices || indices.length === 0) return [];
+  const sorted = Array.from(new Set(indices)).sort((a, b) => a - b);
+
+  if (syntax === 'list') {
+    const lines = [];
+    for (let i = 0; i < sorted.length; i += 10) {
+      lines.push(`  atom ${sorted.slice(i, i + 10).join(' ')}`);
+    }
+    return lines;
+  }
+
+  // Find contiguous ranges
+  const ranges = [];
+  let start = sorted[0];
+  let prev = sorted[0];
+
+  for (let i = 1; i < sorted.length; i++) {
+    const cur = sorted[i];
+    if (cur === prev + 1) {
+      prev = cur;
+    } else {
+      ranges.push({ start, end: prev, count: prev - start + 1 });
+      start = cur;
+      prev = cur;
+    }
+  }
+  ranges.push({ start, end: prev, count: prev - start + 1 });
+
+  if (syntax === 'from_to') {
+    return ranges.map(r => {
+      if (r.count === 1) return `  atom ${r.start}`;
+      return `  atom from ${r.start} to ${r.end}`;
+    });
+  }
+
+  // 'bracket' syntax (Section 7.7: atom [2, 3 -- 6, 8])
+  const parts = ranges.map(r => {
+    if (r.count === 1) return `${r.start}`;
+    if (r.count === 2) return `${r.start}, ${r.end}`;
+    return `${r.start} -- ${r.end}`;
+  });
+  return [`  atom [${parts.join(', ')}]`];
+}
+
 export function convertVaspToFdf(vaspParsed, options = {}) {
   const {
     title,
@@ -185,11 +236,21 @@ export function convertVaspToFdf(vaspParsed, options = {}) {
   const xcFunc = options.xcFunc || 'GGA';
   const xcAuthor = options.xcAuthor || 'PBE';
   const label = (options.systemLabel || title).trim().toLowerCase().replace(/[^a-z0-9_-]/g, '_').substring(0, 24) || 'siesta_calc';
+  const syntax = options.constraintSyntax || 'bracket'; // 'bracket' | 'from_to' | 'list'
+  
+  // Section 7.7 Advanced Options
+  const cellVectors = options.cellVectors || []; // e.g. ['C'] or ['A', 'B']
+  const cellAngle = options.cellAngle || '';      // e.g. 'gamma'
+  const stress = options.stress || [];           // e.g. ['XX', 'YY'] or ['1', '2']
+  const fixedZ = options.fixedZ || [];           // e.g. [6, 82] for C, Pb
+  const rigidMolecules = options.rigidMolecules || ''; // custom range string
+  const centerRange = options.centerRange || '';       // center string
 
   let fdf = `# ══════════════════════════════════════════════════════════════════════\n`;
   fdf += `# SIESTA 5.x Input File — Converted from VASP POSCAR (ASE GUI)\n`;
   fdf += `# System: ${title}\n`;
   fdf += `# Selective Dynamics: ${hasSelectiveDynamics ? 'Detected (' + fixedConstraints.length + ' constrained atoms)' : 'None (All atoms free)'}\n`;
+  fdf += `# Section 7.7 General Constraints: ${fixedConstraints.length > 0 || cellVectors.length > 0 || stress.length > 0 ? 'Active' : 'None'}\n`;
   fdf += `# ══════════════════════════════════════════════════════════════════════\n\n`;
 
   fdf += `SystemLabel                  ${label}\n`;
@@ -224,31 +285,82 @@ export function convertVaspToFdf(vaspParsed, options = {}) {
   });
   fdf += `%endblock AtomicCoordinatesAndAtomicSpecies\n\n`;
 
-  // Constraints if present
-  if (fixedConstraints && fixedConstraints.length > 0) {
-    fdf += `# ── Constraints (Extracted from VASP Selective Dynamics) ────\n`;
+  // Constraints if present (SIESTA Manual Section 7.7)
+  const hasAnyConstraints = (fixedConstraints && fixedConstraints.length > 0) ||
+                            cellVectors.length > 0 ||
+                            Boolean(cellAngle) ||
+                            stress.length > 0 ||
+                            fixedZ.length > 0 ||
+                            Boolean(rigidMolecules) ||
+                            Boolean(centerRange);
+
+  if (hasAnyConstraints) {
+    fdf += `# ── Section 7.7 Use of general constraints ────────────────\n`;
     fdf += `%block Geometry.Constraints\n`;
 
+    // 1. Fully fixed atoms (from Selective Dynamics F F F)
     const fullFixed = fixedConstraints.filter(c => c.isFullFixed).map(c => c.atomIdx);
-    const zOnly = fixedConstraints.filter(c => c.isZOnly).map(c => c.atomIdx);
-    const xyOnly = fixedConstraints.filter(c => c.isXYOnly).map(c => c.atomIdx);
-
-    // Full fixed in lines of up to 10 indices
-    const chunkSize = 10;
-    for (let i = 0; i < fullFixed.length; i += chunkSize) {
-      const chunk = fullFixed.slice(i, i + chunkSize);
-      fdf += `  atom ${chunk.join(' ')}\n`;
+    if (fullFixed.length > 0) {
+      const atomLines = formatAtomConstraints(fullFixed, syntax);
+      atomLines.forEach(l => { fdf += `${l}\n`; });
     }
 
-    // Z-only
+    // 2. Directional constraints (Section 7.7 requires trailing dot '.' on reals!)
+    // Fixed along Z only (T T F): remove force projected on Z => fx -> 0 on z
+    const zOnly = fixedConstraints.filter(c => c.isZOnly).map(c => c.atomIdx);
     zOnly.forEach(idx => {
-      fdf += `  atom ${idx}  0.  0.  1.   # fix along Z\n`;
+      fdf += `  atom ${idx}  0.  0.  1.   # fix along z (allow in-plane relaxation)\n`;
     });
 
-    // XY-only
+    // Fixed in XY plane only (F F T)
+    const xyOnly = fixedConstraints.filter(c => c.isXYOnly).map(c => c.atomIdx);
     xyOnly.forEach(idx => {
-      fdf += `  atom ${idx}  1.  1.  0.   # fix in XY plane\n`;
+      fdf += `  atom ${idx}  1.  1.  0.   # fix in xy plane (allow z relaxation)\n`;
     });
+
+    // Fixed in X only (F T T)
+    const xOnly = fixedConstraints.filter(c => c.isXOnly).map(c => c.atomIdx);
+    xOnly.forEach(idx => {
+      fdf += `  atom ${idx}  1.  0.  0.   # fix x only\n`;
+    });
+
+    // Fixed in Y only (T F T)
+    const yOnly = fixedConstraints.filter(c => c.isYOnly).map(c => c.atomIdx);
+    yOnly.forEach(idx => {
+      fdf += `  atom ${idx}  0.  1.  0.   # fix y only\n`;
+    });
+
+    // 3. Section 7.7: Fix by Atomic Number Z (e.g. Z 6 to fix all Carbon atoms)
+    if (fixedZ && fixedZ.length > 0) {
+      fixedZ.forEach(zVal => {
+        fdf += `  Z ${zVal}                 # constrain all atoms with atomic number Z = ${zVal}\n`;
+      });
+    }
+
+    // 4. Section 7.7: Cell Vectors (cell-vector A B C)
+    if (cellVectors.length > 0) {
+      fdf += `  cell-vector ${cellVectors.join(' ')}\n`;
+    }
+
+    // 5. Section 7.7: Cell Angle (cell-angle alpha/beta/gamma)
+    if (cellAngle && cellAngle !== 'none') {
+      fdf += `  cell-angle ${cellAngle}\n`;
+    }
+
+    // 6. Section 7.7: Stress components (stress 1 2 3 or stress XX YY ZZ)
+    if (stress.length > 0) {
+      fdf += `  stress ${stress.join(' ')}\n`;
+    }
+
+    // 7. Section 7.7: Rigid molecule / cluster
+    if (rigidMolecules && rigidMolecules.trim()) {
+      fdf += `  rigid ${rigidMolecules.trim()}\n`;
+    }
+
+    // 8. Section 7.7: Center of mass
+    if (centerRange && centerRange.trim()) {
+      fdf += `  center ${centerRange.trim()}\n`;
+    }
 
     fdf += `%endblock Geometry.Constraints\n\n`;
   }
@@ -266,11 +378,11 @@ export function convertVaspToFdf(vaspParsed, options = {}) {
   fdf += `DM.NumberPulay               8\n`;
   fdf += `DM.UseSaveDM                 false\n\n`;
 
-  fdf += `# ── Geometry Relaxation ─────────────────────────────────\n`;
+  fdf += `# ── Geometry Relaxation (Section 7.1 & 7.7) ─────────────\n`;
   fdf += `MD.TypeOfRun                 CG\n`;
   fdf += `MD.NumCGsteps                200\n`;
   fdf += `MD.MaxForceTol               0.04 eV/Ang\n`;
-  fdf += `MD.VariableCell              false\n`;
+  fdf += `MD.VariableCell              ${cellVectors.length > 0 || Boolean(cellAngle) ? 'true' : 'false'}\n`;
 
   return fdf;
 }
