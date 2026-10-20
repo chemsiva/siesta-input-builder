@@ -517,7 +517,7 @@ export function TrajectoryViewer({ aniData, cellVectors }) {
       return;
     }
 
-    const intervalMs = Math.max(25, Math.round(150 / speed));
+    const intervalMs = Math.max(12, Math.round(150 / speed));
     frameTimerRef.current = setInterval(() => {
       setCurrentFrame(prev => {
         if (prev >= numFrames - 1) {
@@ -933,7 +933,7 @@ export function TrajectoryViewer({ aniData, cellVectors }) {
         {/* Speed Controls */}
         <div style={{ display: 'flex', gap: '0.3rem', alignItems: 'center' }}>
           <span style={{ fontSize: '0.75rem', color: 'var(--muted)' }}>Speed:</span>
-          {[0.5, 1, 2, 5].map(sp => (
+          {[0.5, 1, 2, 5, 10].map(sp => (
             <button
               key={sp}
               className={`btn btn-sm ${speed === sp ? 'btn-primary' : 'btn-secondary'}`}
