@@ -14,6 +14,9 @@ import { WorkFunctionChart } from '../components/WorkFunctionChart.jsx';
 import { WorkFunctionComparisonStudio } from '../components/WorkFunctionComparisonStudio.jsx';
 import { parse1DPotentialData, parsePotentialCube, generatePotentialFromOut, generateDemoPotential } from '../parser/workFunctionParser.js';
 import { ErrorBoundary } from '../components/ErrorBoundary.jsx';
+import { parseTimesFile } from '../parser/timesParser.js';
+import { TimingAnalysisCard } from '../components/TimingAnalysisCard.jsx';
+
 const TRAJ_FLAGS = [
   { key: 'WriteMDXmol',      type: 'bool', label: 'WriteMDXmol (.ANI)', fileExt: '.ANI',
     help: 'Accumulate coordinates into SystemLabel.ANI (XYZ trajectory format for VMD, JMol, XCrySDen, OVITO)' },
@@ -128,13 +131,14 @@ export function OutputSection() {
   const [outData, setOutData] = useState(null);
   const [mdeData, setMdeData] = useState(null);
   const [aniData, setAniData] = useState(null);
+  const [timesData, setTimesData] = useState(null);
   const [loadingMsg, setLoadingMsg] = useState('');
   const [errorMsg, setErrorMsg] = useState('');
 
   const outInputRef = useRef(null);
   const mdeInputRef = useRef(null);
   const aniInputRef = useRef(null);
-
+  const timesInputRef = useRef(null);
   const MAX_FILE_SIZE = 100 * 1024 * 1024; // 100 MB safety limit
 
   // File loading handlers
@@ -213,8 +217,80 @@ export function OutputSection() {
       }
     };
     reader.readAsText(file);
+  };
+
+  const handleLoadTimes = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (file.size > MAX_FILE_SIZE) {
+      setErrorMsg(`⚠️ File exceeds 100 MB security limit (${file.name}).`);
+      e.target.value = '';
+      return;
+    }
+    setLoadingMsg(`Parsing ${file.name}...`);
+    setErrorMsg('');
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      try {
+        const parsed = parseTimesFile(ev.target.result);
+        setTimesData(parsed);
+        setLoadingMsg('');
+      } catch (err) {
+        setErrorMsg(`Failed to parse ${file.name}: ${err.message}`);
+        setLoadingMsg('');
+      }
+    };
+    reader.readAsText(file);
     e.target.value = '';
   };
+
+  const DEMO_TIMES_TEXT = `timer: Number of nodes = 36
+timer: Busiest calculating node was node = 7
+timer: Times refer to node = 7
+timer: Total elapsed wall-clock time (sec) =    51285.704
+timer: CPU times (sec):
+Calc: Sum, Avge, myNode, Avg/Max = 2204903.137   61247.309   61531.597   0.995
+Comm: Sum, Avge, myNode, Avg/Max =       0.000       0.000       0.000     NaN
+Tot:  Sum, Avge, myNode, Avg/Max = 2204903.137   61247.309   61531.597   0.995
+Program times printed if >  0.000E+00 of total
+
+Program            Calls     Prg.com  Prg.com     Prg.tot  Prg.tot Nod.avg
+                                     /Tot.com             /Tot.tot/Nod.max
+siesta                 1       0.000   0.0000   61531.597   1.0000   0.995
+Setup                  1       0.000   0.0000       1.386   0.0000   0.995
+bands                  1       0.000   0.0000       0.000   0.0000   0.655
+IterGeom            1858       0.000   0.0000   61490.694   0.9993   0.995
+geom_init           1858       0.000   0.0000    8070.904   0.1312   1.000
+Setup_H0            1858       0.000   0.0000    5908.349   0.0960   0.999
+DHSCF_Init          1858       0.000   0.0000    5875.073   0.0955   0.995
+DHSCF2              1858       0.000   0.0000    5656.081   0.0919   0.995
+POISON             24220       0.000   0.0000    3313.643   0.0539   0.955
+setup_H             20503       0.000   0.0000   21394.417   0.3477   0.998
+DHSCF              22362       0.000   0.0000   25397.732   0.4128   0.972
+DHSCF3             22362       0.000   0.0000   23239.052   0.3777   1.000
+rhoofd             22362       0.000   0.0000    3891.919   0.0633   0.898
+XC                 22362       0.000   0.0000    8930.102   0.1451   0.948
+vmat               22361       0.000   0.0000    3402.346   0.0553   0.881
+IterSCF            18645       0.000   0.0000   40178.041   0.6530   0.984
+compute_dm         18645       0.000   0.0000   20005.640   0.3251   0.989
+diagon             18645       0.000   0.0000   19962.859   0.3244   0.989
+r-eigvec           18645       0.000   0.0000   16286.522   0.2647   0.987
+rdiag              18645       0.000   0.0000   16263.224   0.2643   0.987
+rdiag3             18645       0.000   0.0000   12745.190   0.2071   0.984
+r-buildD           18645       0.000   0.0000    3642.466   0.0592   0.990
+PostSCF             1858       0.000   0.0000   11778.647   0.1914   0.995
+FINAL_HF            1858       0.000   0.0000   11778.626   0.1914   0.995`;
+
+  const handleLoadDemoTimes = () => {
+    try {
+      const parsed = parseTimesFile(DEMO_TIMES_TEXT);
+      setTimesData(parsed);
+      setErrorMsg('');
+    } catch (e) {
+      setErrorMsg(e.message);
+    }
+  };
+
   const handleLoadDemoANI = () => {
     try {
       const parsed = parseANI(DEMO_ANI_TEXT);
@@ -244,17 +320,18 @@ export function OutputSection() {
       setErrorMsg(e.message);
     }
   };
-
   const handleLoadAllDemo = () => {
     handleLoadDemoANI();
     handleLoadDemoMDE();
     handleLoadDemoOut();
+    handleLoadDemoTimes();
   };
 
   const handleClearAll = () => {
     setOutData(null);
     setMdeData(null);
     setAniData(null);
+    setTimesData(null);
     setErrorMsg('');
     setLoadingMsg('');
   };
@@ -297,6 +374,11 @@ export function OutputSection() {
       } else if (name.endsWith('.dat') || (name.includes('pot') && name.endsWith('.txt'))) {
         reader.onload = (ev) => {
           try { setPotData(parse1DPotentialData(ev.target.result, outData?.fermiEnergy || -4.35)); } catch (err) { setErrorMsg(err.message); }
+        };
+        reader.readAsText(file);
+      } else if (name.endsWith('.times') || name.includes('times')) {
+        reader.onload = (ev) => {
+          try { setTimesData(parseTimesFile(ev.target.result)); } catch (err) { setErrorMsg(err.message); }
         };
         reader.readAsText(file);
       }
@@ -617,6 +699,145 @@ export function OutputSection() {
               </div>
             )}
           </div>
+
+          {/* ── Section 6.29: Memory, CPU-time, and Wall time Accounting ─── */}
+          <div className="subsection">
+            <div className="subsection-title">
+              ⏱️ Section 6.29 Memory, CPU-time &amp; Wall-time Accounting
+            </div>
+            <p className="subsection-desc">
+              Control parallel execution timers, memory profiling (<code>SystemLabel.alloc</code>),
+              detailed timer reports (<code>SystemLabel.times</code>), and queuing wall-time limit enforcement.
+            </p>
+
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))', gap: '0.6rem' }}>
+              {/* AllocReportLevel */}
+              <div className="flag-card" style={{ flexDirection: 'column', alignItems: 'stretch' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.3rem' }}>
+                  <div className="flag-label"><code>AllocReportLevel</code></div>
+                  <span style={{ fontSize: '0.68rem', padding: '0.1rem 0.35rem', borderRadius: '3px', background: 'var(--surface)', border: '1px solid var(--border)', color: 'var(--accent)', fontFamily: 'monospace' }}>
+                    .alloc
+                  </span>
+                </div>
+                <div className="flag-help" style={{ marginBottom: '0.4rem' }}>
+                  Memory allocation report level in <code>SystemLabel.alloc</code> (0=none, 1=total peak, 2=detailed at end, 3=every peak, 4=every alloc/dealloc).
+                </div>
+                <select
+                  className="input select"
+                  value={output['AllocReportLevel'] || '0'}
+                  onChange={e => set('AllocReportLevel', e.target.value)}>
+                  <option value="0">0 — No report at all (default)</option>
+                  <option value="1">1 — Total memory peak only</option>
+                  <option value="2">2 — Detailed report at normal termination</option>
+                  <option value="3">3 — Detailed report at every new peak</option>
+                  <option value="4">4 — Every individual allocation/deallocation</option>
+                </select>
+              </div>
+
+              {/* AllocReportThreshold */}
+              <div className="flag-card" style={{ flexDirection: 'column', alignItems: 'stretch' }}>
+                <div className="flag-label"><code>AllocReportThreshold</code></div>
+                <div className="flag-help" style={{ marginBottom: '0.4rem' }}>
+                  Minimum array size in bytes individually reported in detailed allocation reports (levels 2 and 3).
+                </div>
+                <input
+                  className="input mono"
+                  placeholder="e.g. 1000000 (1 MB) or 0."
+                  value={output['AllocReportThreshold'] || ''}
+                  onChange={e => set('AllocReportThreshold', e.target.value)}
+                />
+              </div>
+
+              {/* TimerReportThreshold */}
+              <div className="flag-card" style={{ flexDirection: 'column', alignItems: 'stretch' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.3rem' }}>
+                  <div className="flag-label"><code>TimerReportThreshold</code></div>
+                  <span style={{ fontSize: '0.68rem', padding: '0.1rem 0.35rem', borderRadius: '3px', background: 'var(--surface)', border: '1px solid var(--border)', color: 'var(--accent)', fontFamily: 'monospace' }}>
+                    .times
+                  </span>
+                </div>
+                <div className="flag-help" style={{ marginBottom: '0.4rem' }}>
+                  Minimum fraction of total CPU time of subroutines printed in <code>SystemLabel.times</code> (e.g. 0.000 for all, 0.01 for &gt;1%).
+                </div>
+                <input
+                  className="input mono"
+                  placeholder="e.g. 0.000 or 0.001"
+                  value={output['TimerReportThreshold'] || ''}
+                  onChange={e => set('TimerReportThreshold', e.target.value)}
+                />
+              </div>
+
+              {/* MaxWalltime */}
+              <div className="flag-card" style={{ flexDirection: 'column', alignItems: 'stretch' }}>
+                <div className="flag-label"><code>MaxWalltime</code></div>
+                <div className="flag-help" style={{ marginBottom: '0.4rem' }}>
+                  Wall-clock time ceiling for cluster queue limits before clean emergency abort (e.g. <code>24 hours</code>, <code>86400 s</code>, <code>2 days</code>).
+                </div>
+                <input
+                  className="input mono"
+                  placeholder="e.g. 24 hours, 7200 s, 2 days"
+                  value={output['MaxWalltime'] || ''}
+                  onChange={e => set('MaxWalltime', e.target.value)}
+                />
+              </div>
+
+              {/* MaxWalltime.Slack */}
+              <div className="flag-card" style={{ flexDirection: 'column', alignItems: 'stretch' }}>
+                <div className="flag-label"><code>MaxWalltime.Slack</code></div>
+                <div className="flag-help" style={{ marginBottom: '0.4rem' }}>
+                  Safety slack buffer left for clean emergency shutdown before walltime expires (default: 5 s).
+                </div>
+                <input
+                  className="input mono"
+                  placeholder="5 s (default)"
+                  value={output['MaxWalltime.Slack'] || ''}
+                  onChange={e => set('MaxWalltime.Slack', e.target.value)}
+                />
+              </div>
+            </div>
+
+            {/* Boolean accounting toggles */}
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '0.6rem', marginTop: '0.6rem' }}>
+              <div className="flag-card">
+                <div>
+                  <div className="flag-label"><code>UseParallelTimer</code></div>
+                  <div className="flag-help">Perform timings in parallel across MPI nodes (writes SystemLabel.times).</div>
+                </div>
+                <label className="toggle">
+                  <input type="checkbox"
+                    checked={output['UseParallelTimer'] !== 'false'}
+                    onChange={e => set('UseParallelTimer', e.target.checked ? 'true' : 'false')} />
+                  <span className="toggle-label">{output['UseParallelTimer'] !== 'false' ? '✓ on (default)' : 'off'}</span>
+                </label>
+              </div>
+
+              <div className="flag-card">
+                <div>
+                  <div className="flag-label"><code>UseTreeTimer</code></div>
+                  <div className="flag-help">Wall-time tree timer on master node aware of call hierarchy; writes time.json.</div>
+                </div>
+                <label className="toggle">
+                  <input type="checkbox"
+                    checked={output['UseTreeTimer'] === 'true'}
+                    onChange={e => set('UseTreeTimer', e.target.checked ? 'true' : 'false')} />
+                  <span className="toggle-label">{output['UseTreeTimer'] === 'true' ? '✓ on' : 'off (default)'}</span>
+                </label>
+              </div>
+
+              <div className="flag-card">
+                <div>
+                  <div className="flag-label"><code>TimingSplitScfSteps</code></div>
+                  <div className="flag-help">Record individual SCF iteration timings separately (used with tree timer).</div>
+                </div>
+                <label className="toggle">
+                  <input type="checkbox"
+                    checked={output['TimingSplitScfSteps'] === 'true'}
+                    onChange={e => set('TimingSplitScfSteps', e.target.checked ? 'true' : 'false')} />
+                  <span className="toggle-label">{output['TimingSplitScfSteps'] === 'true' ? '✓ on' : 'off (default)'}</span>
+                </label>
+              </div>
+            </div>
+          </div>
         </>
       )}
 
@@ -642,7 +863,7 @@ export function OutputSection() {
               marginBottom: '1rem',
             }}>
             <div style={{ fontSize: '1.2rem', marginBottom: '0.4rem' }}>
-              📂 Drag &amp; Drop <code>.out</code>, <code>.MDE</code>, or <code>.ANI</code> files here
+              📂 Drag &amp; Drop <code>.out</code>, <code>.times / TIMES</code>, <code>.MDE</code>, or <code>.ANI</code> files here
             </div>
             <div style={{ fontSize: '0.8rem', color: 'var(--muted)', marginBottom: '0.8rem' }}>
               or click below to upload individually:
@@ -690,8 +911,20 @@ export function OutputSection() {
                 style={{ display: 'none' }}
                 onChange={handleLoadANI}
               />
+              {/* .times / TIMES upload */}
+              <button
+                className={`btn btn-sm ${timesData ? 'btn-primary' : 'btn-secondary'}`}
+                onClick={() => timesInputRef.current?.click()}>
+                {timesData ? '✓ TIMES Loaded' : '⏱️ Upload TIMES / .times'}
+              </button>
+              <input
+                ref={timesInputRef}
+                type="file"
+                accept=".times,TIMES,times,*.txt"
+                style={{ display: 'none' }}
+                onChange={handleLoadTimes}
+              />
             </div>
-
             {/* 1-Click Demo Buttons */}
             <div style={{
               marginTop: '0.8rem',
@@ -707,7 +940,10 @@ export function OutputSection() {
                 ✨ Quick Demos:
               </span>
               <button type="button" className="btn btn-sm btn-secondary" onClick={handleLoadAllDemo}>
-                🌟 Load All Samples (.out + .MDE + .ANI)
+                🌟 Load All Samples (.out + TIMES + .MDE + .ANI)
+              </button>
+              <button type="button" className="btn btn-sm btn-secondary" onClick={handleLoadDemoTimes}>
+                ⏱️ Demo TIMES
               </button>
               <button type="button" className="btn btn-sm btn-secondary" onClick={handleLoadDemoANI}>
                 🎬 Demo .ANI
@@ -718,7 +954,7 @@ export function OutputSection() {
               <button type="button" className="btn btn-sm btn-secondary" onClick={handleLoadDemoOut}>
                 📄 Demo .out
               </button>
-              {(outData || mdeData || aniData) && (
+              {(outData || mdeData || aniData || timesData) && (
                 <button type="button" className="btn btn-sm btn-secondary" style={{ color: 'var(--error, #ef4444)' }} onClick={handleClearAll}>
                   ✕ Reset
                 </button>
@@ -807,7 +1043,16 @@ export function OutputSection() {
               </ErrorBoundary>
             </div>
           )}
-          {/* DOS & PDOS Electronic Structure Analysis Suite */}
+
+          {/* ⏱️ Section 6.29 Execution Timings & Work Accounting (TIMES) */}
+          {timesData && (
+            <ErrorBoundary>
+              <TimingAnalysisCard
+                timesData={timesData}
+                onClear={() => setTimesData(null)}
+              />
+            </ErrorBoundary>
+          )}
           <div className="subsection" style={{ marginTop: '1.5rem' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.6rem', marginBottom: '0.6rem' }}>
               <div className="subsection-title" style={{ margin: 0 }}>

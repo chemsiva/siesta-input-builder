@@ -151,6 +151,15 @@ const defaultState = {
     'Optical.Vector': '1.0 0.0 0.0',
     'Optical.OffsetMesh': 'false',
     'Optical.Mesh': '5 5 5',
+    // Section 6.29: Memory, CPU-time, and Wall time accounting options
+    AllocReportLevel: '0',
+    AllocReportThreshold: '',
+    TimerReportThreshold: '',
+    UseTreeTimer: 'false',
+    UseParallelTimer: 'true',
+    TimingSplitScfSteps: 'false',
+    MaxWalltime: '',
+    'MaxWalltime.Slack': '5 s',
   },
   md: {
     'MD.TypeOfRun': 'CG', 'MD.NumCGsteps': '100', 'MD.MaxForceTol': '0.04 eV/Ang',

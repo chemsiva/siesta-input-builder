@@ -95,5 +95,13 @@
   "PAO.SoftPotential": { "type": "energy", "default": "40 Ry", "help": "Section 6.3.7: Prefactor of soft confinement potential (default 40 Ry)." },
   "BasisPressure": { "type": "pressure", "default": "0.2 GPa", "help": "Section 6.3.13: Fictitious basis pressure added to compute effective basis enthalpy for basis optimization." },
   "Write.Graphviz": { "type": "string", "default": "none", "help": "Section 6.3.4: Write sparsity pattern to SystemLabel.ATOM.gv or .ORB.gv for Graphviz neato." },
-  "User.Basis": { "type": "logical", "default": "false", "help": "Section 6.3.11: Read basis orbitals directly from Atomlabel.ion files instead of pseudopotentials." }
+  "User.Basis": { "type": "logical", "default": "false", "help": "Section 6.3.11: Read basis orbitals directly from Atomlabel.ion files instead of pseudopotentials." },
+  "AllocReportLevel": { "type": "integer", "default": "0", "help": "Section 6.29: Memory allocation report level (0=none, 1=peak only, 2=detailed at end, 3=at every peak, 4=all alloc/dealloc) printed to SystemLabel.alloc." },
+  "AllocReportThreshold": { "type": "real", "default": "", "help": "Section 6.29: Minimum size in bytes of arrays individually reported in detailed allocation reports." },
+  "TimerReportThreshold": { "type": "real", "default": "", "help": "Section 6.29: Minimum fraction of total CPU time of subroutines individually printed in SystemLabel.times (e.g. 0.001 = 0.1%)." },
+  "UseTreeTimer": { "type": "logical", "default": "false", "help": "Section 6.29: Enable wall-time tree timer aware of call hierarchy; writes time.json file." },
+  "UseParallelTimer": { "type": "logical", "default": "true", "help": "Section 6.29: Determine whether timings are performed across MPI nodes (writes SystemLabel.times)." },
+  "TimingSplitScfSteps": { "type": "logical", "default": "false", "help": "Section 6.29: Record timings for individual SCF steps separately (used with tree timer)." },
+  "MaxWalltime": { "type": "string", "default": "", "help": "Section 6.29: Maximum wall-clock time limit before clean program shutdown (e.g. 24 hours, 7200 s, 2 days)." },
+  "MaxWalltime.Slack": { "type": "string", "default": "5 s", "help": "Section 6.29: Slack time before MaxWalltime to allow emergency save and file clean-up (e.g. 5 s, 60 s)." }
 }

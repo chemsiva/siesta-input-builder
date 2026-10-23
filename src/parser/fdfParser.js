@@ -232,8 +232,10 @@ export function parseFDF(text) {
   // Output
   ['WriteMullikenPop','WriteForces','WriteCoorStep','WriteCoorXmol',
    'WriteMDXmol','WriteMDhistory',
-   'SaveRho','SaveDeltaRho','SaveElectrostaticPotential','SaveTotalPotential','LongOutput','SaveHS','WriteDM'].forEach(k => setIfPresent(result.output, k));
-
+   'SaveRho','SaveDeltaRho','SaveElectrostaticPotential','SaveTotalPotential','LongOutput','SaveHS','WriteDM',
+   'AllocReportLevel','AllocReportThreshold','TimerReportThreshold',
+   'UseTreeTimer','UseParallelTimer','TimingSplitScfSteps',
+   'MaxWalltime','MaxWalltime.Slack'].forEach(k => setIfPresent(result.output, k));
   // MD
   ['MD.TypeOfRun','MD.NumCGsteps','MD.MaxForceTol','MD.MaxStressTol','MD.VariableCell',
    'MD.MaxDispl','MD.Steps','MD.TargetPressure','MD.UseSaveXV','MD.InitialTemperature','MD.TargetTemperature',

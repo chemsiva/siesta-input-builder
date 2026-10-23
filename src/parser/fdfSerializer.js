@@ -361,6 +361,35 @@ export function serializeFDF(state) {
     sections.push(optLines.join('\n'));
   }
 
+  // ── Section 6.29: Memory, CPU-time, and Wall time accounting ───────────────
+  const timeLines = [];
+  if (output['AllocReportLevel'] && output['AllocReportLevel'] !== '0') {
+    timeLines.push(line('AllocReportLevel', output['AllocReportLevel']));
+  }
+  if (output['AllocReportThreshold']) {
+    timeLines.push(line('AllocReportThreshold', output['AllocReportThreshold']));
+  }
+  if (output['TimerReportThreshold']) {
+    timeLines.push(line('TimerReportThreshold', output['TimerReportThreshold']));
+  }
+  if (output['UseTreeTimer'] === 'true') {
+    timeLines.push(line('UseTreeTimer', 'true'));
+  }
+  if (output['UseParallelTimer'] === 'false') {
+    timeLines.push(line('UseParallelTimer', 'false'));
+  }
+  if (output['TimingSplitScfSteps'] === 'true') {
+    timeLines.push(line('TimingSplitScfSteps', 'true'));
+  }
+  if (output['MaxWalltime'] && output['MaxWalltime'].trim()) {
+    timeLines.push(line('MaxWalltime', output['MaxWalltime']));
+    if (output['MaxWalltime.Slack'] && output['MaxWalltime.Slack'].trim()) {
+      timeLines.push(line('MaxWalltime.Slack', output['MaxWalltime.Slack']));
+    }
+  }
+  if (timeLines.length > 0) {
+    sections.push(sec('Timing & Memory Accounting (Section 6.29)', timeLines));
+  }
   // ── MD / Relaxation ───────────────────────────────────────────────────────
   const mdType = md['MD.TypeOfRun'] || 'CG';
   const mdLines = [`# ── MD / Relaxation ─────────────────────────────────────`];
