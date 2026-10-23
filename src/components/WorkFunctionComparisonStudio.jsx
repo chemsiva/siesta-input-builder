@@ -270,13 +270,14 @@ export function WorkFunctionComparisonStudio() {
       if (s.ef < minV) minV = s.ef;
       if (s.vVac > maxV) maxV = s.vVac;
     });
-    return { minV_all: minV * 1.05, maxV_all: maxV + 1.2 };
+    const span = Math.max(2, maxV - minV);
+    return { minV_all: minV - span * 0.05, maxV_all: maxV + span * 0.35 + 1.5 };
   }, [activeSurfaces]);
 
   // SVG Chart dimensions
   const width = 860;
-  const height = 400;
-  const margin = { top: 35, right: 35, bottom: 45, left: 65 };
+  const height = 440;
+  const margin = { top: 55, right: 35, bottom: 45, left: 65 };
   const plotW = width - margin.left - margin.right;
   const plotH = height - margin.top - margin.bottom;
 
@@ -689,7 +690,7 @@ export function WorkFunctionComparisonStudio() {
               height={plotH}
               fill="rgba(51, 65, 85, 0.22)"
             />
-            <text x={margin.left + (getX(18.0) - margin.left) / 2} y={margin.top + 18} fill="#94a3b8" fontSize="11" fontWeight="600" textAnchor="middle">
+            <text x={margin.left + (getX(18.0) - margin.left) / 2} y={margin.top + 20} fill="#94a3b8" fontSize="11" fontWeight="600" textAnchor="middle">
               Substrate Slab
             </text>
 
@@ -700,11 +701,11 @@ export function WorkFunctionComparisonStudio() {
               height={plotH}
               fill="rgba(245, 158, 11, 0.12)"
             />
-            <text x={getX(20.5)} y={margin.top + 18} fill="#fbbf24" fontSize="10" fontWeight="600" textAnchor="middle">
+            <text x={getX(20.5)} y={margin.top + 20} fill="#fbbf24" fontSize="10" fontWeight="600" textAnchor="middle">
               Ligand Interface
             </text>
 
-            <text x={getX(28.0)} y={margin.top + 18} fill="#38bdf8" fontSize="11" fontWeight="600" textAnchor="middle">
+            <text x={getX(28.0)} y={margin.top + 20} fill="#38bdf8" fontSize="11" fontWeight="600" textAnchor="middle">
               Vacuum Gap (Plateau)
             </text>
 
@@ -736,10 +737,9 @@ export function WorkFunctionComparisonStudio() {
             })}
 
             {/* Overlaid Potential Curves */}
-            {activeSurfaces.map(s => {
+            {activeSurfaces.map((s, idx) => {
               const d = createPath(s.z, s.vPlanar);
               const vacY = getY(s.vVac);
-              const efY = getY(s.ef);
 
               return (
                 <g key={s.id}>
@@ -756,20 +756,31 @@ export function WorkFunctionComparisonStudio() {
                     strokeWidth="1.8"
                     strokeDasharray="4,3"
                   />
-                  <text
-                    x={margin.left + plotW - 4}
-                    y={vacY - 5}
-                    fill={s.color}
-                    fontSize="10"
-                    fontFamily="monospace"
-                    fontWeight="700"
-                    textAnchor="end">
-                    {s.name.substring(0, 14)}: V_vac = {s.vVac.toFixed(2)} eV (Φ = {s.phi.toFixed(2)} eV)
-                  </text>
                 </g>
               );
             })}
 
+            {/* Floating Top-Right Legend Box for Vacuum Levels */}
+            <g transform={`translate(${margin.left + plotW - 230}, ${margin.top + 10})`}>
+              <rect
+                x="0"
+                y="0"
+                width="225"
+                height={activeSurfaces.length * 17 + 8}
+                rx="5"
+                fill={plotTheme === 'white' ? 'rgba(255, 255, 255, 0.92)' : 'rgba(15, 23, 42, 0.88)'}
+                stroke="rgba(148, 163, 184, 0.25)"
+                strokeWidth="1"
+              />
+              {activeSurfaces.map((s, idx) => (
+                <g key={s.id} transform={`translate(8, ${idx * 17 + 14})`}>
+                  <line x1="0" y1="-3" x2="16" y2="-3" stroke={s.color} strokeWidth="2.5" strokeDasharray="4,2" />
+                  <text x="22" y="0" fill={s.color} fontSize="9.5" fontFamily="monospace" fontWeight="700">
+                    {s.name.substring(0, 14)}: {s.vVac.toFixed(2)} eV (Φ={s.phi.toFixed(2)})
+                  </text>
+                </g>
+              ))}
+            </g>
             {/* Shared Fermi Level Reference Line */}
             {refSurface && (
               <g>
