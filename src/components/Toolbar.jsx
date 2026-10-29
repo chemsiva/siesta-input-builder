@@ -19,8 +19,8 @@ export function Toolbar() {
   const toggleTheme   = useFDFStore(s => s.toggleTheme);
   const fullState     = useFDFStore(s => s);
   const pseudoSettings = useFDFStore(s => s.pseudoSettings || {});
+  const fileRef = useRef();
   const cifRef  = useRef();
-
   const rawLabel = system.SystemLabel || 'siesta';
   const label = rawLabel.replace(/[/\\?%*:|"<>]/g, '_').replace(/\.\./g, '_').trim() || 'siesta';
   const pseudoPath = (pseudoSettings.pseudoPath || '').trim().replace(/\/+$/, '');

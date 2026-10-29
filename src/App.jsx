@@ -17,22 +17,24 @@ import { NEBSection }       from './sections/NEBSection';
 import { PhononSection }    from './sections/PhononSection';
 import { AdsorptionSection } from './sections/AdsorptionSection';
 import { VaspConverterSection } from './sections/VaspConverterSection';
-const SECTION_MAP = {
-  system:    <SystemSection />,
-  structure: <StructureSection />,
-  species:   <SpeciesSection />,
-  dft:       <DFTSection />,
-  scf:       <SCFSection />,
-  kpoints:   <KPointsSection />,
-  dos:       <DOSSection />,
-  output:    <OutputSection />,
-  md:        <MDSection />,
-  neb:       <NEBSection />,
-  phonon:    <PhononSection />,
-  adsorption: <AdsorptionSection />,
-  vasp:       <VaspConverterSection />,
-};
-
+function renderSection(section) {
+  switch (section) {
+    case 'system': return <SystemSection />;
+    case 'structure': return <StructureSection />;
+    case 'species': return <SpeciesSection />;
+    case 'dft': return <DFTSection />;
+    case 'scf': return <SCFSection />;
+    case 'kpoints': return <KPointsSection />;
+    case 'dos': return <DOSSection />;
+    case 'output': return <OutputSection />;
+    case 'md': return <MDSection />;
+    case 'neb': return <NEBSection />;
+    case 'phonon': return <PhononSection />;
+    case 'adsorption': return <AdsorptionSection />;
+    case 'vasp': return <VaspConverterSection />;
+    default: return <SystemSection />;
+  }
+}
 export default function App() {
   const activeSection = useFDFStore(s => s.activeSection);
   const theme = useFDFStore(s => s.theme || 'dark');
@@ -44,7 +46,7 @@ export default function App() {
         <Sidebar />
         <main className="main-content">
           <ErrorBoundary>
-            {SECTION_MAP[activeSection] || <SystemSection />}
+            {renderSection(activeSection)}
           </ErrorBoundary>
         </main>
         <LivePreview />
