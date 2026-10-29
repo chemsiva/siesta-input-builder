@@ -35,9 +35,10 @@ const SECTION_MAP = {
 
 export default function App() {
   const activeSection = useFDFStore(s => s.activeSection);
+  const theme = useFDFStore(s => s.theme || 'dark');
 
   return (
-    <div className="app-root">
+    <div className={`app-root theme-${theme}`} data-theme={theme}>
       <Toolbar />
       <div className="app-body">
         <Sidebar />

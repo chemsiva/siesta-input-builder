@@ -15,9 +15,10 @@ export function Toolbar() {
   const reset         = useFDFStore(s => s.reset);
   const system        = useFDFStore(s => s.system);
   const errors        = useFDFStore(s => s.validationErrors);
+  const theme         = useFDFStore(s => s.theme || 'dark');
+  const toggleTheme   = useFDFStore(s => s.toggleTheme);
   const fullState     = useFDFStore(s => s);
   const pseudoSettings = useFDFStore(s => s.pseudoSettings || {});
-  const fileRef = useRef();
   const cifRef  = useRef();
 
   const rawLabel = system.SystemLabel || 'siesta';
@@ -222,6 +223,13 @@ Either copy your .psf/.psml files here, or edit run_siesta.sh to set
             : 'Download .fdf + run_siesta.sh (set pseudo path in Species section first)'}>
           📦 Download Package
           {pseudoPath && <span style={{ fontSize: '0.7rem', marginLeft: '4px', opacity: 0.85 }}>+path</span>}
+        </button>
+        <button
+          className="btn btn-secondary"
+          onClick={toggleTheme}
+          title={`Switch to ${theme === 'dark' ? 'Light' : 'Dark'} mode`}
+          style={{ padding: '0.3rem 0.6rem', fontSize: '0.85rem' }}>
+          {theme === 'dark' ? '☀️ Light' : '🌙 Dark'}
         </button>
 
         <button className="btn btn-ghost" onClick={() => { if(confirm('Reset all fields to defaults?')) reset(); }}

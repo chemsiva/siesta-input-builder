@@ -192,6 +192,7 @@ const defaultState = {
     format: 'psf',
     detectedFiles: [],   // filenames discovered by folder scan
   },
+  theme: typeof localStorage !== 'undefined' && localStorage.getItem('siesta_theme') === 'light' ? 'light' : 'dark',
   activeSection: 'system',
   validationErrors: [],
 };
@@ -203,8 +204,18 @@ export const useFDFStore = create((set, get) => ({
     const next = { ...state, [section]: { ...state[section], ...data } };
     return next;
   }),
-
   setActiveSection: (s) => set({ activeSection: s }),
+
+  setTheme: (t) => {
+    if (typeof localStorage !== 'undefined') localStorage.setItem('siesta_theme', t);
+    set({ theme: t });
+  },
+
+  toggleTheme: () => {
+    const next = get().theme === 'dark' ? 'light' : 'dark';
+    if (typeof localStorage !== 'undefined') localStorage.setItem('siesta_theme', next);
+    set({ theme: next });
+  },
 
   setField: (section, key, value) => set(state => ({
     [section]: { ...state[section], [key]: value },
