@@ -107,6 +107,13 @@ The application interface is divided into three functional areas:
  \item \textbf{Right-Hand Live FDF Preview Pane:} A persistent 320px wide code drawer that regenerates the exact, formatted, production-ready \texttt{.fdf} file on every single keystroke.
 \end{enumerate}
 
+\begin{figure}[h!]
+\centering
+\includegraphics[width=0.92\textwidth]{figures/fig01_overview.png}
+\caption{SIESTA Input Builder user interface showing Top Toolbar, 13-section Sidebar navigation, Section 1 System inputs, and persistent Live FDF Preview pane.}
+\end{figure}
+
+
 \subsection{Dark and Light Mode Switching}
 Located in the upper right of the Toolbar:
 \begin{itemize}[leftmargin=*]
@@ -154,7 +161,7 @@ Achieving publication-grade DFT results requires proving that your energy and la
  \item Lattice parameters ($a, b, c, \alpha, \beta, \gamma$) and converts them to Cartesian lattice vectors.
  \item Atomic coordinates and fractional space-group symmetry expansions.
  \item Chemical element symbols and automatically assigns atomic numbers $Z$.
- \item Populates Section \textcircled{1}, \textcircled{2}, and \textcircled{3} simultaneously.
+ \item Populates Section 1, 2, and 3 simultaneously.
  \end{itemize}
  \item \textbf{\texttt{Load .fdf}:} Round-trip loader. Ingests any legacy or modern SIESTA input file, parses keywords and blocks, and repopulates every form control across all sections.
 \end{itemize}
@@ -191,14 +198,14 @@ mpirun -np 4 siesta < SystemLabel.fdf | tee SystemLabel.out
 % ── SECTION 3 ───────────────────────────────────────────────────────────────
 \section{Section-by-Section Walkthrough \& Hidden Details}
 
-\subsection{Section \textcircled{1} System: Basic Identifiers \& Auto-Detection}
+\subsection{Section 1 System: Basic Identifiers \& Auto-Detection}
 \begin{itemize}[leftmargin=*]
  \item \textbf{\texttt{SystemLabel}:} The core naming string prefixed to all calculation output files (e.g. \texttt{SystemLabel.out}, \texttt{.DM}, \texttt{.bands}, \texttt{.ANI}, \texttt{.VH}, \texttt{.times}). Avoid spaces or special characters.
  \item \textbf{\texttt{SystemName}:} A descriptive title for human readability.
  \item \textbf{Hidden Power Detail (SIESTA 5 Auto-Detection):} In legacy SIESTA 4.x, \texttt{NumberOfAtoms} and \texttt{NumberOfSpecies} were mandatory. In modern SIESTA 5.x, these values are automatically counted by the code from the coordinate and species blocks. If you leave these fields blank in the GUI, the builder cleanly omits them from the FDF, preventing count mismatch errors when adding or removing atoms!
 \end{itemize}
 
-\subsection{Section \textcircled{2} Structure: Lattice, Slabs \& 3D Crystal Viewer}
+\subsection{Section 2 Structure: Lattice, Slabs \& 3D Crystal Viewer}
 
 \subsubsection{Coordinate Formats and Units}
 The \texttt{AtomicCoordinatesFormat} selector toggles how atomic positions are interpreted:
@@ -210,7 +217,7 @@ The \texttt{AtomicCoordinatesFormat} selector toggles how atomic positions are i
 \subsubsection{Slab Cleavage \& Vacuum Engineering}
 Located in the dedicated ** Slab \& Vacuum Tools** card:
 \begin{itemize}[leftmargin=*]
- \item \textbf{Add Vacuum Along Z:} Specify desired vacuum thickness (e.g. \texttt{15.0 \AA} or \texttt{20.0 \AA}). Clicking **Add Vacuum** automatically expands the $a_3 / c$ lattice vector and turns on \texttt{Slab.DipoleCorrection true} in Section \textcircled{4}.
+ \item \textbf{Add Vacuum Along Z:} Specify desired vacuum thickness (e.g. \texttt{15.0 \AA} or \texttt{20.0 \AA}). Clicking **Add Vacuum** automatically expands the $a_3 / c$ lattice vector and turns on \texttt{Slab.DipoleCorrection true} in Section 4.
  \item \textbf{Center Slab in Cell:} Shifts atomic $z$-coordinates so that vacuum is symmetrically distributed above and below the atomic layers, preventing boundary clipping.
  \item \textbf{Supercell Multiplier:} Enter $N_x, N_y, N_z$ (e.g. $2 \times 2 \times 1$) to replicate unit cell atoms into an expanded supercell for defect or adsorption modeling.
 \end{itemize}
@@ -238,7 +245,14 @@ Clicking **Turn ON 3D Viewer** activates the interactive viewport:
  \item \textbf{Dual-Engine Fallback:} If running inside a virtual machine or browser with WebGL disabled, the viewer automatically switches to an optimized HTML5 Canvas 2D engine.
 \end{itemize}
 
-\subsection{Section \textcircled{3} Species \& Basis: Pseudopotential Directory Scanner}
+\begin{figure}[h!]
+\centering
+\includegraphics[width=0.92\textwidth]{figures/fig02_structure_3d.png}
+\caption{Section 2 Structure interface: CIF import engine, slab vacuum padding/cleaving tools, atomic coordinates grid, and interactive 3D WebGL crystal viewer.}
+\end{figure}
+
+
+\subsection{Section 3 Species \& Basis: Pseudopotential Directory Scanner}
 
 \subsubsection{The Remote Server Path Embedding Problem}
 A frequent frustration in SIESTA calculations: you build an input on your laptop, copy the \texttt{.fdf} to a remote supercomputer cluster, and the job immediately crashes with:
@@ -270,7 +284,12 @@ In **Step 2**, click **Scan Folder** and choose the local folder on your compute
  \item \textbf{Soft Confinement Drawer:} Toggle \texttt{PAO.SoftDefault true} to soften orbital second derivatives at cutoff boundaries, suppressing eggbox oscillations.
 \end{itemize}
 
-\subsection{Section \textcircled{4} DFT / XC: Exchange-Correlation, vdW \& DFT+U}
+\begin{figure}[h!]
+\centering
+\includegraphics[width=0.92\textwidth]{figures/fig03_species_basis.png}
+\caption{Section 3 Species \& Basis: Local folder scanner, automatic pseudopotential filename matching with real-time status badges, ChemicalSpeciesLabel table, and DZP basis parameters.}
+\end{figure}
+\subsection{Section 4 DFT / XC: Exchange-Correlation, vdW \& DFT+U}
 \begin{itemize}[leftmargin=*]
  \item \textbf{XC Functional \& Authors:} Select functional type (GGA, LDA, VDW) and author parameterization (PBE, PBEsol, CA, revPBE).
  \item \textbf{\texttt{MeshCutoff}:} Energy cutoff governing real-space grid fineness. Standard values: 250–350 Ry for semiconductors; 350–450 Ry for oxides and transition metals.
@@ -285,7 +304,12 @@ In **Step 2**, click **Scan Folder** and choose the local folder on your compute
  \end{itemize}
 \end{itemize}
 
-\subsection{Section \textcircled{5} SCF Control: Convergence \& Mixing}
+\begin{figure}[h!]
+\centering
+\includegraphics[width=0.92\textwidth]{figures/fig04_dft_xc.png}
+\caption{Section 4 DFT / XC: Exchange-correlation functionals, MeshCutoff, Grimme DFT-D3 dispersion, spin-polarization modes, and on-site DFT+U assistant.}
+\end{figure}
+\subsection{Section 5 SCF Control: Convergence \& Mixing}
 \begin{itemize}[leftmargin=*]
  \item \textbf{\texttt{MaxSCFIterations}:} Maximum iteration limit (typically 100–150).
  \item \textbf{\texttt{DM.Tolerance}:} Convergence density matrix threshold (typically \texttt{1.0d-4} to \texttt{1.0d-5}).
@@ -295,7 +319,7 @@ In **Step 2**, click **Scan Folder** and choose the local folder on your compute
  \item \textbf{\texttt{DM.UseSaveDM}:} Toggle to \texttt{true} when restarting a calculation from an existing \texttt{SystemLabel.DM} density matrix file.
 \end{itemize}
 
-\subsection{Section \textcircled{6} K-Points: Reciprocal Mesh \& High-Symmetry Band Path}
+\subsection{Section 6 K-Points: Reciprocal Mesh \& High-Symmetry Band Path}
 
 \subsubsection{Reciprocal Mesh Setup}
 Configure Monkhorst-Pack grid divisions ($N_x \times N_y \times N_z$) and displacement shifts ($0.5$ for off-$\Gamma$, $0.0$ for $\Gamma$-centered).
@@ -310,7 +334,14 @@ Located in the **High-Symmetry Band Path Generator** card:
  \item \textbf{Fatbands Export:} Toggle \texttt{WFS.Write.For.Bands true} to output wavefunctions into \texttt{SystemLabel.fullBZ.WFSX} for orbital-projected band structure analysis.
 \end{itemize}
 
-\subsection{Section \textcircled{7} Bands \& DOS / PDOS: Electronic Structure}
+\begin{figure}[h!]
+\centering
+\includegraphics[width=0.92\textwidth]{figures/fig05_kpoints.png}
+\caption{Section 6 K-Points: Monkhorst-Pack grid inputs and the automated High-Symmetry Band Path Generator pre-populating standard AFLOW/Seekpath crystallographic paths.}
+\end{figure}
+
+
+\subsection{Section 7 Bands \& DOS / PDOS: Electronic Structure}
 \begin{itemize}[leftmargin=*]
  \item \textbf{Projected DOS (\texttt{\%block ProjectedDensityOfStates}):} Configure energy window ($E_{\text{min}}$ to $E_{\text{max}}$), Gaussian peak broadening width ($\sigma$), number of points, and energy units. Toggle \texttt{EF} to align energy relative to the Fermi level.
  \item \textbf{Custom PDOS k-grid:} Toggle \texttt{PDOS.kgrid.MonkhorstPack} to use a denser $k$-point mesh for the DOS calculation than was used for the self-consistent SCF charge density.
@@ -318,7 +349,7 @@ Located in the **High-Symmetry Band Path Generator** card:
  \item \textbf{\texttt{WriteEigenvalues}:} Toggle to write all Kohn-Sham eigenvalues to \texttt{SystemLabel.EIG}.
 \end{itemize}
 
-\subsection{Section \textcircled{8} Output Flags \& Results Viewer}
+\subsection{Section 8 Output Flags \& Results Viewer}
 This section contains two distinct workspaces selected via top tab pills:
 
 \subsubsection{Tab 1: FDF Output Flags}
@@ -341,7 +372,14 @@ Drag and drop (or upload) calculation output files:
  \item \textbf{TIMES Execution Profiler:} Upload your \texttt{SystemLabel.times} or \texttt{TIMES} file. Displays total elapsed wall-clock time, cumulative core CPU hours, MPI node count, load balancing ratio ($Avg/Max$), top routine bottleneck bar charts, and a searchable, sortable routine table with 1-click clipboard copy!
 \end{itemize}
 
-\subsection{Section \textcircled{9} MD / Relaxation: Geometry Optimization \& Dynamics}
+\begin{figure}[h!]
+\centering
+\includegraphics[width=0.92\textwidth]{figures/fig06_output_times.png}
+\caption{Section 8 Output Flags \& Results Viewer: Section 6.29 parallel execution timer breakdown (wall-clock time, core CPU hours, node load-balancing ratio, and routine bottleneck chart).}
+\end{figure}
+
+
+\subsection{Section 9 MD / Relaxation: Geometry Optimization \& Dynamics}
 \begin{itemize}[leftmargin=*]
  \item \textbf{Optimizers:} Select \texttt{CG} (standard conjugate gradient), \texttt{Broyden}, or \texttt{FIRE} (superior for complex structures far from equilibrium).
  \item \textbf{Tolerances:} Set maximum atomic force component (\texttt{MD.MaxForceTol}, e.g. \texttt{0.04 eV/\AA}) and maximum stress component (\texttt{MD.MaxStressTol}, e.g. \texttt{1.0 GPa}).
@@ -350,7 +388,7 @@ Drag and drop (or upload) calculation output files:
  \item \textbf{Molecular Dynamics Ensembles:} Toggle \texttt{Verlet} (microcanonical $NVE$), \texttt{Nose} (canonical $NVT$ thermostat), or \texttt{ParrinelloRahman} (isobaric-isothermal $NPT$). Set time step (\texttt{MD.LengthTimeStep}, e.g. \texttt{1.0 fs}) and temperatures.
 \end{itemize}
 
-\subsection{Section \textcircled{10} CI-NEB Suite: Transition State Search}
+\subsection{Section 10 CI-NEB Suite: Transition State Search}
 \begin{itemize}[leftmargin=*]
  \item \textbf{Climbing Image NEB:} Identifies minimum energy pathways (MEP) and saddle-point transition states for chemical reactions, vacancy diffusion, and ion migration.
  \item \textbf{IDPP Interpolation:} Upload Initial and Final state CIF or FDF files. The builder uses Image Dependent Pair Potential (IDPP) interpolation to generate $N$ smooth, unskewed intermediate reaction frames without atom collisions.
@@ -359,7 +397,14 @@ Drag and drop (or upload) calculation output files:
  \item \textbf{1-Click Download CI-NEB Suite (.zip):} Generates all image FDF files (\texttt{image\_00.fdf} to \texttt{image\_0N.fdf}), automated ASE CI-NEB driver (\texttt{cineb\_siesta\_driver.py}), barrier plotter (\texttt{plot\_neb\_barrier.py}), and parallel SLURM runner (\texttt{run\_cineb.sh}).
 \end{itemize}
 
-\subsection{Section \textcircled{11} Phonons \& Vibrations: Force Constants \& Vibra}
+\begin{figure}[h!]
+\centering
+\includegraphics[width=0.92\textwidth]{figures/fig07_cineb.png}
+\caption{Section 10 CI-NEB Suite: Reaction transition state search, IDPP pair-potential interpolation, 3D pathway slider, and 1-click CI-NEB package generator.}
+\end{figure}
+
+
+\subsection{Section 11 Phonons \& Vibrations: Force Constants \& Vibra}
 \begin{itemize}[leftmargin=*]
  \item \textbf{Finite Displacement Method:} Calculates harmonic force constants by displacing atoms in small finite steps (\texttt{MD.TypeOfRun FC}).
  \item \textbf{Displacement Amplitude:} \texttt{FC.Displacement} (default \texttt{0.04 Bohr} $\approx 0.021\text{ \AA}$).
@@ -369,7 +414,14 @@ Drag and drop (or upload) calculation output files:
  \item \textbf{1-Click Download Phonon Suite (.zip):} Generates \texttt{supercell\_fc.fdf}, \texttt{vibra.fdf}, \texttt{plot\_phonon\_dispersion.py}, and \texttt{run\_phonon.sh}.
 \end{itemize}
 
-\subsection{Section \textcircled{12} Surface, Work Function \& Adsorption Analysis}
+\begin{figure}[h!]
+\centering
+\includegraphics[width=0.92\textwidth]{figures/fig08_phonons.png}
+\caption{Section 11 Phonons: Finite displacement force constants calculation (MD.TypeOfRun FC), supercell builder, Born effective charges, and Vibra suite export.}
+\end{figure}
+
+
+\subsection{Section 12 Surface, Work Function \& Adsorption Analysis}
 A dedicated post-DFT surface science laboratory containing 5 specialized tools:
 \begin{enumerate}[leftmargin=*]
  \item \textbf{Adsorption Energy ($E_{\text{ads}}$) Calculator:} Input total energy of the complex, clean slab, and isolated molecule to calculate binding strength:
@@ -383,7 +435,14 @@ A dedicated post-DFT surface science laboratory containing 5 specialized tools:
  \item \textbf{SIESTA Grid Workflow Drawer:} Provides verified terminal commands for Util/Macroave (\texttt{macroave < macroave.in}) and Util/Grid (\texttt{grid2cube SystemLabel.VH}).
 \end{enumerate}
 
-\subsection{Section \textcircled{13} VASP to FDF Converter (ASE GUI Constraints)}
+\begin{figure}[h!]
+\centering
+\includegraphics[width=0.92\textwidth]{figures/fig09_workfunction.png}
+\caption{Section 12 Surface \& Work Function Studio: Overlaid planar average potential profiles V̄(z), flat asymptotic vacuum plateaus, work function reduction ΔΦ, and surface dipole calculation.}
+\end{figure}
+
+
+\subsection{Section 13 VASP to FDF Converter (ASE GUI Constraints)}
 Designed specifically for researchers who set up geometry constraints in ASE GUI and save as VASP POSCAR:
 \begin{itemize}[leftmargin=*]
  \item \textbf{Side-by-Side Dual-Pane Interface:} Paste or upload a VASP \texttt{POSCAR} or \texttt{CONTCAR} file on the left; view the live generated SIESTA \texttt{.fdf} on the right.
@@ -402,9 +461,14 @@ Designed specifically for researchers who set up geometry constraints in ASE GUI
  \item Element locks: Checkboxes to freeze all atoms of a species by atomic number (e.g. \texttt{Z 82} for Pb).
  \end{itemize}
  \item \textbf{Direct PP Folder Field:} Enter pseudopotential directory path directly in the converter ribbon.
- \item \textbf{Load to Workspace Button:} Clicking this transfers the converted crystal coordinates, lattice vectors, chemical species, and pseudopotential paths into Section \textcircled{2} and the 3D visualizer!
+ \item \textbf{Load to Workspace Button:} Clicking this transfers the converted crystal coordinates, lattice vectors, chemical species, and pseudopotential paths into Section 2 and the 3D visualizer!
 \end{itemize}
 
+\begin{figure}[h!]
+\centering
+\includegraphics[width=0.92\textwidth]{figures/fig10_vasp_converter.png}
+\caption{Section 13 VASP to FDF Converter: Side-by-side dual-pane workspace, ASE GUI Selective Dynamics parsing, Section 7.7 General Constraints controls, and 1-click Load to Workspace.}
+\end{figure}
 \subsection{The Live .fdf Preview Pane}
 \begin{itemize}[leftmargin=*]
  \item Real-time bi-directional reflection: Every input field, checkbox, slider, or table edit re-serializes the FDF instantly.
@@ -419,30 +483,30 @@ Designed specifically for researchers who set up geometry constraints in ASE GUI
 \subsection{Tutorial A: Bulk Silicon Optimization \& Band Structure}
 \begin{enumerate}[leftmargin=*]
  \item Click **Templates ▾** in the top toolbar and select **Bulk SCF (single-point)**.
- \item Set \texttt{SystemLabel} to \texttt{silicon\_bulk} in Section \textcircled{1}.
- \item In Section \textcircled{3}, click **Scan Folder** to match \texttt{Si.psf} or \texttt{Si.psml}.
- \item In Section \textcircled{6}, click **Auto-Detect Lattice Path** to populate the FCC path: $\Gamma \to X \to W \to L \to \Gamma$.
- \item In Section \textcircled{9}, select optimizer \texttt{CG} and set \texttt{MD.MaxForceTol 0.02 eV/Ang}.
+ \item Set \texttt{SystemLabel} to \texttt{silicon\_bulk} in Section 1.
+ \item In Section 3, click **Scan Folder** to match \texttt{Si.psf} or \texttt{Si.psml}.
+ \item In Section 6, click **Auto-Detect Lattice Path** to populate the FCC path: $\Gamma \to X \to W \to L \to \Gamma$.
+ \item In Section 9, select optimizer \texttt{CG} and set \texttt{MD.MaxForceTol 0.02 eV/Ang}.
  \item Click **Download Package** in the toolbar.
  \item On your cluster, extract the package and submit:
 \begin{lstlisting}[language=bash]
 unzip silicon_bulk.zip && cd silicon_bulk
 bash run_siesta.sh
 \end{lstlisting}
- \item After completion, open Section \textcircled{8} Tab 2, drag and drop \texttt{silicon\_bulk.bands}, and inspect the electronic dispersion curves!
+ \item After completion, open Section 8 Tab 2, drag and drop \texttt{silicon\_bulk.bands}, and inspect the electronic dispersion curves!
 \end{enumerate}
 
 \subsection{Tutorial B: $FAPbI_3$ Perovskite Slab with Fixed Substrate}
 \begin{enumerate}[leftmargin=*]
  \item In the top toolbar, click **Import CIF** and select \texttt{FAPbI3\_cubic.cif}.
- \item In Section \textcircled{2}, locate the ** Slab \& Vacuum Tools** card. Set vacuum thickness to \texttt{20.0 \AA} and click **Add Vacuum**. Click **Center Slab in Cell**.
- \item Open Section \textcircled{13} **VASP to FDF Converter** if importing an ASE GUI relaxed geometry, or freeze bottom layers ($z < 15\text{ \AA}$) via the Section 7.7 constraint controls. Check \texttt{cell-vector C} to ensure the vacuum gap remains constant.
- \item In Section \textcircled{4}, ensure \texttt{Slab.DipoleCorrection true} and \texttt{DFTD3 true} are enabled. Set \texttt{MeshCutoff 350 Ry}.
- \item In Section \textcircled{6}, verify the $k$-grid is set to $4 \times 4 \times 1$.
- \item In Section \textcircled{8}, enable \texttt{SaveElectrostaticPotential true} and \texttt{WriteMDXmol true}.
+ \item In Section 2, locate the ** Slab \& Vacuum Tools** card. Set vacuum thickness to \texttt{20.0 \AA} and click **Add Vacuum**. Click **Center Slab in Cell**.
+ \item Open Section 13 **VASP to FDF Converter** if importing an ASE GUI relaxed geometry, or freeze bottom layers ($z < 15\text{ \AA}$) via the Section 7.7 constraint controls. Check \texttt{cell-vector C} to ensure the vacuum gap remains constant.
+ \item In Section 4, ensure \texttt{Slab.DipoleCorrection true} and \texttt{DFTD3 true} are enabled. Set \texttt{MeshCutoff 350 Ry}.
+ \item In Section 6, verify the $k$-grid is set to $4 \times 4 \times 1$.
+ \item In Section 8, enable \texttt{SaveElectrostaticPotential true} and \texttt{WriteMDXmol true}.
  \item Click **Download .fdf**.
- \item Upon calculation completion, drag and drop \texttt{FAPbI3\_slab.ANI} into Section \textcircled{8} to play the relaxation movie in 3D!
- \item Run \texttt{grid2cube FAPbI3\_slab.VH} and upload \texttt{FAPbI3\_slab.cube} into Section \textcircled{12} to extract the vacuum plateau and calculate the work function: $\Phi = V_{\text{vac}} - E_F$.
+ \item Upon calculation completion, drag and drop \texttt{FAPbI3\_slab.ANI} into Section 8 to play the relaxation movie in 3D!
+ \item Run \texttt{grid2cube FAPbI3\_slab.VH} and upload \texttt{FAPbI3\_slab.cube} into Section 12 to extract the vacuum plateau and calculate the work function: $\Phi = V_{\text{vac}} - E_F$.
 \end{enumerate}
 
 \newpage
@@ -456,17 +520,17 @@ bash run_siesta.sh
 \toprule
 \textbf{Symptom / Error} & \textbf{Physical / Numerical Root Cause} & \textbf{Immediate GUI Remedy} \\
 \midrule
-\texttt{SCF does not converge} (energy oscillates wildly) & Charge sloshing between localized orbitals or metallic surface states & Go to Section \textcircled{5}: Lower \texttt{DM.MixingWeight} from 0.25 to 0.05. Increase \texttt{ElectronicTemperature} to 25–50 meV. \\
+\texttt{SCF does not converge} (energy oscillates wildly) & Charge sloshing between localized orbitals or metallic surface states & Go to Section 5: Lower \texttt{DM.MixingWeight} from 0.25 to 0.05. Increase \texttt{ElectronicTemperature} to 25–50 meV. \\
 \addlinespace
-\texttt{Could not find pseudopotential} & Missing `.psf`/`.psml` file or incorrect path on remote cluster & In Section \textcircled{3}, specify the exact cluster folder in Step 1. The builder embeds the full path into \texttt{\%block ChemicalSpeciesLabel}. \\
+\texttt{Could not find pseudopotential} & Missing `.psf`/`.psml` file or incorrect path on remote cluster & In Section 3, specify the exact cluster folder in Step 1. The builder embeds the full path into \texttt{\%block ChemicalSpeciesLabel}. \\
 \addlinespace
-\texttt{Vacuum collapsing during relaxation} & \texttt{MD.VariableCell true} was enabled without locking the $c$-axis & In Section \textcircled{13} or \textcircled{9}, activate \texttt{cell-vector C} in \texttt{\%block Geometry.Constraints} so only in-plane $a, b$ relax. \\
+\texttt{Vacuum collapsing during relaxation} & \texttt{MD.VariableCell true} was enabled without locking the $c$-axis & In Section 13 or 9, activate \texttt{cell-vector C} in \texttt{\%block Geometry.Constraints} so only in-plane $a, b$ relax. \\
 \addlinespace
-\texttt{Eggbox ripple in forces} & Discrete real-space grid spacing is too coarse relative to core states & In Section \textcircled{4}, increase \texttt{MeshCutoff} to $\ge 350\text{ Ry}$. In Section \textcircled{3}, enable \texttt{PAO.SoftDefault true}. \\
+\texttt{Eggbox ripple in forces} & Discrete real-space grid spacing is too coarse relative to core states & In Section 4, increase \texttt{MeshCutoff} to $\ge 350\text{ Ry}$. In Section 3, enable \texttt{PAO.SoftDefault true}. \\
 \addlinespace
-\texttt{Calculation runs out of wall time} & Long relaxation or molecular dynamics killed mid-step by SLURM & In Section \textcircled{8}, set \texttt{MaxWalltime} (e.g. \texttt{23.5 hours}) and \texttt{MaxWalltime.Slack 60 s} for a clean emergency restart. \\
+\texttt{Calculation runs out of wall time} & Long relaxation or molecular dynamics killed mid-step by SLURM & In Section 8, set \texttt{MaxWalltime} (e.g. \texttt{23.5 hours}) and \texttt{MaxWalltime.Slack 60 s} for a clean emergency restart. \\
 \addlinespace
-\texttt{Ghost dipole electric field in vacuum} & Asymmetric slab with polar adsorbate induced periodic image field & In Section \textcircled{4}, enable \texttt{Slab.DipoleCorrection true} and set direction to \texttt{z}. \\
+\texttt{Ghost dipole electric field in vacuum} & Asymmetric slab with polar adsorbate induced periodic image field & In Section 4, enable \texttt{Slab.DipoleCorrection true} and set direction to \texttt{z}. \\
 \bottomrule
 \end{tabular}
 \caption{Comprehensive diagnostic matrix and troubleshooting remedies for SIESTA calculations.}
@@ -474,10 +538,10 @@ bash run_siesta.sh
 
 \subsection{Keyboard Shortcuts and Hidden Productivity Tips}
 \begin{itemize}[leftmargin=*]
- \item \textbf{Tab-Separated Paste in Atom Table:} Highlight any cell in the atomic coordinates grid in Section \textcircled{2} and press \textbf{Ctrl+V} to paste multi-column data directly from VESTA or text editors.
+ \item \textbf{Tab-Separated Paste in Atom Table:} Highlight any cell in the atomic coordinates grid in Section 2 and press \textbf{Ctrl+V} to paste multi-column data directly from VESTA or text editors.
  \item \textbf{Camera Projection Snapping:} In the 3D Crystal Viewer, press the camera projection buttons to jump directly to primary axes ($X, Y, Z$).
- \item \textbf{1-Click Table Copy in TIMES Analyzer:} In Section \textcircled{8} Tab 2, clicking **Copy** on the execution timer table copies formatted routine timings directly to your clipboard for pasting into reports or spreadsheets.
- \item \textbf{Direct Workspace Transfer:} In Section \textcircled{13} (VASP Converter), clicking **Load to Workspace** converts your POSCAR structure, parses selective dynamics into Section 7.7 constraints, and injects the geometry directly into Section \textcircled{2} and the 3D viewer without requiring manual file exports!
+ \item \textbf{1-Click Table Copy in TIMES Analyzer:} In Section 8 Tab 2, clicking **Copy** on the execution timer table copies formatted routine timings directly to your clipboard for pasting into reports or spreadsheets.
+ \item \textbf{Direct Workspace Transfer:} In Section 13 (VASP Converter), clicking **Load to Workspace** converts your POSCAR structure, parses selective dynamics into Section 7.7 constraints, and injects the geometry directly into Section 2 and the 3D viewer without requiring manual file exports!
 \end{itemize}
 
 \vspace{1cm}
