@@ -76,7 +76,7 @@ export function AdsorptionSection() {
  // ═══════════════════════════════════════════════════════════════════════════
  const potFileInputRef = useRef(null);
  const outEfRef = useRef(null);
- const [potData, setPotData] = useState(null); // null = no file loaded yet
+  const [potData, setPotData] = useState(() => generateDemoPotential());
  const [efInput, setEfInput] = useState('');
  const [vVacInput, setVacInput] = useState('');
  const [outVacData, setOutVacData] = useState(null); // { max, mean, ef, fileName }

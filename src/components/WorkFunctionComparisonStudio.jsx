@@ -1,8 +1,8 @@
-import React, { useState, useRef, useMemo } from 'react';
+import React, { useState, useRef, useMemo, useEffect } from 'react';
 import { parseSiestaOut } from '../parser/outParser.js';
 import { parse1DPotentialData, parsePotentialCube, analyzeWorkFunction } from '../parser/workFunctionParser.js';
 import { exportSvg, exportPng, exportTiff } from '../utils/imageExport.js';
-
+import { useFDFStore } from '../store/fdfStore.js';
 const SURFACE_PALETTE = [
  '#38bdf8', // 1: Sky Blue (Clean Reference)
  '#10b981', // 2: Emerald Green (Ligand A - WF Reduction)
@@ -130,12 +130,18 @@ export function WorkFunctionComparisonStudio() {
  const fileInputRef = useRef(null);
  const overlaySvgRef = useRef(null);
 
- // Active comparison surface states
- const [surfaces, setSurfaces] = useState(WORK_FUNCTION_PRESETS.perovskite.surfaces);
- const [activeMode, setActiveMode] = useState('overlay'); // 'overlay' | 'alignment' | 'diff' | 'table'
- const [plotTheme, setPlotTheme] = useState('white'); // 'white' | 'dark'
- const [surfaceArea, setSurfaceArea] = useState(WORK_FUNCTION_PRESETS.perovskite.area);
- const [hoverZ, setHoverZ] = useState(null);
+  // Active comparison surface states
+  const appTheme = useFDFStore(s => s.theme || 'dark');
+  const [surfaces, setSurfaces] = useState(WORK_FUNCTION_PRESETS.perovskite.surfaces);
+  const [activeMode, setActiveMode] = useState('overlay'); // 'overlay' | 'alignment' | 'diff' | 'table'
+  const [plotTheme, setPlotTheme] = useState(() => useFDFStore.getState().theme || 'dark');
+  const [surfaceArea, setSurfaceArea] = useState(WORK_FUNCTION_PRESETS.perovskite.area);
+  const [hoverZ, setHoverZ] = useState(null);
+
+  // Synchronize plot theme with app theme unless overridden
+  useEffect(() => {
+    setPlotTheme(appTheme);
+  }, [appTheme]);
 
  // Difference view selectors (Ref A vs Target B)
  const [diffRefId, setDiffRefId] = useState(surfaces[0]?.id || '');
@@ -291,9 +297,56 @@ export function WorkFunctionComparisonStudio() {
  const y = getY(vArr[i]);
  d += i === 0 ? `M ${x.toFixed(1)} ${y.toFixed(1)}` : ` L ${x.toFixed(1)} ${y.toFixed(1)}`;
  }
- return d;
- };
+  return d;
+  };
 
+  // Adaptive Theme Colors for High-Contrast Clean Visuals
+  const themeColors = useMemo(() => {
+    if (plotTheme === 'white') {
+      return {
+        bg: '#ffffff',
+        border: '#cbd5e1',
+        axisLine: '#0f172a',
+        axisText: '#0f172a',
+        subText: '#475569',
+        gridLine: 'rgba(148, 163, 184, 0.25)',
+        slabShading: 'rgba(226, 232, 240, 0.70)',
+        slabText: '#334155',
+        ligandShading: 'rgba(254, 243, 199, 0.75)',
+        ligandText: '#b45309',
+        vacuumText: '#0284c7',
+        legendBg: 'rgba(255, 255, 255, 0.96)',
+        legendBorder: '#cbd5e1',
+        deltaBoxBg: '#ffffff',
+        deltaText: '#059669',
+        hoverBg: 'rgba(255, 255, 255, 0.96)',
+        hoverBorder: '#cbd5e1',
+        hoverText: '#0f172a',
+        legendBottomText: '#0f172a',
+      };
+    }
+    return {
+      bg: '#0f172a',
+      border: 'rgba(148, 163, 184, 0.35)',
+      axisLine: 'rgba(148, 163, 184, 0.4)',
+      axisText: '#f1f5f9',
+      subText: '#94a3b8',
+      gridLine: 'rgba(148, 163, 184, 0.12)',
+      slabShading: 'rgba(51, 65, 85, 0.30)',
+      slabText: '#cbd5e1',
+      ligandShading: 'rgba(245, 158, 11, 0.16)',
+      ligandText: '#fbbf24',
+      vacuumText: '#38bdf8',
+      legendBg: 'rgba(15, 23, 42, 0.92)',
+      legendBorder: 'rgba(148, 163, 184, 0.25)',
+      deltaBoxBg: 'rgba(15, 23, 42, 0.92)',
+      deltaText: '#10b981',
+      hoverBg: 'rgba(15, 23, 42, 0.92)',
+      hoverBorder: 'var(--border)',
+      hoverText: '#fbbf24',
+      legendBottomText: '#e2e8f0',
+    };
+  }, [plotTheme]);
  // Difference profile ΔV(z)
  const diffPotential = useMemo(() => {
  const sA = surfaces.find(s => s.id === diffRefId);
@@ -562,11 +615,11 @@ export function WorkFunctionComparisonStudio() {
  <button className="btn btn-secondary btn-xs" onClick={handleExportCSV} title="Export comparative metrics to CSV">
  CSV Table
  </button>
- {surfaces.length > 0 && (
- <button className="btn btn-secondary btn-xs" style={{ color: 'var(--error, #ef4444)' }} onClick={() => setSurfaces([])}>
- Clear Clear
- </button>
- )}
+          {surfaces.length > 0 && (
+            <button className="btn btn-secondary btn-xs" style={{ color: 'var(--error, #ef4444)' }} onClick={() => setSurfaces([])}>
+              Clear All
+            </button>
+          )}
  </div>
  </div>
 
@@ -578,76 +631,74 @@ export function WorkFunctionComparisonStudio() {
  const dipole = !isRef && refSurface ? calculateSurfaceDipole(deltaPhi, parseFloat(surfaceArea) || 160.0) : null;
 
  return (
- <div
- key={s.id}
- style={{
- display: 'flex',
- alignItems: 'center',
- justifyContent: 'space-between',
- padding: '0.4rem 0.6rem',
- borderRadius: '6px',
- background: 'var(--surface2)',
- border: `1px solid ${s.visible ? s.color : 'var(--border)'}`,
- opacity: s.visible ? 1 : 0.5,
- }}>
- <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', flex: 1, minWidth: 0 }}>
- <input
- type="color"
- value={s.color}
- onChange={e => handleColorChange(s.id, e.target.value)}
- style={{ width: '18px', height: '18px', border: 'none', background: 'none', cursor: 'pointer', padding: 0 }}
- title="Change surface color"
- />
- <input
- className="input mono"
- style={{ fontSize: '0.75rem', padding: '0.15rem 0.35rem', height: '24px', flex: 1 }}
- value={s.name}
- onChange={e => handleRename(s.id, e.target.value)}
- title="Click to rename"
- />
- </div>
+            <div
+              key={s.id}
+              style={{
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '0.35rem',
+                padding: '0.5rem 0.65rem',
+                borderRadius: '6px',
+                background: 'var(--surface2)',
+                border: `1.5px solid ${s.visible ? s.color : 'var(--border)'}`,
+                opacity: s.visible ? 1 : 0.5,
+              }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                <input
+                  type="color"
+                  value={s.color}
+                  onChange={e => handleColorChange(s.id, e.target.value)}
+                  style={{ width: '18px', height: '18px', border: 'none', background: 'none', cursor: 'pointer', padding: 0 }}
+                  title="Change surface color"
+                />
+                <input
+                  className="input mono"
+                  style={{ fontSize: '0.75rem', padding: '0.15rem 0.35rem', height: '24px', flex: 1 }}
+                  value={s.name}
+                  onChange={e => handleRename(s.id, e.target.value)}
+                  title="Click to rename"
+                />
+                <button
+                  type="button"
+                  className="btn btn-secondary btn-xs"
+                  style={{ padding: '0.12rem 0.4rem', fontSize: '0.68rem' }}
+                  onClick={() => handleToggleVisibility(s.id)}
+                  title={s.visible ? 'Hide profile' : 'Show profile'}>
+                  {s.visible ? 'Hide' : 'Show'}
+                </button>
+                <button
+                  type="button"
+                  className="btn btn-secondary btn-xs"
+                  style={{ padding: '0.12rem 0.4rem', fontSize: '0.68rem', color: 'var(--error, #ef4444)' }}
+                  onClick={() => handleRemove(s.id)}
+                  title="Remove surface">
+                  ×
+                </button>
+              </div>
 
- <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', marginLeft: '0.4rem' }}>
- <span style={{ fontSize: '0.72rem', fontFamily: 'monospace', fontWeight: 700, color: '#e2e8f0' }}>
- Φ={s.phi.toFixed(2)} eV
- </span>
-
- {!isRef && (
- <span style={{
- fontSize: '0.68rem',
- fontFamily: 'monospace',
- fontWeight: 700,
- padding: '0.1rem 0.3rem',
- borderRadius: '3px',
- background: deltaPhi < 0 ? 'rgba(16, 185, 129, 0.2)' : 'rgba(236, 72, 153, 0.2)',
- color: deltaPhi < 0 ? '#10b981' : '#ec4899',
- }} title={`Surface normal dipole: ${dipole?.mu_Debye} Debye`}>
- {deltaPhi < 0 ? '▼ ' : '▲ +'}{Math.abs(deltaPhi).toFixed(2)} eV
- </span>
- )}
- {isRef && (
- <span style={{ fontSize: '0.65rem', padding: '0.1rem 0.3rem', borderRadius: '3px', background: 'var(--accent)', color: '#fff' }}>
- Clean Ref
- </span>
- )}
-
- <button
- type="button"
- style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '0.8rem', padding: '0 2px' }}
- onClick={() => handleToggleVisibility(s.id)}
- title={s.visible ? 'Hide profile' : 'Show profile'}>
- {s.visible ? '' : ''}
- </button>
-
- <button
- type="button"
- style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '0.8rem', color: 'var(--muted)', padding: '0 2px' }}
- onClick={() => handleRemove(s.id)}
- title="Remove surface">
- Clear
- </button>
- </div>
- </div>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: '0.75rem', fontFamily: 'monospace' }}>
+                <span style={{ fontWeight: 700, color: s.color }}>
+                  Φ = {s.phi.toFixed(2)} eV
+                </span>
+                {!isRef && (
+                  <span style={{
+                    fontSize: '0.68rem',
+                    fontWeight: 700,
+                    padding: '0.1rem 0.35rem',
+                    borderRadius: '3px',
+                    background: deltaPhi < 0 ? 'rgba(16, 185, 129, 0.18)' : 'rgba(236, 72, 153, 0.18)',
+                    color: deltaPhi < 0 ? '#10b981' : '#ec4899',
+                  }} title={`Surface normal dipole: ${dipole?.mu_Debye} Debye`}>
+                    {deltaPhi < 0 ? '▼ ' : '▲ +'}{Math.abs(deltaPhi).toFixed(2)} eV
+                  </span>
+                )}
+                {isRef && (
+                  <span style={{ fontSize: '0.68rem', padding: '0.1rem 0.35rem', borderRadius: '3px', background: 'var(--accent)', color: '#fff', fontWeight: 600 }}>
+                    Clean Ref
+                  </span>
+                )}
+              </div>
+            </div>
  );
  })}
  </div>
@@ -660,54 +711,53 @@ export function WorkFunctionComparisonStudio() {
  {/* VIEW MODE 1: OVERLAID POTENTIAL PROFILES V̄(z) */}
  {/* ═══════════════════════════════════════════════════════════════════════ */}
  {activeMode === 'overlay' && (
- <div style={{
- background: plotTheme === 'white' ? '#ffffff' : '#0f172a',
- borderRadius: '8px',
- border: '1px solid var(--border)',
- padding: '1rem',
- position: 'relative',
- boxShadow: plotTheme === 'white' ? '0 4px 12px rgba(0,0,0,0.08)' : 'none',
- }}>
- <svg
- ref={overlaySvgRef}
- viewBox={`0 0 ${width} ${height}`}
- style={{ width: '100%', height: 'auto', display: 'block', background: plotTheme === 'white' ? '#ffffff' : '#0f172a' }}
- onMouseMove={(e) => {
- const rect = e.currentTarget.getBoundingClientRect();
- const svgX = ((e.clientX - rect.left) / rect.width) * width;
- if (svgX >= margin.left && svgX <= margin.left + plotW) {
- const zVal = ((svgX - margin.left) / plotW) * zMaxAll;
- setHoverZ(parseFloat(zVal.toFixed(2)));
- }
- }}
- onMouseLeave={() => setHoverZ(null)}>
+        <div style={{
+          background: themeColors.bg,
+          borderRadius: '8px',
+          border: `1px solid ${themeColors.border}`,
+          padding: '1rem',
+          position: 'relative',
+          boxShadow: plotTheme === 'white' ? '0 4px 12px rgba(0,0,0,0.06)' : 'none',
+        }}>
+          <svg
+            ref={overlaySvgRef}
+            viewBox={`0 0 ${width} ${height}`}
+            style={{ width: '100%', height: 'auto', display: 'block', background: themeColors.bg }}
+            onMouseMove={(e) => {
+              const rect = e.currentTarget.getBoundingClientRect();
+              const svgX = ((e.clientX - rect.left) / rect.width) * width;
+              if (svgX >= margin.left && svgX <= margin.left + plotW) {
+                const zVal = ((svgX - margin.left) / plotW) * zMaxAll;
+                setHoverZ(parseFloat(zVal.toFixed(2)));
+              }
+            }}
+            onMouseLeave={() => setHoverZ(null)}>
+            {/* Shaded Regions: Slab, Ligand Interface, Vacuum Gap */}
+            <rect
+              x={margin.left}
+              y={margin.top}
+              width={Math.max(0, getX(18.0) - margin.left)}
+              height={plotH}
+              fill={themeColors.slabShading}
+            />
+            <text x={margin.left + (getX(18.0) - margin.left) / 2} y={margin.top + 20} fill={themeColors.slabText} fontSize="11" fontWeight="600" textAnchor="middle">
+              Substrate Slab
+            </text>
 
- {/* Shaded Regions: Slab, Ligand Interface, Vacuum Gap */}
- <rect
- x={margin.left}
- y={margin.top}
- width={Math.max(0, getX(18.0) - margin.left)}
- height={plotH}
- fill="rgba(51, 65, 85, 0.22)"
- />
- <text x={margin.left + (getX(18.0) - margin.left) / 2} y={margin.top + 20} fill="#94a3b8" fontSize="11" fontWeight="600" textAnchor="middle">
- Substrate Slab
- </text>
+            <rect
+              x={getX(18.0)}
+              y={margin.top}
+              width={Math.max(0, getX(23.0) - getX(18.0))}
+              height={plotH}
+              fill={themeColors.ligandShading}
+            />
+            <text x={getX(20.5)} y={margin.top + 20} fill={themeColors.ligandText} fontSize="10.5" fontWeight="600" textAnchor="middle">
+              Ligand Interface
+            </text>
 
- <rect
- x={getX(18.0)}
- y={margin.top}
- width={Math.max(0, getX(23.0) - getX(18.0))}
- height={plotH}
- fill="rgba(245, 158, 11, 0.12)"
- />
- <text x={getX(20.5)} y={margin.top + 20} fill="#fbbf24" fontSize="10" fontWeight="600" textAnchor="middle">
- Ligand Interface
- </text>
-
- <text x={getX(28.0)} y={margin.top + 20} fill="#38bdf8" fontSize="11" fontWeight="600" textAnchor="middle">
- Vacuum Gap (Plateau)
- </text>
+            <text x={getX(28.0)} y={margin.top + 20} fill={themeColors.vacuumText} fontSize="11" fontWeight="600" textAnchor="middle">
+              Vacuum Gap (Plateau)
+            </text>
 
  {/* Grid ticks Z */}
  {[0, 5, 10, 15, 20, 25, 30].map(t => {
@@ -715,10 +765,10 @@ export function WorkFunctionComparisonStudio() {
  const x = getX(t);
  return (
  <g key={t}>
- <line x1={x} y1={margin.top} x2={x} y2={margin.top + plotH} stroke="rgba(148, 163, 184, 0.10)" strokeDasharray="2,2" />
- <text x={x} y={margin.top + plotH + 18} fill="#94a3b8" fontSize="11" fontFamily="monospace" textAnchor="middle">
- {t}
- </text>
+                  <line x1={x} y1={margin.top} x2={x} y2={margin.top + plotH} stroke={themeColors.gridLine} strokeDasharray="2,2" />
+                  <text x={x} y={margin.top + plotH + 18} fill={themeColors.subText} fontSize="11" fontFamily="monospace" textAnchor="middle">
+                    {t}
+                  </text>
  </g>
  );
  })}
@@ -728,10 +778,10 @@ export function WorkFunctionComparisonStudio() {
  const y = getY(vTick);
  return (
  <g key={vTick}>
- <line x1={margin.left} y1={y} x2={margin.left + plotW} y2={y} stroke="rgba(148, 163, 184, 0.10)" strokeDasharray="2,2" />
- <text x={margin.left - 8} y={y + 3} fill="#94a3b8" fontSize="10" fontFamily="monospace" textAnchor="end">
- {vTick} eV
- </text>
+                  <line x1={margin.left} y1={y} x2={margin.left + plotW} y2={y} stroke={themeColors.gridLine} strokeDasharray="2,2" />
+                  <text x={margin.left - 8} y={y + 3} fill={themeColors.subText} fontSize="10" fontFamily="monospace" textAnchor="end">
+                    {vTick} eV
+                  </text>
  </g>
  );
  })}
@@ -759,28 +809,27 @@ export function WorkFunctionComparisonStudio() {
  </g>
  );
  })}
-
- {/* Floating Top-Right Legend Box for Vacuum Levels */}
- <g transform={`translate(${margin.left + plotW - 230}, ${margin.top + 10})`}>
- <rect
- x="0"
- y="0"
- width="225"
- height={activeSurfaces.length * 17 + 8}
- rx="5"
- fill={plotTheme === 'white' ? 'rgba(255, 255, 255, 0.92)' : 'rgba(15, 23, 42, 0.88)'}
- stroke="rgba(148, 163, 184, 0.25)"
- strokeWidth="1"
- />
- {activeSurfaces.map((s, idx) => (
- <g key={s.id} transform={`translate(8, ${idx * 17 + 14})`}>
- <line x1="0" y1="-3" x2="16" y2="-3" stroke={s.color} strokeWidth="2.5" strokeDasharray="4,2" />
- <text x="22" y="0" fill={s.color} fontSize="9.5" fontFamily="monospace" fontWeight="700">
- {s.name.substring(0, 14)}: {s.vVac.toFixed(2)} eV (Φ={s.phi.toFixed(2)})
- </text>
- </g>
- ))}
- </g>
+            {/* Floating Top-Right Legend Box for Vacuum Levels */}
+            <g transform={`translate(${margin.left + plotW - 295}, ${margin.top + 8})`}>
+              <rect
+                x="0"
+                y="0"
+                width="290"
+                height={activeSurfaces.length * 20 + 8}
+                rx="6"
+                fill={themeColors.legendBg}
+                stroke={themeColors.legendBorder}
+                strokeWidth="1"
+              />
+              {activeSurfaces.map((s, idx) => (
+                <g key={s.id} transform={`translate(10, ${idx * 20 + 15})`}>
+                  <line x1="0" y1="-4" x2="18" y2="-4" stroke={s.color} strokeWidth="2.5" strokeDasharray="4,2" />
+                  <text x="26" y="0" fill={s.color} fontSize="9.5" fontFamily="monospace" fontWeight="700">
+                    {s.name.length > 20 ? s.name.substring(0, 20) + '…' : s.name}: {s.vVac.toFixed(2)} eV (Φ={s.phi.toFixed(2)} eV)
+                  </text>
+                </g>
+              ))}
+            </g>
  {/* Shared Fermi Level Reference Line */}
  {refSurface && (
  <g>
@@ -815,27 +864,26 @@ export function WorkFunctionComparisonStudio() {
  const deltaPhi = surfaces[1].phi - surfaces[0].phi;
  return (
  <g>
- <line x1={arrowX} y1={y1} x2={arrowX} y2={y2} stroke="#10b981" strokeWidth="2.0" markerEnd="url(#arrow)" />
- <rect x={arrowX - 45} y={(y1 + y2) / 2 - 10} width="90" height="20" rx="3" fill="rgba(15, 23, 42, 0.9)" stroke="#10b981" strokeWidth="1" />
- <text x={arrowX} y={(y1 + y2) / 2 + 4} fill="#10b981" fontSize="10" fontFamily="monospace" fontWeight="700" textAnchor="middle">
- ΔΦ = {deltaPhi.toFixed(2)} eV
- </text>
- </g>
+                      <line x1={arrowX} y1={y1} x2={arrowX} y2={y2} stroke={themeColors.deltaText} strokeWidth="2.0" markerEnd="url(#arrow)" />
+                      <rect x={arrowX + 8} y={(y1 + y2) / 2 - 10} width="85" height="20" rx="4" fill={themeColors.deltaBoxBg} stroke={themeColors.deltaText} strokeWidth="1" />
+                      <text x={arrowX + 50} y={(y1 + y2) / 2 + 4} fill={themeColors.deltaText} fontSize="10" fontFamily="monospace" fontWeight="700" textAnchor="middle">
+                        ΔΦ = {deltaPhi.toFixed(2)} eV
+                      </text>
+                    </g>
  );
  })()}
  </g>
  )}
+            {/* Axes */}
+            <line x1={margin.left} y1={margin.top} x2={margin.left} y2={margin.top + plotH} stroke={themeColors.axisLine} strokeWidth="1.2" />
+            <line x1={margin.left} y1={margin.top + plotH} x2={margin.left + plotW} y2={margin.top + plotH} stroke={themeColors.axisLine} strokeWidth="1.2" />
 
- {/* Axes */}
- <line x1={margin.left} y1={margin.top} x2={margin.left} y2={margin.top + plotH} stroke="rgba(148, 163, 184, 0.4)" />
- <line x1={margin.left} y1={margin.top + plotH} x2={margin.left + plotW} y2={margin.top + plotH} stroke="rgba(148, 163, 184, 0.4)" />
-
- <text x={margin.left + plotW / 2} y={height - 8} fill="#e2e8f0" fontSize="12" fontWeight="600" textAnchor="middle">
- Distance Normal to Surface z (Å)
- </text>
- <text x={-height / 2} y={18} fill="#e2e8f0" fontSize="12" fontWeight="600" textAnchor="middle" transform="rotate(-90)">
- Electrostatic Potential V̄(z) (eV)
- </text>
+            <text x={margin.left + plotW / 2} y={height - 8} fill={themeColors.axisText} fontSize="12" fontWeight="600" textAnchor="middle">
+              Distance Normal to Surface z (Å)
+            </text>
+            <text x={-height / 2} y={18} fill={themeColors.axisText} fontSize="12" fontWeight="600" textAnchor="middle" transform="rotate(-90)">
+              Electrostatic Potential V̄(z) (eV)
+            </text>
 
  {/* Hover Crosshair */}
  {hoverZ !== null && (
@@ -849,56 +897,56 @@ export function WorkFunctionComparisonStudio() {
  position: 'absolute',
  top: '15px',
  left: '80px',
- background: 'rgba(15, 23, 42, 0.92)',
- border: '1px solid var(--border)',
- borderRadius: '6px',
- padding: '0.4rem 0.65rem',
- fontSize: '0.72rem',
- fontFamily: 'monospace',
- pointerEvents: 'none',
- zIndex: 10,
- }}>
- <div style={{ color: '#fbbf24', fontWeight: 700, marginBottom: '0.2rem' }}>
- z = {hoverZ.toFixed(2)} Å
- </div>
- {activeSurfaces.map(s => {
- const idx = Math.min(s.z.length - 1, Math.max(0, Math.round((hoverZ / zMaxAll) * (s.z.length - 1))));
- const val = s.vPlanar[idx] ?? s.vVac;
- return (
- <div key={s.id} style={{ display: 'flex', justifyContent: 'space-between', gap: '0.8rem', color: s.color }}>
- <span>{s.name.substring(0, 16)}:</span>
- <strong>{val.toFixed(2)} eV</strong>
- </div>
- );
- })}
- </div>
- )}
+              background: themeColors.hoverBg,
+              border: `1px solid ${themeColors.hoverBorder}`,
+              borderRadius: '6px',
+              padding: '0.4rem 0.65rem',
+              fontSize: '0.72rem',
+              fontFamily: 'monospace',
+              pointerEvents: 'none',
+              zIndex: 10,
+            }}>
+              <div style={{ color: themeColors.hoverText, fontWeight: 700, marginBottom: '0.2rem' }}>
+                z = {hoverZ.toFixed(2)} Å
+              </div>
+              {activeSurfaces.map(s => {
+                const idx = Math.min(s.z.length - 1, Math.max(0, Math.round((hoverZ / zMaxAll) * (s.z.length - 1))));
+                const val = s.vPlanar[idx] ?? s.vVac;
+                return (
+                  <div key={s.id} style={{ display: 'flex', justifyContent: 'space-between', gap: '0.8rem', color: s.color }}>
+                    <span>{s.name.substring(0, 18)}:</span>
+                    <strong>{val.toFixed(2)} eV</strong>
+                  </div>
+                );
+              })}
+            </div>
+          )}
 
- {/* Legend */}
- <div style={{
- display: 'flex',
- flexWrap: 'wrap',
- gap: '0.8rem',
- justifyContent: 'center',
- marginTop: '0.8rem',
- paddingTop: '0.6rem',
- borderTop: '1px solid rgba(148, 163, 184, 0.15)',
- }}>
- {activeSurfaces.map((s, idx) => {
- const deltaPhi = idx > 0 && refSurface ? (s.phi - refSurface.phi) : 0;
- return (
- <div key={s.id} style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', fontSize: '0.78rem' }}>
- <span style={{ width: '12px', height: '12px', borderRadius: '3px', backgroundColor: s.color }} />
- <span style={{ color: '#e2e8f0', fontWeight: 600 }}>{s.name}</span>
- <span style={{ color: 'var(--muted)', fontSize: '0.7rem' }}>
- (Φ = {s.phi.toFixed(2)} eV{idx > 0 ? `, ΔΦ = ${deltaPhi > 0 ? '+' : ''}${deltaPhi.toFixed(2)} eV` : ''})
- </span>
- </div>
- );
- })}
- </div>
- </div>
- )}
+          {/* Legend */}
+          <div style={{
+            display: 'flex',
+            flexWrap: 'wrap',
+            gap: '0.8rem',
+            justifyContent: 'center',
+            marginTop: '0.8rem',
+            paddingTop: '0.6rem',
+            borderTop: `1px solid ${themeColors.border}`,
+          }}>
+            {activeSurfaces.map((s, idx) => {
+              const deltaPhi = idx > 0 && refSurface ? (s.phi - refSurface.phi) : 0;
+              return (
+                <div key={s.id} style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', fontSize: '0.78rem' }}>
+                  <span style={{ width: '12px', height: '12px', borderRadius: '3px', backgroundColor: s.color }} />
+                  <span style={{ color: themeColors.legendBottomText, fontWeight: 600 }}>{s.name}</span>
+                  <span style={{ color: themeColors.subText, fontSize: '0.7rem' }}>
+                    (Φ = {s.phi.toFixed(2)} eV{idx > 0 ? `, ΔΦ = ${deltaPhi > 0 ? '+' : ''}${deltaPhi.toFixed(2)} eV` : ''})
+                  </span>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
 
  {/* ═══════════════════════════════════════════════════════════════════════ */}
  {/* VIEW MODE 2: ENERGY LEVEL & BAND ALIGNMENT DIAGRAM (BEFORE VS AFTER) */}

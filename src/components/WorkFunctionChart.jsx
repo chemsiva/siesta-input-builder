@@ -410,7 +410,7 @@ export function WorkFunctionChart({
  setShowLineText(false);
  setShowShading(true);
  }}>
- Reset Reset
+                Reset View
  </button>
  </div>
  </div>
@@ -584,8 +584,8 @@ export function WorkFunctionChart({
  </g>
  )}
 
- {/* Potential Curve V_bar(z) */}
- <path d={potPath} fill="none" stroke="#e2e8f0" strokeWidth="2.2" />
+          {/* Potential Curve V_bar(z) */}
+          <path d={potPath} fill="none" stroke="#38bdf8" strokeWidth="2.4" />
 
  {/* Hover crosshair */}
  {hoverIdx !== null && (
