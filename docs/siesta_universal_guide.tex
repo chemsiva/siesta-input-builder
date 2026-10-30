@@ -31,7 +31,7 @@
  urlcolor=siestaBlue,
  citecolor=siestaGreen,
  pdftitle={SIESTA Input Builder: Comprehensive User Manual & Hidden Features Handbook},
- pdfauthor={Sivakumar & Materials Science DFT Consortium},
+    pdfauthor={SIESTA Materials Science DFT Initiative},
  pdfsubject={Detailed Step-by-Step Operations, Hidden Features, and Workflow Guide for SIESTA Input Builder GUI},
  pdfkeywords={SIESTA, GUI, FDF, VASP, ASE GUI, Constraints, CI-NEB, Phonons, Work Function, Band Alignment}
 }
@@ -71,10 +71,8 @@
 \title{\Huge \textbf{SIESTA Input Builder Web Studio}\\[0.3em]
 \Large \textbf{The Complete GUI User Manual \& Hidden Features Handbook}\\[0.4em]
 \large \textit{A Comprehensive, Step-by-Step Operational Reference Covering Every Button, Section, Converter, Analysis Suite, and Power-User Workflow}}
-\author{\textbf{Sivakumar \& Materials Science DFT Consortium}\\
-\small Computational Materials Laboratory \& Surface Engineering Group\\
-\footnotesize Online Web Application: \url{https://chemsiva.github.io/siesta-input-builder/}\\
-\footnotesize GitHub Repository: \url{https://github.com/chemsiva/siesta-input-builder}}
+\author{\textbf{SIESTA Open-Source Development Consortium}\\
+\small Computational Materials Science \& Surface Physics Initiative}
 \date{\textbf{October 2026} \quad | \quad \textbf{App Version 5.4.2 (Production)}}
 
 \begin{document}
@@ -262,8 +260,8 @@ Could not find pseudopotential file: Pb.psf
 In SIESTA, \texttt{\%block ChemicalSpeciesLabel} supports an optional fourth column specifying the absolute filesystem path to the pseudopotential file:
 \begin{lstlisting}
 %block ChemicalSpeciesLabel
- 1 82 Pb /scratch/SIVAKUMAR/pseudos/Pb.psf
- 2 53 I /scratch/SIVAKUMAR/pseudos/I.psf
+  1   82  Pb   /path/to/pseudos/Pb.psf
+  2   53  I    /path/to/pseudos/I.psf
 %endblock ChemicalSpeciesLabel
 \end{lstlisting}
 When specified, SIESTA reads the pseudopotentials directly from that directory regardless of where you submit the job from!
@@ -548,8 +546,7 @@ bash run_siesta.sh
 \begin{center}
 \rule{0.6\textwidth}{0.8pt}\\[0.3cm]
 \small \textbf{SIESTA Input Builder Web Studio — Documentation Version 5.4.2}\\[0.1cm]
-\footnotesize Maintained by Sivakumar \& Materials Science DFT Consortium\\
-\url{https://chemsiva.github.io/siesta-input-builder/}
+\footnotesize Maintained by the Open-Source Materials Science Consortium
 \end{center}
 
 \end{document}

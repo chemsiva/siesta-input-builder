@@ -105,14 +105,14 @@ export function SpeciesSection() {
  Step 1 — Full server path to your pseudopotential folder
  </div>
  <div style={{ display: 'flex', gap: '0.4rem', marginTop: '0.5rem', alignItems: 'center' }}>
- <input
- type="text"
- className="input mono"
- style={{ flex: 1 }}
- placeholder="/scratch/SIVAKUMAR/nc-sr-05_pbe_standard_psml/psf_outputs"
- value={pseudoSettings.pseudoPath || ''}
- onChange={e => setPseudoSettings({ pseudoPath: e.target.value })}
- />
+            <input
+              type="text"
+              className="input mono"
+              style={{ flex: 1 }}
+              placeholder="/path/to/pseudopotentials/folder"
+              value={pseudoSettings.pseudoPath || ''}
+              onChange={e => setPseudoSettings({ pseudoPath: e.target.value })}
+            />
  </div>
  {pseudoSettings.pseudoPath && pseudoSettings.pseudoPath.trim() && (
  <div className="hint" style={{ color: 'var(--success)', marginTop: '0.35rem', fontWeight: 600 }}>

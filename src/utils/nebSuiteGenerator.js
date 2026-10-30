@@ -131,13 +131,13 @@ def find_and_copy_pseudos(symbols, current_dir, hint_dir="psf_outputs"):
  os.path.abspath(hint_dir),
  os.path.abspath(os.path.join("..", hint_dir)),
  os.path.abspath(os.path.join("..", "..", hint_dir)),
- os.environ.get("SIESTA_PS_PATH", ""),
- os.environ.get("SIESTA_PP_PATH", ""),
- "/scratch/SIVAKUMAR/Sivakumar_Research_work/preliminary_data/nc-sr-05_pbe_standard_psml/psf_outputs",
- "/scratch/SIVAKUMAR/Sivakumar_Research_work/preliminary_data/FASnI3/stage2_vc_psf",
- "/scratch/SIVAKUMAR/Sivakumar_Research_work/preliminary_data/FAPbI3_DFT/WMD/Convergen_test_burai/siesta_convergence/01_meshcutoff/mc_100Ry",
- "/home/subrata/softwares/material_science/siesta-5.4.2/Tests/Pseudos",
- ]
+    os.environ.get("SIESTA_PS_PATH", ""),
+    os.environ.get("SIESTA_PP_PATH", ""),
+    os.path.abspath("./pseudos"),
+    os.path.abspath("../pseudos"),
+    os.path.abspath("../../pseudos"),
+    os.path.expanduser("~/pseudos"),
+  ]
 
  for sym in missing:
  psf = f"{sym}.psf"

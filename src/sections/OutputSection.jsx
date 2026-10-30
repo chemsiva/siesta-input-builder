@@ -1203,18 +1203,18 @@ FINAL_HF 1858 0.000 0.0000 11778.626 0.1914 0.995`;
  To compute planar averages from real-space potential grids (<code>SaveElectrostaticPotential true</code> → <code>SystemLabel.VH</code>), run either Macroave or convert to Gaussian Cube:
  </p>
  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '0.4rem', marginTop: '0.3rem' }}>
- <code style={{ fontSize: '0.7rem', padding: '0.35rem 0.5rem', background: '#090d16', borderRadius: '4px', color: '#e2e8f0', display: 'block' }}>
- # 1. Macroave planar average:<br />
- ~/softwares/material_science/siesta-5.4.2/build/Util/Macroave/Src/macroave &lt; macroave.in
- </code>
- <code style={{ fontSize: '0.7rem', padding: '0.35rem 0.5rem', background: '#090d16', borderRadius: '4px', color: '#e2e8f0', display: 'block' }}>
- # 2. Gaussian Cube conversion:<br />
- ~/softwares/material_science/siesta-5.4.2/build/Util/Grid/grid2cube SystemLabel.VH
- </code>
- </div>
- </div>
- </div>
- {/* Hint if nothing uploaded yet */}
+                <code style={{ fontSize: '0.7rem', padding: '0.35rem 0.5rem', background: '#090d16', borderRadius: '4px', color: '#e2e8f0', display: 'block' }}>
+                  # 1. Macroave planar average:<br />
+                  macroave &lt; macroave.in
+                </code>
+                <code style={{ fontSize: '0.7rem', padding: '0.35rem 0.5rem', background: '#090d16', borderRadius: '4px', color: '#e2e8f0', display: 'block' }}>
+                  # 2. Gaussian Cube conversion:<br />
+                  grid2cube SystemLabel.VH
+                </code>
+                </div>
+              </div>
+            </div>
+            {/* Hint if nothing uploaded yet */}
  {!outData && !mdeData && !aniData && (
  <div className="info-box" style={{ marginTop: '1rem' }}>
  <strong>Quick Start:</strong> Drag and drop your <code>.out</code>, <code>.MDE</code>, or <code>.ANI</code> files into the dashed box above.
