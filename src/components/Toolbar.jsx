@@ -192,6 +192,16 @@ Either copy your .psf/.psml files here, or edit run_siesta.sh to set
           📊 Output Viewer
         </button>
 
+        <a
+          href="./SIESTA_Universal_Guide.pdf"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="btn btn-secondary"
+          title="Open comprehensive 19-page SIESTA Universal Guide & DFT Handbook (PDF)"
+          style={{ textDecoration: 'none' }}>
+          📚 User Guide
+        </a>
+
         <button className="btn btn-secondary" onClick={() => fileRef.current.click()}>
           📂 Load .fdf
         </button>

@@ -1,0 +1,1475 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <meta name="author" content="Sivakumar &amp; Materials Science DFT Consortium Computational Materials Laboratory &amp; Surface Engineering Group Interactive Web Studio: https://chemsiva.github.io/siesta-input-builder/" />
+  <title>SIESTA Universal User Guide &amp; First-Principles DFT Handbook From Fundamental Quantum Mechanics to High-Throughput Calculations: Theory, FDF Architecture, Advanced Workflows, and GUI Studio Operations</title>
+  <style>
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    /* CSS for syntax highlighting */
+    pre > code.sourceCode { white-space: pre; position: relative; }
+    pre > code.sourceCode > span { line-height: 1.25; }
+    pre > code.sourceCode > span:empty { height: 1.2em; }
+    .sourceCode { overflow: visible; }
+    code.sourceCode > span { color: inherit; text-decoration: inherit; }
+    div.sourceCode { margin: 1em 0; }
+    pre.sourceCode { margin: 0; }
+    @media screen {
+    div.sourceCode { overflow: auto; }
+    }
+    @media print {
+    pre > code.sourceCode { white-space: pre-wrap; }
+    pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+    }
+    pre.numberSource code
+      { counter-reset: source-line 0; }
+    pre.numberSource code > span
+      { position: relative; left: -4em; counter-increment: source-line; }
+    pre.numberSource code > span > a:first-child::before
+      { content: counter(source-line);
+        position: relative; left: -1em; text-align: right; vertical-align: baseline;
+        border: none; display: inline-block;
+        -webkit-touch-callout: none; -webkit-user-select: none;
+        -khtml-user-select: none; -moz-user-select: none;
+        -ms-user-select: none; user-select: none;
+        padding: 0 4px; width: 4em;
+        color: #aaaaaa;
+      }
+    pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+    div.sourceCode
+      {   }
+    @media screen {
+    pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+    }
+    code span.al { color: #ff0000; font-weight: bold; } /* Alert */
+    code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+    code span.at { color: #7d9029; } /* Attribute */
+    code span.bn { color: #40a070; } /* BaseN */
+    code span.bu { color: #008000; } /* BuiltIn */
+    code span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+    code span.ch { color: #4070a0; } /* Char */
+    code span.cn { color: #880000; } /* Constant */
+    code span.co { color: #60a0b0; font-style: italic; } /* Comment */
+    code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+    code span.do { color: #ba2121; font-style: italic; } /* Documentation */
+    code span.dt { color: #902000; } /* DataType */
+    code span.dv { color: #40a070; } /* DecVal */
+    code span.er { color: #ff0000; font-weight: bold; } /* Error */
+    code span.ex { } /* Extension */
+    code span.fl { color: #40a070; } /* Float */
+    code span.fu { color: #06287e; } /* Function */
+    code span.im { color: #008000; font-weight: bold; } /* Import */
+    code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+    code span.kw { color: #007020; font-weight: bold; } /* Keyword */
+    code span.op { color: #666666; } /* Operator */
+    code span.ot { color: #007020; } /* Other */
+    code span.pp { color: #bc7a00; } /* Preprocessor */
+    code span.sc { color: #4070a0; } /* SpecialChar */
+    code span.ss { color: #bb6688; } /* SpecialString */
+    code span.st { color: #4070a0; } /* String */
+    code span.va { color: #19177c; } /* Variable */
+    code span.vs { color: #4070a0; } /* VerbatimString */
+    code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+  </style>
+  <link rel="stylesheet" href="guide_style.css" />
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title"><strong>SIESTA Universal User Guide &amp;
+First-Principles DFT Handbook</strong><br />
+<em>From Fundamental Quantum Mechanics to High-Throughput Calculations:
+Theory, FDF Architecture, Advanced Workflows, and GUI Studio
+Operations</em></h1>
+<p class="author"><strong>Sivakumar &amp; Materials Science DFT
+Consortium</strong><br />
+Computational Materials Laboratory &amp; Surface Engineering Group<br />
+Interactive Web Studio: <a
+href="https://chemsiva.github.io/siesta-input-builder/"
+class="uri">https://chemsiva.github.io/siesta-input-builder/</a></p>
+<p class="date"><strong>October 2026</strong> | <strong>Target: SIESTA
+5.x / 5.4.2 &amp; Web Studio</strong></p>
+</header>
+<nav id="TOC" role="doc-toc">
+<ul>
+<li><a href="#foundations-of-siesta-first-principles-physics"
+id="toc-foundations-of-siesta-first-principles-physics">Foundations of
+SIESTA &amp; First-Principles Physics</a>
+<ul>
+<li><a
+href="#the-quantum-many-body-challenge-and-hohenberg-kohn-theorems"
+id="toc-the-quantum-many-body-challenge-and-hohenberg-kohn-theorems">The
+Quantum Many-Body Challenge and Hohenberg-Kohn Theorems</a></li>
+<li><a href="#the-kohn-sham-formulation"
+id="toc-the-kohn-sham-formulation">The Kohn-Sham Formulation</a></li>
+<li><a
+href="#plane-wave-dft-vs.-linear-combination-of-atomic-orbitals-lcao"
+id="toc-plane-wave-dft-vs.-linear-combination-of-atomic-orbitals-lcao">Plane-Wave
+DFT vs. Linear Combination of Atomic Orbitals (LCAO)</a></li>
+<li><a href="#why-siesta-the-on-localized-orbital-paradigm"
+id="toc-why-siesta-the-on-localized-orbital-paradigm">Why SIESTA? The
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>O</mi><mrow><mo stretchy="true" form="prefix">(</mo><mi>N</mi><mo stretchy="true" form="postfix">)</mo></mrow></mrow><annotation encoding="application/x-tex">O(N)</annotation></semantics></math>
+Localized Orbital Paradigm</a></li>
+</ul></li>
+<li><a href="#the-fdf-flexible-data-format-language"
+id="toc-the-fdf-flexible-data-format-language">The FDF (Flexible Data
+Format) Language</a>
+<ul>
+<li><a href="#syntax-tokens-and-data-blocks"
+id="toc-syntax-tokens-and-data-blocks">Syntax, Tokens, and Data
+Blocks</a></li>
+<li><a href="#physical-dimensions-and-unit-scaling"
+id="toc-physical-dimensions-and-unit-scaling">Physical Dimensions and
+Unit Scaling</a></li>
+</ul></li>
+<li><a href="#crystal-structure-lattice-geometry-setup"
+id="toc-crystal-structure-lattice-geometry-setup">Crystal Structure,
+Lattice &amp; Geometry Setup</a>
+<ul>
+<li><a href="#lattice-representation-vectors-vs.-parameters"
+id="toc-lattice-representation-vectors-vs.-parameters">Lattice
+Representation: Vectors vs. Parameters</a></li>
+<li><a href="#atomic-coordinates-formats"
+id="toc-atomic-coordinates-formats">Atomic Coordinates Formats</a></li>
+<li><a href="#surface-slabs-vacuum-padding-and-dipole-correction"
+id="toc-surface-slabs-vacuum-padding-and-dipole-correction">Surface
+Slabs, Vacuum Padding, and Dipole Correction</a></li>
+</ul></li>
+<li><a href="#pseudopotentials-pao-basis-sets"
+id="toc-pseudopotentials-pao-basis-sets">Pseudopotentials &amp; PAO
+Basis Sets</a>
+<ul>
+<li><a
+href="#the-pseudopotential-concept-norm-conservation-kleinman-bylander"
+id="toc-the-pseudopotential-concept-norm-conservation-kleinman-bylander">The
+Pseudopotential Concept (Norm-Conservation &amp;
+Kleinman-Bylander)</a></li>
+<li><a href="#pseudopotential-file-formats-psf-and-modern-psml"
+id="toc-pseudopotential-file-formats-psf-and-modern-psml">Pseudopotential
+File Formats: PSF and Modern PSML</a></li>
+<li><a href="#numerical-atomic-orbitals-naos-and-basis-cardinality"
+id="toc-numerical-atomic-orbitals-naos-and-basis-cardinality">Numerical
+Atomic Orbitals (NAOs) and Basis Cardinality</a></li>
+<li><a href="#the-spatial-confinement-parameter-pao.energyshift"
+id="toc-the-spatial-confinement-parameter-pao.energyshift">The Spatial
+Confinement Parameter: <code>PAO.EnergyShift</code></a></li>
+</ul></li>
+<li><a href="#real-space-grid-exchange-correlation-xc"
+id="toc-real-space-grid-exchange-correlation-xc">Real-Space Grid &amp;
+Exchange-Correlation (XC)</a>
+<ul>
+<li><a href="#the-real-space-mesh-and-meshcutoff"
+id="toc-the-real-space-mesh-and-meshcutoff">The Real-Space Mesh and
+<code>MeshCutoff</code></a></li>
+<li><a href="#the-eggbox-effect" id="toc-the-eggbox-effect">The Eggbox
+Effect</a></li>
+<li><a href="#exchange-correlation-xc-functionals"
+id="toc-exchange-correlation-xc-functionals">Exchange-Correlation (XC)
+Functionals</a></li>
+<li><a
+href="#spin-polarization-non-collinear-magnetism-spin-orbit-coupling"
+id="toc-spin-polarization-non-collinear-magnetism-spin-orbit-coupling">Spin
+Polarization, Non-Collinear Magnetism &amp; Spin-Orbit Coupling</a></li>
+</ul></li>
+<li><a href="#self-consistent-field-scf-control"
+id="toc-self-consistent-field-scf-control">Self-Consistent Field (SCF)
+Control</a>
+<ul>
+<li><a href="#the-density-matrix-formulation"
+id="toc-the-density-matrix-formulation">The Density Matrix
+Formulation</a></li>
+<li><a href="#scf-convergence-criteria-and-mixing-algorithms"
+id="toc-scf-convergence-criteria-and-mixing-algorithms">SCF Convergence
+Criteria and Mixing Algorithms</a></li>
+<li><a href="#electronic-temperature-fermi-smearing"
+id="toc-electronic-temperature-fermi-smearing">Electronic Temperature
+(Fermi Smearing)</a></li>
+</ul></li>
+<li><a href="#brillouin-zone-sampling-k-points"
+id="toc-brillouin-zone-sampling-k-points">Brillouin Zone Sampling &amp;
+K-Points</a>
+<ul>
+<li><a href="#reciprocal-space-integration-monkhorst-pack-grids"
+id="toc-reciprocal-space-integration-monkhorst-pack-grids">Reciprocal
+Space Integration &amp; Monkhorst-Pack Grids</a></li>
+<li><a href="#dimensionality-rules-for-k-points"
+id="toc-dimensionality-rules-for-k-points">Dimensionality Rules for
+K-Points</a></li>
+</ul></li>
+<li><a
+href="#structural-relaxation-general-constraints-molecular-dynamics"
+id="toc-structural-relaxation-general-constraints-molecular-dynamics">Structural
+Relaxation, General Constraints &amp; Molecular Dynamics</a>
+<ul>
+<li><a href="#geometry-optimization-algorithms"
+id="toc-geometry-optimization-algorithms">Geometry Optimization
+Algorithms</a></li>
+<li><a href="#siesta-section-7.7-use-of-general-constraints"
+id="toc-siesta-section-7.7-use-of-general-constraints">SIESTA Section
+7.7: Use of General Constraints</a></li>
+</ul></li>
+<li><a href="#post-processing-spectroscopy-performance-accounting"
+id="toc-post-processing-spectroscopy-performance-accounting">Post-Processing,
+Spectroscopy &amp; Performance Accounting</a>
+<ul>
+<li><a href="#band-structure-calculations-block-bandlines"
+id="toc-band-structure-calculations-block-bandlines">Band Structure
+Calculations (<code>%block BandLines</code>)</a></li>
+<li><a href="#projected-density-of-states-pdos"
+id="toc-projected-density-of-states-pdos">Projected Density of States
+(PDOS)</a></li>
+<li><a href="#work-function-determination-phi-v_textvac---e_f"
+id="toc-work-function-determination-phi-v_textvac---e_f">Work Function
+Determination
+(<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>Φ</mi><mo>=</mo><msub><mi>V</mi><mtext mathvariant="normal">vac</mtext></msub><mo>−</mo><msub><mi>E</mi><mi>F</mi></msub></mrow><annotation encoding="application/x-tex">\Phi = V_{\text{vac}} - E_F</annotation></semantics></math>)</a></li>
+<li><a href="#section-6.29-memory-cpu-time-wall-time-accounting"
+id="toc-section-6.29-memory-cpu-time-wall-time-accounting">Section 6.29:
+Memory, CPU-time &amp; Wall-Time Accounting</a></li>
+</ul></li>
+<li><a href="#the-siesta-input-builder-web-studio-manual"
+id="toc-the-siesta-input-builder-web-studio-manual">The SIESTA Input
+Builder Web Studio Manual</a>
+<ul>
+<li><a href="#application-overview-zero-backend-architecture"
+id="toc-application-overview-zero-backend-architecture">Application
+Overview &amp; Zero-Backend Architecture</a></li>
+<li><a href="#walkthrough-of-the-navigation-modules"
+id="toc-walkthrough-of-the-navigation-modules">Walkthrough of the
+Navigation Modules</a></li>
+</ul></li>
+<li><a href="#step-by-step-hands-on-tutorials"
+id="toc-step-by-step-hands-on-tutorials">Step-by-Step Hands-On
+Tutorials</a>
+<ul>
+<li><a href="#tutorial-1-bulk-silicon-si-diamond-ground-state-bands-dos"
+id="toc-tutorial-1-bulk-silicon-si-diamond-ground-state-bands-dos">Tutorial
+1: Bulk Silicon
+(<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>S</mi><mi>i</mi></mrow><annotation encoding="application/x-tex">Si</annotation></semantics></math>)
+Diamond — Ground State, Bands &amp; DOS</a></li>
+<li><a
+href="#tutorial-2-fapbi_3-perovskite-001-slab-cleaving-layer-freezing-work-function"
+id="toc-tutorial-2-fapbi_3-perovskite-001-slab-cleaving-layer-freezing-work-function">Tutorial
+2:
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>F</mi><mi>A</mi><mi>P</mi><mi>b</mi><msub><mi>I</mi><mn>3</mn></msub></mrow><annotation encoding="application/x-tex">FAPbI_3</annotation></semantics></math>
+Perovskite (001) Slab — Cleaving, Layer Freezing &amp; Work
+Function</a></li>
+<li><a
+href="#tutorial-3-gas-adsorption-on-surface-energy-charge-density-difference"
+id="toc-tutorial-3-gas-adsorption-on-surface-energy-charge-density-difference">Tutorial
+3: Gas Adsorption on Surface — Energy &amp; Charge Density
+Difference</a></li>
+</ul></li>
+</ul>
+</nav>
+<div class="titlepage">
+<p><span> <strong>SIESTA Universal User Guide<br />
+&amp; First-Principles DFT Handbook</strong></span></p>
+<p><span> <strong>From Fundamental Quantum Mechanics to High-Throughput
+Calculations:<br />
+Theory, FDF Architecture, Advanced Workflows, and GUI Studio
+Operations</strong></span></p>
+<hr />
+<p><span><strong>Target Codebases:</strong><br />
+<code>SIESTA 5.x (5.4.2)</code> &amp;
+<code>SIESTA Input Builder Web Studio</code></span><br />
+<span><strong>Author &amp; Maintainer:</strong><br />
+<strong>Sivakumar &amp; Materials Science DFT Consortium</strong><br />
+<em>Computational Materials Laboratory &amp; Surface Engineering
+Group</em></span><br />
+<span>Online Interactive GUI: <a
+href="https://chemsiva.github.io/siesta-input-builder/"
+class="uri">https://chemsiva.github.io/siesta-input-builder/</a><br />
+Repository: <a href="https://github.com/chemsiva/siesta-input-builder"
+class="uri">https://github.com/chemsiva/siesta-input-builder</a></span></p>
+<p><em>This handbook is designed as a universal primer: a complete
+beginner with zero prior knowledge of density functional theory or
+SIESTA can master the underlying physics, parameters, and input
+architecture from the ground up, while experienced computational
+researchers can leverage the detailed operational reference, general
+constraints (Section 7.7), time accounting (Section 6.29), and converter
+pipelines.</em></p>
+<p><span>2026-10-30</span></p>
+</div>
+<h1 id="foundations-of-siesta-first-principles-physics">Foundations of
+SIESTA &amp; First-Principles Physics</h1>
+<h2 id="the-quantum-many-body-challenge-and-hohenberg-kohn-theorems">The
+Quantum Many-Body Challenge and Hohenberg-Kohn Theorems</h2>
+<p>In condensed matter physics and quantum chemistry, the fundamental
+goal is to solve the time-independent Schr<span>ö</span>dinger equation
+for a collection of
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>N</mi><annotation encoding="application/x-tex">N</annotation></semantics></math>
+interacting electrons and
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>M</mi><annotation encoding="application/x-tex">M</annotation></semantics></math>
+atomic nuclei:
+<math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mover><mi>H</mi><mo accent="true">̂</mo></mover><mi>Ψ</mi><mrow><mo stretchy="true" form="prefix">(</mo><msub><mi>𝐫</mi><mn>1</mn></msub><mo>,</mo><mi>…</mi><mo>,</mo><msub><mi>𝐫</mi><mi>N</mi></msub><mo>;</mo><msub><mi>𝐑</mi><mn>1</mn></msub><mo>,</mo><mi>…</mi><mo>,</mo><msub><mi>𝐑</mi><mi>M</mi></msub><mo stretchy="true" form="postfix">)</mo></mrow><mo>=</mo><mi>E</mi><mi>Ψ</mi><mrow><mo stretchy="true" form="prefix">(</mo><msub><mi>𝐫</mi><mn>1</mn></msub><mo>,</mo><mi>…</mi><mo>,</mo><msub><mi>𝐫</mi><mi>N</mi></msub><mo>;</mo><msub><mi>𝐑</mi><mn>1</mn></msub><mo>,</mo><mi>…</mi><mo>,</mo><msub><mi>𝐑</mi><mi>M</mi></msub><mo stretchy="true" form="postfix">)</mo></mrow></mrow><annotation encoding="application/x-tex">\hat{H} \Psi(\mathbf{r}_1, \dots, \mathbf{r}_N; \mathbf{R}_1, \dots, \mathbf{R}_M) = E \Psi(\mathbf{r}_1, \dots, \mathbf{r}_N; \mathbf{R}_1, \dots, \mathbf{R}_M)</annotation></semantics></math>
+Under the <strong>Born-Oppenheimer approximation</strong>, because
+atomic nuclei are thousands of times more massive than electrons
+(<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>M</mi><mtext mathvariant="normal">nuc</mtext></msub><mo>≫</mo><msub><mi>m</mi><mi>e</mi></msub></mrow><annotation encoding="application/x-tex">M_{\text{nuc}} \gg m_e</annotation></semantics></math>),
+nuclear kinetic energy is decoupled, treating nuclei as static external
+point charges that produce a Coulomb potential
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>V</mi><mtext mathvariant="normal">ext</mtext></msub><mrow><mo stretchy="true" form="prefix">(</mo><mi>𝐫</mi><mo stretchy="true" form="postfix">)</mo></mrow></mrow><annotation encoding="application/x-tex">V_{\text{ext}}(\mathbf{r})</annotation></semantics></math>
+felt by the electrons.</p>
+<p>Even with this simplification, the exact electronic wave function
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>Ψ</mi><mrow><mo stretchy="true" form="prefix">(</mo><msub><mi>𝐫</mi><mn>1</mn></msub><mo>,</mo><mi>…</mi><mo>,</mo><msub><mi>𝐫</mi><mi>N</mi></msub><mo stretchy="true" form="postfix">)</mo></mrow></mrow><annotation encoding="application/x-tex">\Psi(\mathbf{r}_1, \dots, \mathbf{r}_N)</annotation></semantics></math>
+depends on
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>3</mn><mi>N</mi></mrow><annotation encoding="application/x-tex">3N</annotation></semantics></math>
+spatial coordinates. For a modest semiconductor slab containing 100
+atoms
+(<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo>∼</mo><mn>1000</mn></mrow><annotation encoding="application/x-tex">\sim 1000</annotation></semantics></math>
+valence electrons),
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>Ψ</mi><annotation encoding="application/x-tex">\Psi</annotation></semantics></math>
+lives in a 3000-dimensional Hilbert space, rendering direct wave
+function approaches computationally impossible for solid-state
+materials.</p>
+<p><strong>Density Functional Theory (DFT)</strong> circumvents this
+exponential bottleneck through the two foundational theorems of
+<strong>Hohenberg and Kohn (1964)</strong>:</p>
+<ol>
+<li><p><strong>Theorem 1 (One-to-One Mapping):</strong> The ground-state
+electron density
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>ρ</mi><mrow><mo stretchy="true" form="prefix">(</mo><mi>𝐫</mi><mo stretchy="true" form="postfix">)</mo></mrow></mrow><annotation encoding="application/x-tex">\rho(\mathbf{r})</annotation></semantics></math>
+uniquely determines the external potential
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>V</mi><mtext mathvariant="normal">ext</mtext></msub><mrow><mo stretchy="true" form="prefix">(</mo><mi>𝐫</mi><mo stretchy="true" form="postfix">)</mo></mrow></mrow><annotation encoding="application/x-tex">V_{\text{ext}}(\mathbf{r})</annotation></semantics></math>
+up to an additive constant, and therefore uniquely determines the full
+Hamiltonian and all ground-state observables of the many-body
+system.</p></li>
+<li><p><strong>Theorem 2 (Variational Principle):</strong> There exists
+a universal energy functional
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>E</mi><mrow><mo stretchy="true" form="prefix">[</mo><mi>ρ</mi><mo stretchy="true" form="postfix">]</mo></mrow></mrow><annotation encoding="application/x-tex">E[\rho]</annotation></semantics></math>
+such that the exact ground-state density minimizes
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>E</mi><mrow><mo stretchy="true" form="prefix">[</mo><mi>ρ</mi><mo stretchy="true" form="postfix">]</mo></mrow></mrow><annotation encoding="application/x-tex">E[\rho]</annotation></semantics></math>,
+yielding the true ground-state energy
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>E</mi><mn>0</mn></msub><annotation encoding="application/x-tex">E_0</annotation></semantics></math>:
+<math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>E</mi><mn>0</mn></msub><mo>≤</mo><mi>E</mi><mrow><mo stretchy="true" form="prefix">[</mo><mover><mi>ρ</mi><mo accent="true">̃</mo></mover><mo stretchy="true" form="postfix">]</mo></mrow><mspace width="1.0em"></mspace><mrow><mtext mathvariant="normal">for any trial density </mtext><mspace width="0.333em"></mspace></mrow><mover><mi>ρ</mi><mo accent="true">̃</mo></mover><mrow><mo stretchy="true" form="prefix">(</mo><mi>𝐫</mi><mo stretchy="true" form="postfix">)</mo></mrow><mo>≥</mo><mn>0</mn><mo>,</mo><mspace width="1.0em"></mspace><mo>∫</mo><mover><mi>ρ</mi><mo accent="true">̃</mo></mover><mrow><mo stretchy="true" form="prefix">(</mo><mi>𝐫</mi><mo stretchy="true" form="postfix">)</mo></mrow><msup><mi>d</mi><mn>3</mn></msup><mi>𝐫</mi><mo>=</mo><mi>N</mi></mrow><annotation encoding="application/x-tex">E_0 \le E[\tilde{\rho}] \quad \text{for any trial density } \tilde{\rho}(\mathbf{r}) \ge 0, \quad \int \tilde{\rho}(\mathbf{r}) d^3\mathbf{r} = N</annotation></semantics></math></p></li>
+</ol>
+<h2 id="the-kohn-sham-formulation">The Kohn-Sham Formulation</h2>
+<p>To make this variational principle computationally tractable,
+<strong>Kohn and Sham (1965)</strong> replaced the intractable
+interacting electron system with an auxiliary, non-interacting electron
+system that yields the exact same ground-state density
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>ρ</mi><mrow><mo stretchy="true" form="prefix">(</mo><mi>𝐫</mi><mo stretchy="true" form="postfix">)</mo></mrow></mrow><annotation encoding="application/x-tex">\rho(\mathbf{r})</annotation></semantics></math>.
+The total energy functional is partitioned into four physically
+transparent terms:
+<math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>E</mi><mrow><mo stretchy="true" form="prefix">[</mo><mi>ρ</mi><mo stretchy="true" form="postfix">]</mo></mrow><mo>=</mo><msub><mi>T</mi><mi>s</mi></msub><mrow><mo stretchy="true" form="prefix">[</mo><mi>ρ</mi><mo stretchy="true" form="postfix">]</mo></mrow><mo>+</mo><mo>∫</mo><mi>ρ</mi><mrow><mo stretchy="true" form="prefix">(</mo><mi>𝐫</mi><mo stretchy="true" form="postfix">)</mo></mrow><msub><mi>V</mi><mtext mathvariant="normal">ext</mtext></msub><mrow><mo stretchy="true" form="prefix">(</mo><mi>𝐫</mi><mo stretchy="true" form="postfix">)</mo></mrow><msup><mi>d</mi><mn>3</mn></msup><mi>𝐫</mi><mo>+</mo><msub><mi>E</mi><mi>H</mi></msub><mrow><mo stretchy="true" form="prefix">[</mo><mi>ρ</mi><mo stretchy="true" form="postfix">]</mo></mrow><mo>+</mo><msub><mi>E</mi><mtext mathvariant="normal">xc</mtext></msub><mrow><mo stretchy="true" form="prefix">[</mo><mi>ρ</mi><mo stretchy="true" form="postfix">]</mo></mrow></mrow><annotation encoding="application/x-tex">E[\rho] = T_s[\rho] + \int \rho(\mathbf{r}) V_{\text{ext}}(\mathbf{r}) d^3\mathbf{r} + E_H[\rho] + E_{\text{xc}}[\rho]</annotation></semantics></math>
+where:</p>
+<ul>
+<li><p><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>T</mi><mi>s</mi></msub><mrow><mo stretchy="true" form="prefix">[</mo><mi>ρ</mi><mo stretchy="true" form="postfix">]</mo></mrow><mo>=</mo><mo>−</mo><mfrac><msup><mi>ℏ</mi><mn>2</mn></msup><mrow><mn>2</mn><mi>m</mi></mrow></mfrac><msubsup><mo>∑</mo><mrow><mi>i</mi><mo>=</mo><mn>1</mn></mrow><mi>N</mi></msubsup><mo>∫</mo><msubsup><mi>ψ</mi><mi>i</mi><mo>*</mo></msubsup><mrow><mo stretchy="true" form="prefix">(</mo><mi>𝐫</mi><mo stretchy="true" form="postfix">)</mo></mrow><msup><mi>∇</mi><mn>2</mn></msup><msub><mi>ψ</mi><mi>i</mi></msub><mrow><mo stretchy="true" form="prefix">(</mo><mi>𝐫</mi><mo stretchy="true" form="postfix">)</mo></mrow><msup><mi>d</mi><mn>3</mn></msup><mi>𝐫</mi></mrow><annotation encoding="application/x-tex">T_s[\rho] = -\frac{\hbar^2}{2m} \sum_{i=1}^N \int \psi_i^*(\mathbf{r}) \nabla^2 \psi_i(\mathbf{r}) d^3\mathbf{r}</annotation></semantics></math>
+is the kinetic energy of non-interacting electrons described by
+single-particle Kohn-Sham orbitals
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>ψ</mi><mi>i</mi></msub><mrow><mo stretchy="true" form="prefix">(</mo><mi>𝐫</mi><mo stretchy="true" form="postfix">)</mo></mrow></mrow><annotation encoding="application/x-tex">\psi_i(\mathbf{r})</annotation></semantics></math>.</p></li>
+<li><p><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>E</mi><mi>H</mi></msub><mrow><mo stretchy="true" form="prefix">[</mo><mi>ρ</mi><mo stretchy="true" form="postfix">]</mo></mrow><mo>=</mo><mfrac><msup><mi>e</mi><mn>2</mn></msup><mn>2</mn></mfrac><mo>∬</mo><mfrac><mrow><mi>ρ</mi><mrow><mo stretchy="true" form="prefix">(</mo><mi>𝐫</mi><mo stretchy="true" form="postfix">)</mo></mrow><mi>ρ</mi><mrow><mo stretchy="true" form="prefix">(</mo><mi>𝐫</mi><mi>′</mi><mo stretchy="true" form="postfix">)</mo></mrow></mrow><mrow><mo stretchy="true" form="prefix">|</mo><mi>𝐫</mi><mo>−</mo><mi>𝐫</mi><mi>′</mi><mo stretchy="true" form="postfix">|</mo></mrow></mfrac><msup><mi>d</mi><mn>3</mn></msup><mi>𝐫</mi><msup><mi>d</mi><mn>3</mn></msup><mi>𝐫</mi><mi>′</mi></mrow><annotation encoding="application/x-tex">E_H[\rho] = \frac{e^2}{2} \iint \frac{\rho(\mathbf{r})\rho(\mathbf{r}&#39;)}{|\mathbf{r} - \mathbf{r}&#39;|} d^3\mathbf{r} d^3\mathbf{r}&#39;</annotation></semantics></math>
+is the classical electrostatic Hartree electron-electron
+repulsion.</p></li>
+<li><p><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>E</mi><mtext mathvariant="normal">xc</mtext></msub><mrow><mo stretchy="true" form="prefix">[</mo><mi>ρ</mi><mo stretchy="true" form="postfix">]</mo></mrow></mrow><annotation encoding="application/x-tex">E_{\text{xc}}[\rho]</annotation></semantics></math>
+is the <strong>Exchange-Correlation (XC) functional</strong>, which
+encapsulates all quantum mechanical many-body effects: Pauli exchange
+repulsion and dynamic electron correlation.</p></li>
+</ul>
+<p>Varying
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>E</mi><mrow><mo stretchy="true" form="prefix">[</mo><mi>ρ</mi><mo stretchy="true" form="postfix">]</mo></mrow></mrow><annotation encoding="application/x-tex">E[\rho]</annotation></semantics></math>
+with respect to
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msubsup><mi>ψ</mi><mi>i</mi><mo>*</mo></msubsup><mrow><mo stretchy="true" form="prefix">(</mo><mi>𝐫</mi><mo stretchy="true" form="postfix">)</mo></mrow></mrow><annotation encoding="application/x-tex">\psi_i^*(\mathbf{r})</annotation></semantics></math>
+yields the canonical <strong>Kohn-Sham Equations</strong>:
+<math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mrow><mo stretchy="true" form="prefix">(</mo><mo>−</mo><mfrac><msup><mi>ℏ</mi><mn>2</mn></msup><mrow><mn>2</mn><mi>m</mi></mrow></mfrac><msup><mi>∇</mi><mn>2</mn></msup><mo>+</mo><msub><mi>V</mi><mtext mathvariant="normal">eff</mtext></msub><mrow><mo stretchy="true" form="prefix">[</mo><mi>ρ</mi><mo stretchy="true" form="postfix">]</mo></mrow><mrow><mo stretchy="true" form="prefix">(</mo><mi>𝐫</mi><mo stretchy="true" form="postfix">)</mo></mrow><mo stretchy="true" form="postfix">)</mo></mrow><msub><mi>ψ</mi><mi>i</mi></msub><mrow><mo stretchy="true" form="prefix">(</mo><mi>𝐫</mi><mo stretchy="true" form="postfix">)</mo></mrow><mo>=</mo><msub><mi>ε</mi><mi>i</mi></msub><msub><mi>ψ</mi><mi>i</mi></msub><mrow><mo stretchy="true" form="prefix">(</mo><mi>𝐫</mi><mo stretchy="true" form="postfix">)</mo></mrow><mo>,</mo><mspace width="1.0em"></mspace><mrow><mtext mathvariant="normal">where </mtext><mspace width="0.333em"></mspace></mrow><mi>ρ</mi><mrow><mo stretchy="true" form="prefix">(</mo><mi>𝐫</mi><mo stretchy="true" form="postfix">)</mo></mrow><mo>=</mo><munderover><mo>∑</mo><mrow><mi>i</mi><mo>=</mo><mn>1</mn></mrow><mi>N</mi></munderover><msup><mrow><mo stretchy="true" form="prefix">|</mo><msub><mi>ψ</mi><mi>i</mi></msub><mrow><mo stretchy="true" form="prefix">(</mo><mi>𝐫</mi><mo stretchy="true" form="postfix">)</mo></mrow><mo stretchy="true" form="postfix">|</mo></mrow><mn>2</mn></msup></mrow><annotation encoding="application/x-tex">\left( -\frac{\hbar^2}{2m}\nabla^2 + V_{\text{eff}}[\rho](\mathbf{r}) \right) \psi_i(\mathbf{r}) = \varepsilon_i \psi_i(\mathbf{r}), \quad \text{where } \rho(\mathbf{r}) = \sum_{i=1}^N |\psi_i(\mathbf{r})|^2</annotation></semantics></math>
+with the effective single-particle potential defined as:
+<math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>V</mi><mtext mathvariant="normal">eff</mtext></msub><mrow><mo stretchy="true" form="prefix">(</mo><mi>𝐫</mi><mo stretchy="true" form="postfix">)</mo></mrow><mo>=</mo><msub><mi>V</mi><mtext mathvariant="normal">ext</mtext></msub><mrow><mo stretchy="true" form="prefix">(</mo><mi>𝐫</mi><mo stretchy="true" form="postfix">)</mo></mrow><mo>+</mo><msup><mi>e</mi><mn>2</mn></msup><mo>∫</mo><mfrac><mrow><mi>ρ</mi><mrow><mo stretchy="true" form="prefix">(</mo><mi>𝐫</mi><mi>′</mi><mo stretchy="true" form="postfix">)</mo></mrow></mrow><mrow><mo stretchy="true" form="prefix">|</mo><mi>𝐫</mi><mo>−</mo><mi>𝐫</mi><mi>′</mi><mo stretchy="true" form="postfix">|</mo></mrow></mfrac><msup><mi>d</mi><mn>3</mn></msup><mi>𝐫</mi><mi>′</mi><mo>+</mo><mfrac><mrow><mi>δ</mi><msub><mi>E</mi><mtext mathvariant="normal">xc</mtext></msub><mrow><mo stretchy="true" form="prefix">[</mo><mi>ρ</mi><mo stretchy="true" form="postfix">]</mo></mrow></mrow><mrow><mi>δ</mi><mi>ρ</mi><mrow><mo stretchy="true" form="prefix">(</mo><mi>𝐫</mi><mo stretchy="true" form="postfix">)</mo></mrow></mrow></mfrac></mrow><annotation encoding="application/x-tex">V_{\text{eff}}(\mathbf{r}) = V_{\text{ext}}(\mathbf{r}) + e^2 \int \frac{\rho(\mathbf{r}&#39;)}{|\mathbf{r} - \mathbf{r}&#39;|} d^3\mathbf{r}&#39; + \frac{\delta E_{\text{xc}}[\rho]}{\delta \rho(\mathbf{r})}</annotation></semantics></math>
+Because
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>V</mi><mtext mathvariant="normal">eff</mtext></msub><annotation encoding="application/x-tex">V_{\text{eff}}</annotation></semantics></math>
+depends on
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>ρ</mi><mrow><mo stretchy="true" form="prefix">(</mo><mi>𝐫</mi><mo stretchy="true" form="postfix">)</mo></mrow></mrow><annotation encoding="application/x-tex">\rho(\mathbf{r})</annotation></semantics></math>,
+which in turn depends on the unknown wavefunctions
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>ψ</mi><mi>i</mi></msub><mrow><mo stretchy="true" form="prefix">(</mo><mi>𝐫</mi><mo stretchy="true" form="postfix">)</mo></mrow></mrow><annotation encoding="application/x-tex">\psi_i(\mathbf{r})</annotation></semantics></math>,
+the Kohn-Sham equations must be solved iteratively until
+self-consistency is achieved (<strong>Self-Consistent Field,
+SCF</strong>).</p>
+<h2
+id="plane-wave-dft-vs.-linear-combination-of-atomic-orbitals-lcao">Plane-Wave
+DFT vs. Linear Combination of Atomic Orbitals (LCAO)</h2>
+<p>To solve the differential Kohn-Sham equations on a computer, the
+continuous orbitals
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>ψ</mi><mi>i</mi></msub><mrow><mo stretchy="true" form="prefix">(</mo><mi>𝐫</mi><mo stretchy="true" form="postfix">)</mo></mrow></mrow><annotation encoding="application/x-tex">\psi_i(\mathbf{r})</annotation></semantics></math>
+must be expanded in a discrete mathematical basis set:
+<math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>ψ</mi><mi>i</mi></msub><mrow><mo stretchy="true" form="prefix">(</mo><mi>𝐫</mi><mo stretchy="true" form="postfix">)</mo></mrow><mo>=</mo><munder><mo>∑</mo><mi>μ</mi></munder><msub><mi>c</mi><mrow><mi>μ</mi><mi>i</mi></mrow></msub><msub><mi>ϕ</mi><mi>μ</mi></msub><mrow><mo stretchy="true" form="prefix">(</mo><mi>𝐫</mi><mo stretchy="true" form="postfix">)</mo></mrow></mrow><annotation encoding="application/x-tex">\psi_i(\mathbf{r}) = \sum_{\mu} c_{\mu i} \phi_{\mu}(\mathbf{r})</annotation></semantics></math>
+The choice of basis functions
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>ϕ</mi><mi>μ</mi></msub><mrow><mo stretchy="true" form="prefix">(</mo><mi>𝐫</mi><mo stretchy="true" form="postfix">)</mo></mrow></mrow><annotation encoding="application/x-tex">\phi_{\mu}(\mathbf{r})</annotation></semantics></math>
+fundamentally distinguishes computational DFT codes:</p>
+<table>
+<caption>Comparison between plane-wave DFT methods and the localized
+atomic orbital approach in SIESTA.</caption>
+<thead>
+<tr class="header">
+<th style="text-align: left;"><strong>Feature</strong></th>
+<th style="text-align: left;"><strong>Plane-Wave Codes (QE,
+VASP)</strong></th>
+<th style="text-align: left;"><strong>LCAO Codes (SIESTA)</strong></th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;"><strong>Basis Function
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>ϕ</mi><mi>μ</mi></msub><annotation encoding="application/x-tex">\phi_{\mu}</annotation></semantics></math></strong></td>
+<td style="text-align: left;">Orthogonal Fourier waves:
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msup><mi>e</mi><mrow><mi>i</mi><mrow><mo stretchy="true" form="prefix">(</mo><mi>𝐤</mi><mo>+</mo><mi>𝐆</mi><mo stretchy="true" form="postfix">)</mo></mrow><mo>⋅</mo><mi>𝐫</mi></mrow></msup><annotation encoding="application/x-tex">e^{i(\mathbf{k}+\mathbf{G})\cdot\mathbf{r}}</annotation></semantics></math></td>
+<td style="text-align: left;">Strictly localized numerical atomic
+orbitals:
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>R</mi><mrow><mi>n</mi><mi>l</mi></mrow></msub><mrow><mo stretchy="true" form="prefix">(</mo><mi>r</mi><mo stretchy="true" form="postfix">)</mo></mrow><msub><mi>Y</mi><mrow><mi>l</mi><mi>m</mi></mrow></msub><mrow><mo stretchy="true" form="prefix">(</mo><mover><mi>r</mi><mo accent="true">̂</mo></mover><mo stretchy="true" form="postfix">)</mo></mrow></mrow><annotation encoding="application/x-tex">R_{nl}(r) Y_{lm}(\hat{r})</annotation></semantics></math></td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><strong>Systematic
+Convergence</strong></td>
+<td style="text-align: left;">Trivial: increase energy cutoff
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>E</mi><mtext mathvariant="normal">cut</mtext></msub><annotation encoding="application/x-tex">E_{\text{cut}}</annotation></semantics></math></td>
+<td style="text-align: left;">Requires selecting radial cutoffs and
+polarization shells
+(<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>S</mi><mi>Z</mi><mo>,</mo><mi>D</mi><mi>Z</mi><mi>P</mi><mo>,</mo><mi>T</mi><mi>Z</mi><mi>P</mi></mrow><annotation encoding="application/x-tex">SZ, DZP, TZP</annotation></semantics></math>)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;"><strong>Vacuum Efficiency</strong></td>
+<td style="text-align: left;">Very poor: empty vacuum space requires
+plane waves everywhere</td>
+<td style="text-align: left;"><strong>Extremely efficient</strong>:
+empty vacuum has zero orbitals
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mo>⟹</mo><annotation encoding="application/x-tex">\implies</annotation></semantics></math>
+zero compute cost</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><strong>Scaling with Size
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>N</mi><annotation encoding="application/x-tex">N</annotation></semantics></math></strong></td>
+<td style="text-align: left;">Cubic
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>O</mi><mrow><mo stretchy="true" form="prefix">(</mo><msup><mi>N</mi><mn>3</mn></msup><mo stretchy="true" form="postfix">)</mo></mrow></mrow><annotation encoding="application/x-tex">O(N^3)</annotation></semantics></math>
+or
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>O</mi><mrow><mo stretchy="true" form="prefix">(</mo><msup><mi>N</mi><mn>2</mn></msup><mo>log</mo><mi>N</mi><mo stretchy="true" form="postfix">)</mo></mrow></mrow><annotation encoding="application/x-tex">O(N^2 \log N)</annotation></semantics></math>
+FFT cost</td>
+<td style="text-align: left;"><strong>Linear
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>O</mi><mrow><mo stretchy="true" form="prefix">(</mo><mi>N</mi><mo stretchy="true" form="postfix">)</mo></mrow></mrow><annotation encoding="application/x-tex">O(N)</annotation></semantics></math>
+or sparse
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>O</mi><mrow><mo stretchy="true" form="prefix">(</mo><mi>N</mi><mo stretchy="true" form="postfix">)</mo></mrow></mrow><annotation encoding="application/x-tex">O(N)</annotation></semantics></math>
+Hamiltonian</strong></td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;"><strong>Sparsity</strong></td>
+<td style="text-align: left;">Dense matrices in real space</td>
+<td style="text-align: left;"><strong>Strictly sparse Hamiltonian &amp;
+Overlap matrices</strong></td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><strong>Ideal Applications</strong></td>
+<td style="text-align: left;">Dense 3D metals, isotropic bulk
+solids</td>
+<td style="text-align: left;"><strong>Surface slabs, 2D layers, large
+clusters, nanoribbons, biomolecules</strong></td>
+</tr>
+</tbody>
+</table>
+<h2 id="why-siesta-the-on-localized-orbital-paradigm">Why SIESTA? The
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>O</mi><mrow><mo stretchy="true" form="prefix">(</mo><mi>N</mi><mo stretchy="true" form="postfix">)</mo></mrow></mrow><annotation encoding="application/x-tex">O(N)</annotation></semantics></math>
+Localized Orbital Paradigm</h2>
+<p>SIESTA (<em>Spanish Initiative for Electronic Simulations with
+Thousands of Atoms</em>) was conceived by Emilio Artacho, Alberto
+Garc<span>í</span>a, Julian Gale, Javier Junquera, Richard Martin, Pablo
+Ordej<span>ó</span>n, Daniel S<span>á</span>nchez-Portal, and
+Jos<span>é</span> M. Soler.</p>
+<p>The defining breakthrough of SIESTA is that its basis orbitals
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>ϕ</mi><mi>μ</mi></msub><mrow><mo stretchy="true" form="prefix">(</mo><mi>𝐫</mi><mo stretchy="true" form="postfix">)</mo></mrow></mrow><annotation encoding="application/x-tex">\phi_{\mu}(\mathbf{r})</annotation></semantics></math>
+are <strong>strictly zero</strong> beyond a finite cutoff radius
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>r</mi><mrow><mi>c</mi><mo>,</mo><mi>μ</mi></mrow></msub><annotation encoding="application/x-tex">r_{c,\mu}</annotation></semantics></math>:
+<math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>ϕ</mi><mi>μ</mi></msub><mrow><mo stretchy="true" form="prefix">(</mo><mi>𝐫</mi><mo stretchy="true" form="postfix">)</mo></mrow><mo>≡</mo><mn>0</mn><mspace width="1.0em"></mspace><mrow><mtext mathvariant="normal">for </mtext><mspace width="0.333em"></mspace></mrow><mrow><mo stretchy="true" form="prefix">|</mo><mi>𝐫</mi><mo>−</mo><msub><mi>𝐑</mi><mi>I</mi></msub><mo stretchy="true" form="postfix">|</mo></mrow><mo>&gt;</mo><msub><mi>r</mi><mrow><mi>c</mi><mo>,</mo><mi>μ</mi></mrow></msub></mrow><annotation encoding="application/x-tex">\phi_{\mu}(\mathbf{r}) \equiv 0 \quad \text{for } |\mathbf{r} - \mathbf{R}_I| &gt; r_{c,\mu}</annotation></semantics></math>
+Because orbitals strictly vanish beyond
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>r</mi><mi>c</mi></msub><annotation encoding="application/x-tex">r_c</annotation></semantics></math>,
+the overlap matrix
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>S</mi><mrow><mi>μ</mi><mi>ν</mi></mrow></msub><mo>=</mo><mo stretchy="false" form="prefix">⟨</mo><msub><mi>ϕ</mi><mi>μ</mi></msub><mo stretchy="false" form="prefix">|</mo><msub><mi>ϕ</mi><mi>ν</mi></msub><mo stretchy="false" form="postfix">⟩</mo></mrow><annotation encoding="application/x-tex">S_{\mu\nu} = \langle \phi_{\mu} | \phi_{\nu} \rangle</annotation></semantics></math>
+and Hamiltonian matrix
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>H</mi><mrow><mi>μ</mi><mi>ν</mi></mrow></msub><mo>=</mo><mo stretchy="false" form="prefix">⟨</mo><msub><mi>ϕ</mi><mi>μ</mi></msub><mrow><mo stretchy="true" form="prefix">|</mo><mover><mi>H</mi><mo accent="true">̂</mo></mover><mo stretchy="true" form="postfix">|</mo></mrow><msub><mi>ϕ</mi><mi>ν</mi></msub><mo stretchy="false" form="postfix">⟩</mo></mrow><annotation encoding="application/x-tex">H_{\mu\nu} = \langle \phi_{\mu} | \hat{H} | \phi_{\nu} \rangle</annotation></semantics></math>
+are <strong>sparse banded matrices</strong>: matrix elements are
+strictly zero unless two atoms are within distance
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>r</mi><mrow><mi>c</mi><mo>,</mo><mi>μ</mi></mrow></msub><mo>+</mo><msub><mi>r</mi><mrow><mi>c</mi><mo>,</mo><mi>ν</mi></mrow></msub></mrow><annotation encoding="application/x-tex">r_{c,\mu} + r_{c,\nu}</annotation></semantics></math>.
+As a direct consequence:</p>
+<ul>
+<li><p>Matrix construction scales strictly as
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>𝒪</mi><mrow><mo stretchy="true" form="prefix">(</mo><mi>N</mi><mo stretchy="true" form="postfix">)</mo></mrow></mrow><annotation encoding="application/x-tex">\mathcal{O}(N)</annotation></semantics></math>.</p></li>
+<li><p>Storing matrices requires memory proportional to
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>𝒪</mi><mrow><mo stretchy="true" form="prefix">(</mo><mi>N</mi><mo stretchy="true" form="postfix">)</mo></mrow></mrow><annotation encoding="application/x-tex">\mathcal{O}(N)</annotation></semantics></math>
+rather than
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>𝒪</mi><mrow><mo stretchy="true" form="prefix">(</mo><msup><mi>N</mi><mn>2</mn></msup><mo stretchy="true" form="postfix">)</mo></mrow></mrow><annotation encoding="application/x-tex">\mathcal{O}(N^2)</annotation></semantics></math>.</p></li>
+<li><p>Systems comprising thousands of atoms (e.g.
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>F</mi><mi>A</mi><mi>P</mi><mi>b</mi><msub><mi>I</mi><mn>3</mn></msub></mrow><annotation encoding="application/x-tex">FAPbI_3</annotation></semantics></math>
+perovskite slabs with organic ligands) can be calculated on standard
+computing clusters where plane-wave codes would run out of
+memory.</p></li>
+</ul>
+<h1 id="the-fdf-flexible-data-format-language">The FDF (Flexible Data
+Format) Language</h1>
+<h2 id="syntax-tokens-and-data-blocks">Syntax, Tokens, and Data
+Blocks</h2>
+<p>All control parameters, structural descriptions, and calculation
+directives in SIESTA are provided through a unified plain-text file
+known as the <strong>FDF (Flexible Data Format)</strong> file
+(conventionally named with the <code>.fdf</code> extension).</p>
+<p>Key rules of the FDF format:</p>
+<ol>
+<li><p><strong>Case Insensitivity:</strong> FDF keywords are
+case-insensitive. <code>MeshCutoff</code>, <code>meshcutoff</code>, and
+<code>Mesh.Cutoff</code> resolve to the exact same parameter.</p></li>
+<li><p><strong>Punctuation Tolerance:</strong> Characters like periods
+(<code>.</code>), hyphens (<code>-</code>), and underscores
+(<code>_</code>) in variable names are largely treated as
+interchangeable separators in modern SIESTA versions.</p></li>
+<li><p><strong>Single Values:</strong> Specified as
+<code>Keyword Value [Unit]</code>:</p>
+<pre><code>MeshCutoff         350.0 Ry
+ElectronicTemperature  25.0 meV</code></pre></li>
+<li><p><strong>Logical Values:</strong> Booleans can be specified using
+<code>true</code>/<code>false</code>, <code>yes</code>/<code>no</code>,
+or single letters <code>T</code>/<code>F</code>.</p></li>
+<li><p><strong>Data Blocks:</strong> Structured arrays, coordinate
+tables, and matrix specifications are enclosed in
+<code>%block BlockName</code> and <code>%endblock BlockName</code>:</p>
+<pre><code>%block ChemicalSpeciesLabel
+  1   14  Si      Si.psf
+%endblock ChemicalSpeciesLabel</code></pre></li>
+<li><p><strong>Comments:</strong> Any text preceded by <code>#</code> or
+<code>!</code> is treated as a comment and ignored by the
+parser.</p></li>
+</ol>
+<h2 id="physical-dimensions-and-unit-scaling">Physical Dimensions and
+Unit Scaling</h2>
+<p>SIESTA provides automatic physical unit conversion. A user can
+specify units in their preferred scientific convention, and SIESTA
+internally scales them to atomic units (Hartree, Bohr):</p>
+<table>
+<caption>Supported physical units and dimensional scaling in SIESTA FDF
+files.</caption>
+<thead>
+<tr class="header">
+<th style="text-align: left;"><strong>Physical Quantity</strong></th>
+<th style="text-align: left;"><strong>Supported FDF Units</strong></th>
+<th style="text-align: left;"><strong>Common Conversions</strong></th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">Length</td>
+<td style="text-align: left;"><code>Ang</code>, <code>Bohr</code>,
+<code>nm</code>, <code>pm</code></td>
+<td
+style="text-align: left;"><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>1</mn><mrow><mspace width="0.333em"></mspace><mtext mathvariant="normal"> Å</mtext></mrow><mo>=</mo><msup><mn>10</mn><mrow><mo>−</mo><mn>10</mn></mrow></msup><mrow><mspace width="0.333em"></mspace><mtext mathvariant="normal"> m</mtext></mrow><mo>≈</mo><mn>1.889726</mn><mrow><mspace width="0.333em"></mspace><mtext mathvariant="normal"> Bohr</mtext></mrow></mrow><annotation encoding="application/x-tex">1\text{ \AA} = 10^{-10}\text{ m} \approx 1.889726\text{ Bohr}</annotation></semantics></math></td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Energy</td>
+<td style="text-align: left;"><code>eV</code>, <code>Ry</code>,
+<code>Hartree</code>, <code>kcal/mol</code>, <code>kJ/mol</code>,
+<code>meV</code></td>
+<td
+style="text-align: left;"><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>1</mn><mrow><mspace width="0.333em"></mspace><mtext mathvariant="normal"> Ry</mtext></mrow><mo>=</mo><mn>13.60569</mn><mrow><mspace width="0.333em"></mspace><mtext mathvariant="normal"> eV</mtext></mrow><mo>=</mo><mn>0.5</mn><mrow><mspace width="0.333em"></mspace><mtext mathvariant="normal"> Hartree</mtext></mrow></mrow><annotation encoding="application/x-tex">1\text{ Ry} = 13.60569\text{ eV} = 0.5\text{ Hartree}</annotation></semantics></math></td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Pressure / Stress</td>
+<td style="text-align: left;"><code>GPa</code>, <code>kBar</code>,
+<code>bar</code>, <code>Pa</code>, <code>Ry/Bohr**3</code>,
+<code>eV/Ang**3</code></td>
+<td
+style="text-align: left;"><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>1</mn><mrow><mspace width="0.333em"></mspace><mtext mathvariant="normal"> GPa</mtext></mrow><mo>=</mo><mn>10</mn><mrow><mspace width="0.333em"></mspace><mtext mathvariant="normal"> kBar</mtext></mrow><mo>=</mo><mn>0.0062415</mn><msup><mrow><mspace width="0.333em"></mspace><mtext mathvariant="normal"> eV/Å</mtext></mrow><mn>3</mn></msup></mrow><annotation encoding="application/x-tex">1\text{ GPa} = 10\text{ kBar} = 0.0062415\text{ eV/\AA}^3</annotation></semantics></math></td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Force</td>
+<td style="text-align: left;"><code>eV/Ang</code>, <code>Ry/Bohr</code>,
+<code>Hartree/Bohr</code></td>
+<td
+style="text-align: left;"><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>1</mn><mrow><mspace width="0.333em"></mspace><mtext mathvariant="normal"> eV/Å</mtext></mrow><mo>≈</mo><mn>0.036749</mn><mrow><mspace width="0.333em"></mspace><mtext mathvariant="normal"> Ry/Bohr</mtext></mrow></mrow><annotation encoding="application/x-tex">1\text{ eV/\AA} \approx 0.036749\text{ Ry/Bohr}</annotation></semantics></math></td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Temperature</td>
+<td style="text-align: left;"><code>K</code>, <code>eV</code>,
+<code>meV</code>, <code>Ry</code></td>
+<td
+style="text-align: left;"><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>1</mn><mrow><mspace width="0.333em"></mspace><mtext mathvariant="normal"> eV</mtext></mrow><mo>≈</mo><mn>11604.5</mn><mrow><mspace width="0.333em"></mspace><mtext mathvariant="normal"> K</mtext></mrow><mo>,</mo><mspace width="1.0em"></mspace><mn>300</mn><mrow><mspace width="0.333em"></mspace><mtext mathvariant="normal"> K</mtext></mrow><mo>≈</mo><mn>25.85</mn><mrow><mspace width="0.333em"></mspace><mtext mathvariant="normal"> meV</mtext></mrow></mrow><annotation encoding="application/x-tex">1\text{ eV} \approx 11604.5\text{ K}, \quad 300\text{ K} \approx 25.85\text{ meV}</annotation></semantics></math></td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Time</td>
+<td style="text-align: left;"><code>fs</code>, <code>ps</code>,
+<code>s</code>, <code>mins</code>, <code>hours</code>,
+<code>days</code></td>
+<td
+style="text-align: left;"><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>1</mn><mrow><mspace width="0.333em"></mspace><mtext mathvariant="normal"> fs</mtext></mrow><mo>=</mo><msup><mn>10</mn><mrow><mo>−</mo><mn>15</mn></mrow></msup><mrow><mspace width="0.333em"></mspace><mtext mathvariant="normal"> s</mtext></mrow></mrow><annotation encoding="application/x-tex">1\text{ fs} = 10^{-15}\text{ s}</annotation></semantics></math></td>
+</tr>
+</tbody>
+</table>
+<h1 id="crystal-structure-lattice-geometry-setup">Crystal Structure,
+Lattice &amp; Geometry Setup</h1>
+<h2 id="lattice-representation-vectors-vs.-parameters">Lattice
+Representation: Vectors vs. Parameters</h2>
+<p>Every periodic calculation requires defining the unit cell Bravais
+lattice. In SIESTA, this is governed by the global scaling parameter
+<code>LatticeConstant</code> and one of two mutually exclusive
+blocks:</p>
+<h3 id="option-a-explicit-lattice-vectors-recommended">Option A:
+Explicit Lattice Vectors (Recommended)</h3>
+<pre><code>LatticeConstant 1.0 Ang
+%block LatticeVectors
+  12.640000   0.000000   0.000000
+   0.000000  12.640000   0.000000
+   0.000000   0.000000  36.000000
+%endblock LatticeVectors</code></pre>
+<p>Here, each row represents the Cartesian components of basis vectors
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>𝐚</mi><mn>1</mn></msub><mo>,</mo><msub><mi>𝐚</mi><mn>2</mn></msub><mo>,</mo><msub><mi>𝐚</mi><mn>3</mn></msub></mrow><annotation encoding="application/x-tex">\mathbf{a}_1, \mathbf{a}_2, \mathbf{a}_3</annotation></semantics></math>.
+Because <code>LatticeConstant</code> is set to <code>1.0 Ang</code>, the
+numbers inside the block represent absolute Cartesian lengths in
+Ångstr<span>ö</span>ms.</p>
+<h3 id="option-b-crystallographic-lattice-parameters">Option B:
+Crystallographic Lattice Parameters</h3>
+<pre><code>LatticeConstant 5.4307 Ang
+%block LatticeParameters
+  1.0  1.0  1.0  90.0  90.0  90.0
+%endblock LatticeParameters</code></pre>
+<p>The row defines
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>a</mi><mi>/</mi><msub><mi>a</mi><mn>0</mn></msub><mo>,</mo><mi>b</mi><mi>/</mi><msub><mi>a</mi><mn>0</mn></msub><mo>,</mo><mi>c</mi><mi>/</mi><msub><mi>a</mi><mn>0</mn></msub><mo>,</mo><mi>α</mi><mo>,</mo><mi>β</mi><mo>,</mo><mi>γ</mi></mrow><annotation encoding="application/x-tex">a/a_0, b/a_0, c/a_0, \alpha, \beta, \gamma</annotation></semantics></math>,
+where
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>α</mi><annotation encoding="application/x-tex">\alpha</annotation></semantics></math>
+is the angle between
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>𝐚</mi><mn>2</mn></msub><annotation encoding="application/x-tex">\mathbf{a}_2</annotation></semantics></math>
+and
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>𝐚</mi><mn>3</mn></msub><annotation encoding="application/x-tex">\mathbf{a}_3</annotation></semantics></math>,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>β</mi><annotation encoding="application/x-tex">\beta</annotation></semantics></math>
+between
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>𝐚</mi><mn>1</mn></msub><annotation encoding="application/x-tex">\mathbf{a}_1</annotation></semantics></math>
+and
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>𝐚</mi><mn>3</mn></msub><annotation encoding="application/x-tex">\mathbf{a}_3</annotation></semantics></math>,
+and
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>γ</mi><annotation encoding="application/x-tex">\gamma</annotation></semantics></math>
+between
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>𝐚</mi><mn>1</mn></msub><annotation encoding="application/x-tex">\mathbf{a}_1</annotation></semantics></math>
+and
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>𝐚</mi><mn>2</mn></msub><annotation encoding="application/x-tex">\mathbf{a}_2</annotation></semantics></math>.</p>
+<h2 id="atomic-coordinates-formats">Atomic Coordinates Formats</h2>
+<p>The spatial positions of all atoms in the simulation cell are
+declared in the <code>%block AtomicCoordinatesAndAtomicSpecies</code>
+block. The interpretation of these coordinates is dictated by
+<code>AtomicCoordinatesFormat</code>:</p>
+<ul>
+<li><p><code>Fractional</code>: Dimensionless crystal coordinates
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="true" form="prefix">(</mo><mi>u</mi><mo>,</mo><mi>v</mi><mo>,</mo><mi>w</mi><mo stretchy="true" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">(u, v, w)</annotation></semantics></math>
+such that position
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>𝐑</mi><mo>=</mo><mi>u</mi><msub><mi>𝐚</mi><mn>1</mn></msub><mo>+</mo><mi>v</mi><msub><mi>𝐚</mi><mn>2</mn></msub><mo>+</mo><mi>w</mi><msub><mi>𝐚</mi><mn>3</mn></msub></mrow><annotation encoding="application/x-tex">\mathbf{R} = u \mathbf{a}_1 + v \mathbf{a}_2 + w \mathbf{a}_3</annotation></semantics></math>,
+with
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>0</mn><mo>≤</mo><mi>u</mi><mo>,</mo><mi>v</mi><mo>,</mo><mi>w</mi><mo>&lt;</mo><mn>1</mn></mrow><annotation encoding="application/x-tex">0 \le u, v, w &lt; 1</annotation></semantics></math>.</p></li>
+<li><p><code>NotScaledCartesianAng</code>: Unscaled Cartesian
+coordinates
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="true" form="prefix">(</mo><mi>x</mi><mo>,</mo><mi>y</mi><mo>,</mo><mi>z</mi><mo stretchy="true" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">(x, y, z)</annotation></semantics></math>
+in Ångstr<span>ö</span>ms.</p></li>
+<li><p><code>NotScaledCartesianBohr</code>: Unscaled Cartesian
+coordinates in atomic units (Bohr).</p></li>
+<li><p><code>ScaledCartesian</code>: Cartesian coordinates multiplied by
+the global <code>LatticeConstant</code>.</p></li>
+</ul>
+<pre><code>AtomicCoordinatesFormat Fractional
+%block AtomicCoordinatesAndAtomicSpecies
+  0.00000000  0.00000000  0.15000000  1   # Pb atom at bottom
+  0.50000000  0.50000000  0.15000000  2   # I atom
+%endblock AtomicCoordinatesAndAtomicSpecies</code></pre>
+<p>The fourth column is the integer species index corresponding to the
+sequential index in <code>%block ChemicalSpeciesLabel</code>.</p>
+<h2 id="surface-slabs-vacuum-padding-and-dipole-correction">Surface
+Slabs, Vacuum Padding, and Dipole Correction</h2>
+<p>When modeling surfaces, interfaces, or 2D materials (graphene,
+perovskite nanosheets, transition metal dichalcogenides),
+three-dimensional periodic boundary conditions (PBC) are still enforced
+by the FFT grid. To prevent spurious electronic interactions between
+periodic vertical images of the slab along the surface normal
+(<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>z</mi><annotation encoding="application/x-tex">z</annotation></semantics></math>),
+one must:</p>
+<ol>
+<li><p><strong>Add Sufficient Vacuum:</strong> Typically
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>15</mn><mrow><mspace width="0.333em"></mspace><mtext mathvariant="normal"> Å</mtext></mrow><mo>≤</mo><msub><mi>d</mi><mtext mathvariant="normal">vac</mtext></msub><mo>≤</mo><mn>25</mn><mrow><mspace width="0.333em"></mspace><mtext mathvariant="normal"> Å</mtext></mrow></mrow><annotation encoding="application/x-tex">15\text{ \AA} \le d_{\text{vac}} \le 25\text{ \AA}</annotation></semantics></math>
+between the highest atom of one slab and the lowest atom of the periodic
+replica.</p></li>
+<li><p><strong>Center the Slab:</strong> Shift atomic coordinates so the
+vacuum is evenly split above and below the material
+(<code>AtomicCoordinatesOrigin COP-Z</code>).</p></li>
+<li><p><strong>Apply Dipole Correction:</strong> If the slab is
+asymmetric (e.g., polar surface termination or molecule adsorbed on one
+side only), an artificial net dipole moment
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>𝐩</mi><annotation encoding="application/x-tex">\mathbf{p}</annotation></semantics></math>
+arises across the cell. This induces a fictitious linear electric field
+across the vacuum. Setting:</p>
+<pre><code>Slab.DipoleCorrection true</code></pre>
+<p>instructs SIESTA to introduce an internal compensating dipole sheet
+in the vacuum gap, flattening the potential and yielding exact,
+uncorrupted work functions.</p></li>
+</ol>
+<h1 id="pseudopotentials-pao-basis-sets">Pseudopotentials &amp; PAO
+Basis Sets</h1>
+<h2
+id="the-pseudopotential-concept-norm-conservation-kleinman-bylander">The
+Pseudopotential Concept (Norm-Conservation &amp; Kleinman-Bylander)</h2>
+<p>Core electrons (e.g.
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>1</mn><msup><mi>s</mi><mn>2</mn></msup><mn>2</mn><msup><mi>s</mi><mn>2</mn></msup><mn>2</mn><msup><mi>p</mi><mn>6</mn></msup></mrow><annotation encoding="application/x-tex">1s^2 2s^2 2p^6</annotation></semantics></math>
+in Silicon) are tightly bound to the nucleus and chemically inert.
+However, their wavefunctions oscillate violently near the core to
+maintain orthogonality with deeper shells. In pseudopotential
+theory:</p>
+<ol>
+<li><p>Core electrons and the nuclear Coulomb potential are replaced by
+an effective smooth <strong>pseudopotential</strong>
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>V</mi><mtext mathvariant="normal">pseudo</mtext></msub><mrow><mo stretchy="true" form="prefix">(</mo><mi>r</mi><mo stretchy="true" form="postfix">)</mo></mrow></mrow><annotation encoding="application/x-tex">V_{\text{pseudo}}(r)</annotation></semantics></math>.</p></li>
+<li><p>Beyond a core radius
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>r</mi><mi>c</mi></msub><annotation encoding="application/x-tex">r_c</annotation></semantics></math>,
+the pseudo-wavefunction
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mover><mi>ψ</mi><mo accent="true">̃</mo></mover><mrow><mo stretchy="true" form="prefix">(</mo><mi>r</mi><mo stretchy="true" form="postfix">)</mo></mrow></mrow><annotation encoding="application/x-tex">\tilde{\psi}(r)</annotation></semantics></math>
+matches the all-electron wavefunction
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>ψ</mi><mrow><mo stretchy="true" form="prefix">(</mo><mi>r</mi><mo stretchy="true" form="postfix">)</mo></mrow></mrow><annotation encoding="application/x-tex">\psi(r)</annotation></semantics></math>
+exactly.</p></li>
+<li><p>Under <strong>norm-conservation</strong>, the integral of
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msup><mrow><mo stretchy="true" form="prefix">|</mo><mover><mi>ψ</mi><mo accent="true">̃</mo></mover><mrow><mo stretchy="true" form="prefix">(</mo><mi>r</mi><mo stretchy="true" form="postfix">)</mo></mrow><mo stretchy="true" form="postfix">|</mo></mrow><mn>2</mn></msup><annotation encoding="application/x-tex">|\tilde{\psi}(r)|^2</annotation></semantics></math>
+inside
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>r</mi><mi>c</mi></msub><annotation encoding="application/x-tex">r_c</annotation></semantics></math>
+equals that of the all-electron wavefunction, ensuring correct
+electrostatic scattering properties across varying chemical
+environments.</p></li>
+</ol>
+<p>SIESTA requires norm-conserving pseudopotentials in the separable
+<strong>Kleinman-Bylander (KB)</strong> form:
+<math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mover><mi>V</mi><mo accent="true">̂</mo></mover><mtext mathvariant="normal">NL</mtext></msub><mo>=</mo><munder><mo>∑</mo><mrow><mi>l</mi><mo>,</mo><mi>m</mi></mrow></munder><mfrac><mrow><mo stretchy="true" form="prefix">|</mo><msub><mi>χ</mi><mrow><mi>l</mi><mi>m</mi></mrow></msub><mo stretchy="false" form="postfix">⟩</mo><mo stretchy="false" form="prefix">⟨</mo><msub><mi>χ</mi><mrow><mi>l</mi><mi>m</mi></mrow></msub><mo stretchy="true" form="postfix">|</mo></mrow><mrow><mo stretchy="false" form="prefix">⟨</mo><msub><mi>χ</mi><mrow><mi>l</mi><mi>m</mi></mrow></msub><mrow><mo stretchy="true" form="prefix">|</mo><mi>δ</mi><msub><mi>V</mi><mi>l</mi></msub><mo stretchy="true" form="postfix">|</mo></mrow><msub><mi>χ</mi><mrow><mi>l</mi><mi>m</mi></mrow></msub><mo stretchy="false" form="postfix">⟩</mo></mrow></mfrac></mrow><annotation encoding="application/x-tex">\hat{V}_{\text{NL}} = \sum_{l,m} \frac{| \chi_{lm} \rangle \langle \chi_{lm} |}{\langle \chi_{lm} | \delta V_l | \chi_{lm} \rangle}</annotation></semantics></math></p>
+<h2
+id="pseudopotential-file-formats-psf-and-modern-psml">Pseudopotential
+File Formats: PSF and Modern PSML</h2>
+<ul>
+<li><p><strong>PSF (Traditional ASCII Format):</strong> Stores radial
+grid data, logarithmic derivatives, and local/non-local projectors.
+Named <code>[Element].psf</code> (e.g., <code>Pb.psf</code>,
+<code>I.psf</code>).</p></li>
+<li><p><strong>PSML (Pseudopotential Markup Language):</strong> The
+modern XML-based standard adopted by SIESTA 5.x. Enables full provenance
+tracking, relativistic spin-orbit projectors, and semicore configuration
+verification.</p></li>
+</ul>
+<h2 id="numerical-atomic-orbitals-naos-and-basis-cardinality">Numerical
+Atomic Orbitals (NAOs) and Basis Cardinality</h2>
+<p>Unlike Gaussian orbitals used in quantum chemistry, SIESTA computes
+radial basis functions numerically by solving the
+Schr<span>ö</span>dinger equation for the isolated pseudo-atom enclosed
+in a spherical confinement well:
+<math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>ϕ</mi><mrow><mi>n</mi><mi>l</mi><mi>m</mi></mrow></msub><mrow><mo stretchy="true" form="prefix">(</mo><mi>𝐫</mi><mo stretchy="true" form="postfix">)</mo></mrow><mo>=</mo><msub><mi>R</mi><mrow><mi>n</mi><mi>l</mi></mrow></msub><mrow><mo stretchy="true" form="prefix">(</mo><mi>r</mi><mo stretchy="true" form="postfix">)</mo></mrow><msub><mi>Y</mi><mrow><mi>l</mi><mi>m</mi></mrow></msub><mrow><mo stretchy="true" form="prefix">(</mo><mover><mi>𝐫</mi><mo accent="true">̂</mo></mover><mo stretchy="true" form="postfix">)</mo></mrow></mrow><annotation encoding="application/x-tex">\phi_{nlm}(\mathbf{r}) = R_{nl}(r) Y_{lm}(\hat{\mathbf{r}})</annotation></semantics></math>
+The basis set hierarchy is defined by <code>PAO.BasisSize</code>:</p>
+<ul>
+<li><p><strong><code>SZ</code> (Single-Zeta):</strong> Minimal basis.
+Exactly one radial function per valence orbital (e.g. for Carbon
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>2</mn><mi>s</mi><mo>,</mo><mn>2</mn><mi>p</mi></mrow><annotation encoding="application/x-tex">2s, 2p</annotation></semantics></math>:
+1
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>s</mi><annotation encoding="application/x-tex">s</annotation></semantics></math>
+function and 3
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>p</mi><annotation encoding="application/x-tex">p</annotation></semantics></math>
+functions = 4 basis functions). Fast, qualitative.</p></li>
+<li><p><strong><code>DZ</code> (Double-Zeta):</strong> Two radial
+functions per valence orbital
+(<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>2</mn><mi>s</mi><mo>,</mo><mn>2</mn><mi>s</mi><mi>′</mi><mo>,</mo><mn>2</mn><mi>p</mi><mo>,</mo><mn>2</mn><mi>p</mi><mi>′</mi></mrow><annotation encoding="application/x-tex">2s, 2s&#39;, 2p, 2p&#39;</annotation></semantics></math>).
+Essential for chemical bonding and valence deformation.</p></li>
+<li><p><strong><code>DZP</code> (Double-Zeta Polarized):</strong>
+<strong>The standard for production research.</strong> Takes
+<code>DZ</code> and adds a polarization shell with angular momentum
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>l</mi><mo>+</mo><mn>1</mn></mrow><annotation encoding="application/x-tex">l+1</annotation></semantics></math>
+(e.g. adds
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>3</mn><mi>d</mi></mrow><annotation encoding="application/x-tex">3d</annotation></semantics></math>
+orbitals to Carbon
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>2</mn><mi>p</mi></mrow><annotation encoding="application/x-tex">2p</annotation></semantics></math>).
+Allows electron clouds to distort under asymmetric surface
+fields.</p></li>
+<li><p><strong><code>TZP</code> / <code>TZ2P</code>:</strong>
+Triple-zeta with multiple polarization shells. High-precision limit,
+approaching the complete basis set (CBS) plane-wave accuracy.</p></li>
+</ul>
+<h2 id="the-spatial-confinement-parameter-pao.energyshift">The Spatial
+Confinement Parameter: <code>PAO.EnergyShift</code></h2>
+<p>How does SIESTA determine where to truncate the orbital so it
+strictly equals zero at
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>r</mi><mi>c</mi></msub><annotation encoding="application/x-tex">r_c</annotation></semantics></math>?
+Instead of forcing the user to guess radii for every shell of every
+element, SIESTA provides the universal thermodynamic parameter
+<code>PAO.EnergyShift</code>:
+<math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>δ</mi><mi>E</mi><mo>=</mo><mfrac><mrow><msup><mi>ℏ</mi><mn>2</mn></msup><msup><mi>π</mi><mn>2</mn></msup></mrow><mrow><mn>2</mn><msub><mi>m</mi><mi>e</mi></msub><msubsup><mi>r</mi><mrow><mi>c</mi><mo>,</mo><mi>n</mi><mi>l</mi></mrow><mn>2</mn></msubsup></mrow></mfrac></mrow><annotation encoding="application/x-tex">\delta E = \frac{\hbar^2 \pi^2}{2 m_e r_{c,nl}^2}</annotation></semantics></math></p>
+<ul>
+<li><p><strong>Physical Meaning:</strong> It represents the energy
+increase experienced by an electron when it is confined inside a
+spherical box of radius
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>r</mi><mi>c</mi></msub><annotation encoding="application/x-tex">r_c</annotation></semantics></math>.</p></li>
+<li><p><strong>Standard Value:</strong> Default is <code>100 meV</code>
+to <code>250 meV</code>.</p></li>
+<li><p><strong>Behavior:</strong> A <em>smaller</em> energy shift (e.g.
+<code>50 meV</code>) gives a larger
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>r</mi><mi>c</mi></msub><annotation encoding="application/x-tex">r_c</annotation></semantics></math>,
+expanding the basis set to capture diffuse vacuum states at the cost of
+denser matrices. A <em>larger</em> energy shift (e.g.
+<code>300 meV</code>) makes orbitals more compact and faster, but may
+under-represent surface dipole relaxation.</p></li>
+</ul>
+<h1 id="real-space-grid-exchange-correlation-xc">Real-Space Grid &amp;
+Exchange-Correlation (XC)</h1>
+<h2 id="the-real-space-mesh-and-meshcutoff">The Real-Space Mesh and
+<code>MeshCutoff</code></h2>
+<p>While Hamiltonian and overlap matrices are computed on atomic basis
+orbitals, the electron density
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>ρ</mi><mrow><mo stretchy="true" form="prefix">(</mo><mi>𝐫</mi><mo stretchy="true" form="postfix">)</mo></mrow></mrow><annotation encoding="application/x-tex">\rho(\mathbf{r})</annotation></semantics></math>
+and Hartree/XC potentials are represented on a 3D regular Cartesian
+real-space grid. The grid fineness is specified by
+<code>MeshCutoff</code>:
+<math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>E</mi><mtext mathvariant="normal">cut</mtext></msub><mo>=</mo><mfrac><mrow><msup><mi>ℏ</mi><mn>2</mn></msup><msubsup><mi>k</mi><mtext mathvariant="normal">max</mtext><mn>2</mn></msubsup></mrow><mrow><mn>2</mn><msub><mi>m</mi><mi>e</mi></msub></mrow></mfrac><mo>⟹</mo><mi>Δ</mi><mi>x</mi><mo>≈</mo><mfrac><mi>π</mi><msub><mi>k</mi><mtext mathvariant="normal">max</mtext></msub></mfrac><mo>=</mo><mfrac><mi>π</mi><msqrt><mrow><mn>2</mn><msub><mi>m</mi><mi>e</mi></msub><msub><mi>E</mi><mtext mathvariant="normal">cut</mtext></msub></mrow></msqrt></mfrac></mrow><annotation encoding="application/x-tex">E_{\text{cut}} = \frac{\hbar^2 k_{\text{max}}^2}{2 m_e} \implies \Delta x \approx \frac{\pi}{k_{\text{max}}} = \frac{\pi}{\sqrt{2 m_e E_{\text{cut}}}}</annotation></semantics></math></p>
+<ul>
+<li><p>For
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>E</mi><mtext mathvariant="normal">cut</mtext></msub><mo>=</mo><mn>200</mn><mrow><mspace width="0.333em"></mspace><mtext mathvariant="normal"> Ry</mtext></mrow><mo>⟹</mo><mi>Δ</mi><mi>x</mi><mo>≈</mo><mn>0.12</mn><mrow><mspace width="0.333em"></mspace><mtext mathvariant="normal"> Å</mtext></mrow></mrow><annotation encoding="application/x-tex">E_{\text{cut}} = 200\text{ Ry} \implies \Delta x \approx 0.12\text{ \AA}</annotation></semantics></math>.</p></li>
+<li><p>For
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>E</mi><mtext mathvariant="normal">cut</mtext></msub><mo>=</mo><mn>350</mn><mrow><mspace width="0.333em"></mspace><mtext mathvariant="normal"> Ry</mtext></mrow><mo>⟹</mo><mi>Δ</mi><mi>x</mi><mo>≈</mo><mn>0.09</mn><mrow><mspace width="0.333em"></mspace><mtext mathvariant="normal"> Å</mtext></mrow></mrow><annotation encoding="application/x-tex">E_{\text{cut}} = 350\text{ Ry} \implies \Delta x \approx 0.09\text{ \AA}</annotation></semantics></math>.</p></li>
+<li><p><strong>Rule of Thumb:</strong> Always perform a mesh cutoff
+convergence test. Standard semiconductors require
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>250</mn><mtext mathvariant="normal">–</mtext><mn>350</mn><mrow><mspace width="0.333em"></mspace><mtext mathvariant="normal"> Ry</mtext></mrow></mrow><annotation encoding="application/x-tex">250\text{--}350\text{ Ry}</annotation></semantics></math>.
+Highly localized elements
+(<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>O</mi><mo>,</mo><mi>F</mi><mo>,</mo><mi>F</mi><mi>e</mi></mrow><annotation encoding="application/x-tex">O, F, Fe</annotation></semantics></math>)
+require
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>350</mn><mtext mathvariant="normal">–</mtext><mn>450</mn><mrow><mspace width="0.333em"></mspace><mtext mathvariant="normal"> Ry</mtext></mrow></mrow><annotation encoding="application/x-tex">350\text{--}450\text{ Ry}</annotation></semantics></math>.</p></li>
+</ul>
+<h2 id="the-eggbox-effect">The Eggbox Effect</h2>
+<p>Because the real-space grid is discrete and does not automatically
+displace with the atoms as they move, shifting an atom across grid
+points induces an artificial periodic ripple in the total energy and
+forces, termed the <strong>eggbox effect</strong>:</p>
+<ul>
+<li><p><strong>Remedy 1:</strong> Increase <code>MeshCutoff</code>
+(<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo>&gt;</mo><mn>300</mn><mrow><mspace width="0.333em"></mspace><mtext mathvariant="normal"> Ry</mtext></mrow></mrow><annotation encoding="application/x-tex">&gt; 300\text{ Ry}</annotation></semantics></math>).</p></li>
+<li><p><strong>Remedy 2:</strong> Use modern grid-cell sampling
+(<code>GridCellSampling true</code>).</p></li>
+<li><p><strong>Remedy 3:</strong> Use soft confinement potentials
+(<code>PAO.SoftDefault true</code>) to smooth the orbital second
+derivatives near
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>r</mi><mi>c</mi></msub><annotation encoding="application/x-tex">r_c</annotation></semantics></math>.</p></li>
+</ul>
+<h2 id="exchange-correlation-xc-functionals">Exchange-Correlation (XC)
+Functionals</h2>
+<p>SIESTA supports both local and gradient-corrected approximations:</p>
+<pre><code>XC.functional   GGA
+XC.authors      PBE</code></pre>
+<ul>
+<li><p><strong>LDA (Local Density Approximation):</strong>
+<code>XC.functional LDA</code>, <code>XC.authors CA</code>
+(Ceperley-Alder parameterized by Perdew-Zunger). Reliable for bulk
+moduli, underestimates lattice parameters by
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>1</mn><mtext mathvariant="normal">–</mtext><mn>2</mn><mi>%</mi></mrow><annotation encoding="application/x-tex">1\text{--}2\%</annotation></semantics></math>.</p></li>
+<li><p><strong>GGA (Generalized Gradient Approximation):</strong>
+<code>XC.functional GGA</code>, <code>XC.authors PBE</code>
+(Perdew-Burke-Ernzerhof). The workhorse functional for solid-state
+chemistry and surfaces.</p></li>
+<li><p><strong>PBEsol:</strong> <code>XC.authors PBEsol</code>. Refined
+GGA specifically tuned for equilibrium lattice constants and bulk phonon
+frequencies.</p></li>
+<li><p><strong>van der Waals Dispersion (Grimme DFT-D3):</strong>
+Crucial for molecular adsorption, perovskite organic-inorganic
+interfaces, and layered materials:</p>
+<pre><code>DFTD3           true</code></pre></li>
+</ul>
+<h2
+id="spin-polarization-non-collinear-magnetism-spin-orbit-coupling">Spin
+Polarization, Non-Collinear Magnetism &amp; Spin-Orbit Coupling</h2>
+<p>SIESTA provides three levels of magnetic treatment:</p>
+<ol>
+<li><p><strong>Collinear Spin Polarized:</strong>
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>α</mi><annotation encoding="application/x-tex">\alpha</annotation></semantics></math>
+and
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>β</mi><annotation encoding="application/x-tex">\beta</annotation></semantics></math>
+spins along a single quantization axis:</p>
+<pre><code>Spin            polarized</code></pre></li>
+<li><p><strong>Non-Collinear Spin:</strong> Vector spin density
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>𝐒</mi><mrow><mo stretchy="true" form="prefix">(</mo><mi>𝐫</mi><mo stretchy="true" form="postfix">)</mo></mrow><mo>=</mo><mrow><mo stretchy="true" form="prefix">(</mo><msub><mi>S</mi><mi>x</mi></msub><mo>,</mo><msub><mi>S</mi><mi>y</mi></msub><mo>,</mo><msub><mi>S</mi><mi>z</mi></msub><mo stretchy="true" form="postfix">)</mo></mrow></mrow><annotation encoding="application/x-tex">\mathbf{S}(\mathbf{r}) = (S_x, S_y, S_z)</annotation></semantics></math>
+pointing arbitrarily in 3D space:</p>
+<pre><code>Spin            non-collinear</code></pre></li>
+<li><p><strong>Fully Relativistic Spin-Orbit Coupling (SOC):</strong>
+Essential for heavy elements (Lead
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>P</mi><mi>b</mi></mrow><annotation encoding="application/x-tex">Pb</annotation></semantics></math>,
+Iodine
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>I</mi><annotation encoding="application/x-tex">I</annotation></semantics></math>,
+Bismuth
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>B</mi><mi>i</mi></mrow><annotation encoding="application/x-tex">Bi</annotation></semantics></math>,
+Gold
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>A</mi><mi>u</mi></mrow><annotation encoding="application/x-tex">Au</annotation></semantics></math>):</p>
+<pre><code>Spin            spin-orbit</code></pre></li>
+</ol>
+<h1 id="self-consistent-field-scf-control">Self-Consistent Field (SCF)
+Control</h1>
+<h2 id="the-density-matrix-formulation">The Density Matrix
+Formulation</h2>
+<p>Instead of dealing with individual Kohn-Sham wavefunctions, SIESTA
+expresses all physical observables via the single-particle
+<strong>density matrix</strong>
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>P</mi><mrow><mi>μ</mi><mi>ν</mi></mrow></msub><annotation encoding="application/x-tex">P_{\mu\nu}</annotation></semantics></math>:
+<math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>P</mi><mrow><mi>μ</mi><mi>ν</mi></mrow></msub><mo>=</mo><munder><mo>∑</mo><mi>i</mi></munder><msub><mi>f</mi><mi>i</mi></msub><msub><mi>c</mi><mrow><mi>μ</mi><mi>i</mi></mrow></msub><msubsup><mi>c</mi><mrow><mi>ν</mi><mi>i</mi></mrow><mo>*</mo></msubsup></mrow><annotation encoding="application/x-tex">P_{\mu\nu} = \sum_i f_i c_{\mu i} c_{\nu i}^*</annotation></semantics></math>
+where
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>f</mi><mi>i</mi></msub><annotation encoding="application/x-tex">f_i</annotation></semantics></math>
+is the Fermi-Dirac occupation factor. The real-space electron density is
+reconstructed as:
+<math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>ρ</mi><mrow><mo stretchy="true" form="prefix">(</mo><mi>𝐫</mi><mo stretchy="true" form="postfix">)</mo></mrow><mo>=</mo><munder><mo>∑</mo><mrow><mi>μ</mi><mo>,</mo><mi>ν</mi></mrow></munder><msub><mi>P</mi><mrow><mi>μ</mi><mi>ν</mi></mrow></msub><msubsup><mi>ϕ</mi><mi>μ</mi><mo>*</mo></msubsup><mrow><mo stretchy="true" form="prefix">(</mo><mi>𝐫</mi><mo stretchy="true" form="postfix">)</mo></mrow><msub><mi>ϕ</mi><mi>ν</mi></msub><mrow><mo stretchy="true" form="prefix">(</mo><mi>𝐫</mi><mo stretchy="true" form="postfix">)</mo></mrow></mrow><annotation encoding="application/x-tex">\rho(\mathbf{r}) = \sum_{\mu,\nu} P_{\mu\nu} \phi_{\mu}^*(\mathbf{r}) \phi_{\nu}(\mathbf{r})</annotation></semantics></math></p>
+<h2 id="scf-convergence-criteria-and-mixing-algorithms">SCF Convergence
+Criteria and Mixing Algorithms</h2>
+<p>During each SCF iteration
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>m</mi><annotation encoding="application/x-tex">m</annotation></semantics></math>,
+the computed density matrix
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msup><mi>P</mi><mrow><mo stretchy="true" form="prefix">(</mo><mi>m</mi><mo stretchy="true" form="postfix">)</mo></mrow></msup><annotation encoding="application/x-tex">P^{(m)}</annotation></semantics></math>
+differs from the input density matrix
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msubsup><mi>P</mi><mtext mathvariant="normal">in</mtext><mrow><mo stretchy="true" form="prefix">(</mo><mi>m</mi><mo stretchy="true" form="postfix">)</mo></mrow></msubsup><annotation encoding="application/x-tex">P_{\text{in}}^{(m)}</annotation></semantics></math>.
+A simple substitution
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msubsup><mi>P</mi><mtext mathvariant="normal">in</mtext><mrow><mo stretchy="true" form="prefix">(</mo><mi>m</mi><mo>+</mo><mn>1</mn><mo stretchy="true" form="postfix">)</mo></mrow></msubsup><mo>=</mo><msup><mi>P</mi><mrow><mo stretchy="true" form="prefix">(</mo><mi>m</mi><mo stretchy="true" form="postfix">)</mo></mrow></msup></mrow><annotation encoding="application/x-tex">P_{\text{in}}^{(m+1)} = P^{(m)}</annotation></semantics></math>
+leads to violent charge sloshing and divergence. Therefore, mixing
+algorithms are applied:</p>
+<pre><code>MaxSCFIterations       150
+DM.Tolerance           1.0d-4
+DM.MixingWeight        0.25
+DM.NumberPulay         8</code></pre>
+<ul>
+<li><p><strong><code>DM.Tolerance</code>:</strong> The calculation is
+declared converged when:
+<math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><munder><mo>max</mo><mrow><mi>μ</mi><mo>,</mo><mi>ν</mi></mrow></munder><mrow><mo stretchy="true" form="prefix">|</mo><msubsup><mi>P</mi><mrow><mi>μ</mi><mi>ν</mi></mrow><mrow><mo stretchy="true" form="prefix">(</mo><mi>m</mi><mo stretchy="true" form="postfix">)</mo></mrow></msubsup><mo>−</mo><msubsup><mi>P</mi><mrow><mi>μ</mi><mi>ν</mi></mrow><mrow><mo stretchy="true" form="prefix">(</mo><mi>m</mi><mo>−</mo><mn>1</mn><mo stretchy="true" form="postfix">)</mo></mrow></msubsup><mo stretchy="true" form="postfix">|</mo></mrow><mo>&lt;</mo><mtext mathvariant="monospace">𝙳𝙼.𝚃𝚘𝚕𝚎𝚛𝚊𝚗𝚌𝚎</mtext><mspace width="1.0em"></mspace><mrow><mo stretchy="true" form="prefix">(</mo><mrow><mtext mathvariant="normal">typically </mtext><mspace width="0.333em"></mspace></mrow><msup><mn>10</mn><mrow><mo>−</mo><mn>4</mn></mrow></msup><mrow><mspace width="0.333em"></mspace><mtext mathvariant="normal"> to </mtext><mspace width="0.333em"></mspace></mrow><msup><mn>10</mn><mrow><mo>−</mo><mn>5</mn></mrow></msup><mo stretchy="true" form="postfix">)</mo></mrow></mrow><annotation encoding="application/x-tex">\max_{\mu,\nu} |P_{\mu\nu}^{(m)} - P_{\mu\nu}^{(m-1)}| &lt; \texttt{DM.Tolerance} \quad (\text{typically } 10^{-4}\text{ to } 10^{-5})</annotation></semantics></math></p></li>
+<li><p><strong><code>DM.MixingWeight</code>
+(<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>α</mi><annotation encoding="application/x-tex">\alpha</annotation></semantics></math>):</strong>
+Fraction of the newly calculated density matrix mixed with the old
+matrix. For difficult systems (surfaces, transition metals, low bandgap
+perovskites), lower this value to <code>0.05</code> or <code>0.10</code>
+to prevent divergence.</p></li>
+<li><p><strong><code>DM.NumberPulay</code>:</strong> Depth of the Pulay
+Direct Inversion in the Iterative Subspace (DIIS) history. Using 6 to 8
+history steps accelerates convergence exponentially after the initial
+linear regime.</p></li>
+</ul>
+<h2 id="electronic-temperature-fermi-smearing">Electronic Temperature
+(Fermi Smearing)</h2>
+<p>For metallic systems or surfaces with near-zero bandgaps, sharp
+discontinuities in Fermi occupations at
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>T</mi><mo>=</mo><mn>0</mn></mrow><annotation encoding="application/x-tex">T=0</annotation></semantics></math>
+destabilize SCF convergence. Introducing a finite electronic temperature
+smears occupations via the Fermi-Dirac function:
+<math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>f</mi><mrow><mo stretchy="true" form="prefix">(</mo><mi>ε</mi><mo stretchy="true" form="postfix">)</mo></mrow><mo>=</mo><mfrac><mn>1</mn><mrow><msup><mi>e</mi><mrow><mrow><mo stretchy="true" form="prefix">(</mo><mi>ε</mi><mo>−</mo><msub><mi>E</mi><mi>F</mi></msub><mo stretchy="true" form="postfix">)</mo></mrow><mi>/</mi><msub><mi>k</mi><mi>B</mi></msub><msub><mi>T</mi><mtext mathvariant="normal">elec</mtext></msub></mrow></msup><mo>+</mo><mn>1</mn></mrow></mfrac></mrow><annotation encoding="application/x-tex">f(\varepsilon) = \frac{1}{e^{(\varepsilon - E_F)/k_B T_{\text{elec}}} + 1}</annotation></semantics></math></p>
+<pre><code>ElectronicTemperature  25.0 meV</code></pre>
+<p>This represents
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>T</mi><mo>≈</mo><mn>290</mn><mrow><mspace width="0.333em"></mspace><mtext mathvariant="normal"> K</mtext></mrow></mrow><annotation encoding="application/x-tex">T \approx 290\text{ K}</annotation></semantics></math>,
+smoothing occupation transitions and ensuring rapid, monotonic
+convergence.</p>
+<h1 id="brillouin-zone-sampling-k-points">Brillouin Zone Sampling &amp;
+K-Points</h1>
+<h2 id="reciprocal-space-integration-monkhorst-pack-grids">Reciprocal
+Space Integration &amp; Monkhorst-Pack Grids</h2>
+<p>In crystalline solids, translational symmetry dictates that
+wavefunctions obey Bloch’s theorem:
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>ψ</mi><mrow><mi>n</mi><mi>𝐤</mi></mrow></msub><mrow><mo stretchy="true" form="prefix">(</mo><mi>𝐫</mi><mo stretchy="true" form="postfix">)</mo></mrow><mo>=</mo><msup><mi>e</mi><mrow><mi>i</mi><mi>𝐤</mi><mo>⋅</mo><mi>𝐫</mi></mrow></msup><msub><mi>u</mi><mrow><mi>n</mi><mi>𝐤</mi></mrow></msub><mrow><mo stretchy="true" form="prefix">(</mo><mi>𝐫</mi><mo stretchy="true" form="postfix">)</mo></mrow></mrow><annotation encoding="application/x-tex">\psi_{n\mathbf{k}}(\mathbf{r}) = e^{i\mathbf{k}\cdot\mathbf{r}} u_{n\mathbf{k}}(\mathbf{r})</annotation></semantics></math>.
+Physical properties require integration over the first Brillouin zone:
+<math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mover><mi>g</mi><mo accent="true">‾</mo></mover><mo>=</mo><mfrac><mi>Ω</mi><msup><mrow><mo stretchy="true" form="prefix">(</mo><mn>2</mn><mi>π</mi><mo stretchy="true" form="postfix">)</mo></mrow><mn>3</mn></msup></mfrac><msub><mo>∫</mo><mtext mathvariant="normal">BZ</mtext></msub><mi>g</mi><mrow><mo stretchy="true" form="prefix">(</mo><mi>𝐤</mi><mo stretchy="true" form="postfix">)</mo></mrow><msup><mi>d</mi><mn>3</mn></msup><mi>𝐤</mi><mo>≈</mo><munder><mo>∑</mo><mi>𝐤</mi></munder><msub><mi>w</mi><mi>𝐤</mi></msub><mi>g</mi><mrow><mo stretchy="true" form="prefix">(</mo><mi>𝐤</mi><mo stretchy="true" form="postfix">)</mo></mrow></mrow><annotation encoding="application/x-tex">\bar{g} = \frac{\Omega}{(2\pi)^3} \int_{\text{BZ}} g(\mathbf{k}) d^3\mathbf{k} \approx \sum_{\mathbf{k}} w_{\mathbf{k}} g(\mathbf{k})</annotation></semantics></math>
+SIESTA generates discrete
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>k</mi><annotation encoding="application/x-tex">k</annotation></semantics></math>-point
+grids using the <strong>Monkhorst-Pack (MP)</strong> scheme:</p>
+<pre><code>%block kgrid_Monkhorst_Pack
+  4   0   0   0.5
+  0   4   0   0.5
+  0   0   1   0.0
+%endblock kgrid_Monkhorst_Pack</code></pre>
+<p>The first three numbers in each row define the divisions along
+reciprocal vectors
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>𝐛</mi><mn>1</mn></msub><mo>,</mo><msub><mi>𝐛</mi><mn>2</mn></msub><mo>,</mo><msub><mi>𝐛</mi><mn>3</mn></msub></mrow><annotation encoding="application/x-tex">\mathbf{b}_1, \mathbf{b}_2, \mathbf{b}_3</annotation></semantics></math>.
+The fourth number is the origin shift (typically <code>0.5</code> to
+avoid high-symmetry points or <code>0.0</code> for
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>Γ</mi><annotation encoding="application/x-tex">\Gamma</annotation></semantics></math>-centered
+meshes).</p>
+<h2 id="dimensionality-rules-for-k-points">Dimensionality Rules for
+K-Points</h2>
+<ul>
+<li><p><strong>3D Bulk Crystals (e.g. Silicon, Perovskite
+bulk):</strong> Full 3D grid
+(<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>6</mn><mo>×</mo><mn>6</mn><mo>×</mo><mn>6</mn></mrow><annotation encoding="application/x-tex">6 \times 6 \times 6</annotation></semantics></math>
+or
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>8</mn><mo>×</mo><mn>8</mn><mo>×</mo><mn>8</mn></mrow><annotation encoding="application/x-tex">8 \times 8 \times 8</annotation></semantics></math>).</p></li>
+<li><p><strong>2D Surfaces &amp; Slabs:</strong> <strong>Strictly 1
+point along
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>z</mi><annotation encoding="application/x-tex">z</annotation></semantics></math></strong>
+(<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>k</mi><mi>z</mi></msub><mo>=</mo><mn>1</mn></mrow><annotation encoding="application/x-tex">k_z = 1</annotation></semantics></math>,
+e.g.
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>4</mn><mo>×</mo><mn>4</mn><mo>×</mo><mn>1</mn></mrow><annotation encoding="application/x-tex">4 \times 4 \times 1</annotation></semantics></math>).
+Because the slab has vacuum along
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>z</mi><annotation encoding="application/x-tex">z</annotation></semantics></math>,
+there is zero physical dispersion along the reciprocal
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>z</mi><annotation encoding="application/x-tex">z</annotation></semantics></math>-axis.
+Setting
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>k</mi><mi>z</mi></msub><mo>&gt;</mo><mn>1</mn></mrow><annotation encoding="application/x-tex">k_z &gt; 1</annotation></semantics></math>
+wastes massive compute power with zero physical benefit.</p></li>
+<li><p><strong>1D Nanowires / Nanotubes:</strong> 1 point along
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>x</mi><annotation encoding="application/x-tex">x</annotation></semantics></math>
+and
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>y</mi><annotation encoding="application/x-tex">y</annotation></semantics></math>
+(<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>1</mn><mo>×</mo><mn>1</mn><mo>×</mo><mn>8</mn></mrow><annotation encoding="application/x-tex">1 \times 1 \times 8</annotation></semantics></math>).</p></li>
+<li><p><strong>0D Molecules / Isolated Clusters:</strong> Single
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>Γ</mi><annotation encoding="application/x-tex">\Gamma</annotation></semantics></math>-point
+calculation
+(<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>1</mn><mo>×</mo><mn>1</mn><mo>×</mo><mn>1</mn></mrow><annotation encoding="application/x-tex">1 \times 1 \times 1</annotation></semantics></math>).</p></li>
+</ul>
+<h1
+id="structural-relaxation-general-constraints-molecular-dynamics">Structural
+Relaxation, General Constraints &amp; Molecular Dynamics</h1>
+<h2 id="geometry-optimization-algorithms">Geometry Optimization
+Algorithms</h2>
+<p>Structural relaxation minimizes the total energy with respect to
+nuclear positions and cell vectors until atomic forces and stress
+tensors fall below strict tolerances:</p>
+<pre><code>MD.TypeOfRun       CG
+MD.NumCGsteps      200
+MD.MaxForceTol     0.04 eV/Ang
+MD.MaxStressTol    1.0 GPa
+MD.VariableCell    false</code></pre>
+<ul>
+<li><p><strong><code>MD.TypeOfRun</code>:</strong> Options include
+<code>CG</code> (Conjugate Gradient, standard), <code>Broyden</code>
+(quasi-Newton), and <code>FIRE</code> (Fast Inertial Relaxation Engine,
+superior for complex interfaces and loose initial
+configurations).</p></li>
+<li><p><strong><code>MD.MaxForceTol</code>:</strong> The maximum force
+component allowed on any atom for convergence (typically
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>0.02</mn><mtext mathvariant="normal">–</mtext><mn>0.04</mn><mrow><mspace width="0.333em"></mspace><mtext mathvariant="normal"> eV/Å</mtext></mrow></mrow><annotation encoding="application/x-tex">0.02\text{--}0.04\text{ eV/\AA}</annotation></semantics></math>).</p></li>
+<li><p><strong><code>MD.VariableCell</code>:</strong> Set to
+<code>true</code> to relax cell vectors simultaneously. <strong>Critical
+Warning:</strong> Never enable <code>MD.VariableCell true</code> on a
+surface slab without fixing the
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>c</mi><annotation encoding="application/x-tex">c</annotation></semantics></math>-axis,
+or the simulation will compress the vacuum gap!</p></li>
+</ul>
+<h2 id="siesta-section-7.7-use-of-general-constraints">SIESTA Section
+7.7: Use of General Constraints</h2>
+<p>SIESTA provides a versatile constraints engine
+(<code>%block Geometry.Constraints</code>) to freeze or couple degrees
+of freedom during relaxation:</p>
+<pre><code>%block Geometry.Constraints
+  atom [1 -- 12]              # Freeze atoms 1 through 12 completely
+  atom 15  0.  0.  1.         # Fix atom 15 along Z only (allow XY relaxation)
+  cell-vector C               # Freeze out-of-plane vacuum axis
+  stress XX YY                # Constrain in-plane stress components
+  Z 82                        # Freeze all Lead (Pb) atoms by atomic number
+%endblock Geometry.Constraints</code></pre>
+<h3 id="key-constraint-syntax-rules">Key Constraint Syntax Rules</h3>
+<ul>
+<li><p><strong>Range specifications:</strong> Supports
+<code>atom [1 – 4]</code>, <code>atom from 1 to 4 step 1</code>, and
+space-separated lists <code>atom 1 2 3 4</code>.</p></li>
+<li><p><strong>Directional Constraints:</strong> Append three real
+numbers representing a Cartesian projection vector. <strong>Crucial
+Rule:</strong> Reals <em>must</em> include a trailing decimal point
+(e.g., <code>0. 0. 1.</code>). SIESTA subtracts the force component
+projected onto this vector:
+<math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>𝐅</mi><mtext mathvariant="normal">active</mtext></msub><mo>=</mo><mi>𝐅</mi><mo>−</mo><mrow><mo stretchy="true" form="prefix">(</mo><mi>𝐅</mi><mo>⋅</mo><mover><mi>𝐧</mi><mo accent="true">̂</mo></mover><mo stretchy="true" form="postfix">)</mo></mrow><mover><mi>𝐧</mi><mo accent="true">̂</mo></mover></mrow><annotation encoding="application/x-tex">\mathbf{F}_{\text{active}} = \mathbf{F} - (\mathbf{F} \cdot \hat{\mathbf{n}}) \hat{\mathbf{n}}</annotation></semantics></math></p></li>
+<li><p><strong>Cell Constraints:</strong> <code>cell-vector C</code>
+locks the vacuum height, allowing in-plane cell vectors
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>A</mi><annotation encoding="application/x-tex">A</annotation></semantics></math>
+and
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>B</mi><annotation encoding="application/x-tex">B</annotation></semantics></math>
+to relax without collapsing the vacuum.</p></li>
+</ul>
+<h1
+id="post-processing-spectroscopy-performance-accounting">Post-Processing,
+Spectroscopy &amp; Performance Accounting</h1>
+<h2 id="band-structure-calculations-block-bandlines">Band Structure
+Calculations (<code>%block BandLines</code>)</h2>
+<p>Electronic dispersion curves
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>E</mi><mi>n</mi></msub><mrow><mo stretchy="true" form="prefix">(</mo><mi>𝐤</mi><mo stretchy="true" form="postfix">)</mo></mrow></mrow><annotation encoding="application/x-tex">E_n(\mathbf{k})</annotation></semantics></math>
+along high-symmetry Brillouin zone paths:</p>
+<pre><code>BandLinesScale ReciprocalLatticeVectors
+%block BandLines
+  1   0.000  0.000  0.000  \Gamma
+ 25   0.500  0.000  0.500  X
+ 15   0.500  0.250  0.750  W
+ 20   0.500  0.500  0.500  L
+ 25   0.000  0.000  0.000  \Gamma
+%endblock BandLines</code></pre>
+<p>SIESTA writes <code>SystemLabel.bands</code>, which can be plotted
+directly using the web studio or converted via
+<code>gnubands SystemLabel.bands &gt; bands.dat</code>.</p>
+<h2 id="projected-density-of-states-pdos">Projected Density of States
+(PDOS)</h2>
+<p>Orbital-resolved density of states
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>g</mi><mi>μ</mi></msub><mrow><mo stretchy="true" form="prefix">(</mo><mi>E</mi><mo stretchy="true" form="postfix">)</mo></mrow><mo>=</mo><msub><mo>∑</mo><mrow><mi>n</mi><mo>,</mo><mi>𝐤</mi></mrow></msub><msub><mi>w</mi><mi>𝐤</mi></msub><mrow><mo stretchy="true" form="prefix">|</mo><mo stretchy="false" form="prefix">⟨</mo><msub><mi>ϕ</mi><mi>μ</mi></msub><mo stretchy="true" form="postfix">|</mo></mrow><msub><mi>ψ</mi><mrow><mi>n</mi><mi>𝐤</mi></mrow></msub><mo stretchy="false" form="postfix">⟩</mo><msup><mo stretchy="false" form="prefix">|</mo><mn>2</mn></msup><mi>δ</mi><mrow><mo stretchy="true" form="prefix">(</mo><mi>E</mi><mo>−</mo><msub><mi>E</mi><mrow><mi>n</mi><mi>𝐤</mi></mrow></msub><mo stretchy="true" form="postfix">)</mo></mrow></mrow><annotation encoding="application/x-tex">g_{\mu}(E) = \sum_{n,\mathbf{k}} w_{\mathbf{k}} |\langle \phi_{\mu} | \psi_{n\mathbf{k}} \rangle|^2 \delta(E - E_{n\mathbf{k}})</annotation></semantics></math>:</p>
+<pre><code>%block ProjectedDensityOfStates
+  EF  -10.0   10.0   0.100   1000   eV
+%endblock ProjectedDensityOfStates</code></pre>
+<p>Outputs <code>SystemLabel.PDOS.xml</code>, decomposing contributions
+into atomic species, angular momentum shells
+(<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>s</mi><mo>,</mo><mi>p</mi><mo>,</mo><mi>d</mi><mo>,</mo><mi>f</mi></mrow><annotation encoding="application/x-tex">s, p, d, f</annotation></semantics></math>),
+and magnetic orbital orientations
+(<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>p</mi><mi>x</mi></msub><mo>,</mo><msub><mi>p</mi><mi>y</mi></msub><mo>,</mo><msub><mi>p</mi><mi>z</mi></msub><mo>,</mo><msub><mi>d</mi><msup><mi>z</mi><mn>2</mn></msup></msub><mo>,</mo><msub><mi>d</mi><mrow><msup><mi>x</mi><mn>2</mn></msup><mo>−</mo><msup><mi>y</mi><mn>2</mn></msup></mrow></msub></mrow><annotation encoding="application/x-tex">p_x, p_y, p_z, d_{z^2}, d_{x^2-y^2}</annotation></semantics></math>).</p>
+<h2 id="work-function-determination-phi-v_textvac---e_f">Work Function
+Determination
+(<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>Φ</mi><mo>=</mo><msub><mi>V</mi><mtext mathvariant="normal">vac</mtext></msub><mo>−</mo><msub><mi>E</mi><mi>F</mi></msub></mrow><annotation encoding="application/x-tex">\Phi = V_{\text{vac}} - E_F</annotation></semantics></math>)</h2>
+<p>The work function
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>Φ</mi><annotation encoding="application/x-tex">\Phi</annotation></semantics></math>
+is the minimum energy required to remove an electron from the Fermi
+level of a solid to the electrostatic vacuum plateau outside the
+surface:
+<math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>Φ</mi><mo>=</mo><msub><mi>V</mi><mtext mathvariant="normal">vac</mtext></msub><mo>−</mo><msub><mi>E</mi><mi>F</mi></msub></mrow><annotation encoding="application/x-tex">\Phi = V_{\text{vac}} - E_F</annotation></semantics></math></p>
+<ol>
+<li><p>Request the electrostatic potential grid:
+<code>SaveElectrostaticPotential true</code>
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mo>⟹</mo><annotation encoding="application/x-tex">\implies</annotation></semantics></math>
+generates <code>SystemLabel.VH</code>.</p></li>
+<li><p>Compute planar average
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mover><mi>V</mi><mo accent="true">‾</mo></mover><mrow><mo stretchy="true" form="prefix">(</mo><mi>z</mi><mo stretchy="true" form="postfix">)</mo></mrow><mo>=</mo><mfrac><mn>1</mn><mi>A</mi></mfrac><mo>∬</mo><mi>V</mi><mrow><mo stretchy="true" form="prefix">(</mo><mi>𝐫</mi><mo stretchy="true" form="postfix">)</mo></mrow><mi>d</mi><mi>x</mi><mi>d</mi><mi>y</mi></mrow><annotation encoding="application/x-tex">\bar{V}(z) = \frac{1}{A} \iint V(\mathbf{r}) dx dy</annotation></semantics></math>
+using <code>Util/Macroave</code> or <code>grid2cube</code>.</p></li>
+<li><p>Identify the asymptotic flat plateau
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>V</mi><mtext mathvariant="normal">vac</mtext></msub><annotation encoding="application/x-tex">V_{\text{vac}}</annotation></semantics></math>
+in the middle of the vacuum region.</p></li>
+<li><p>Subtract the self-consistent Fermi level:
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>Φ</mi><mo>=</mo><msub><mi>V</mi><mtext mathvariant="normal">vac</mtext></msub><mo>−</mo><msub><mi>E</mi><mi>F</mi></msub></mrow><annotation encoding="application/x-tex">\Phi = V_{\text{vac}} - E_F</annotation></semantics></math>.</p></li>
+</ol>
+<h2 id="section-6.29-memory-cpu-time-wall-time-accounting">Section 6.29:
+Memory, CPU-time &amp; Wall-Time Accounting</h2>
+<p>Large-scale HPC calculations require monitoring memory and execution
+bottlenecks:</p>
+<pre><code>AllocReportLevel        2           # Detailed memory report in SystemLabel.alloc
+AllocReportThreshold    1000000     # Report arrays larger than 1 MB
+TimerReportThreshold    0.001       # Print routines taking &gt; 0.1% CPU in TIMES
+UseParallelTimer        true        # Write MPI timing breakdown to SystemLabel.times
+MaxWalltime             24 hours    # Queue time ceiling before clean abort
+MaxWalltime.Slack       10 s        # Emergency shutdown buffer</code></pre>
+<h1 id="the-siesta-input-builder-web-studio-manual">The SIESTA Input
+Builder Web Studio Manual</h1>
+<h2 id="application-overview-zero-backend-architecture">Application
+Overview &amp; Zero-Backend Architecture</h2>
+<p>The <strong>SIESTA Input Builder</strong> is a pure client-side web
+application running entirely inside the modern browser via React 19,
+Vite, and Zustand.</p>
+<p><strong>Core Advantages:</strong></p>
+<ul>
+<li><p><strong>Zero Server Compute &amp; Total Privacy:</strong> Input
+building, CIF parsing, and data conversion execute strictly in local
+browser memory. No proprietary crystal coordinates, structures, or logs
+are uploaded to any external server.</p></li>
+<li><p><strong>Real-Time Bi-Directional Preview:</strong> Any keystroke
+in the form immediately updates the live, syntax-colored
+<code>.fdf</code> code preview panel.</p></li>
+<li><p><strong>Cross-Code Ecosystem:</strong> Includes specialized
+converters to translate between VASP POSCAR (with ASE GUI Selective
+Dynamics), CIF crystallographic files, and SIESTA.</p></li>
+</ul>
+<h2 id="walkthrough-of-the-navigation-modules">Walkthrough of the
+Navigation Modules</h2>
+<ol>
+<li><p><strong>1⃝ System:</strong> Sets <code>SystemLabel</code>,
+<code>SystemName</code>, and optional atom/species counts.</p></li>
+<li><p><strong>2⃝ Structure:</strong> Full interactive coordinate table,
+crystallographic unit cell parameters, vacuum cleavage tools, supercell
+expansion, and 3D WebGL Crystal Viewer.</p></li>
+<li><p><strong>3⃝ Species &amp; Basis:</strong> Defines chemical
+elements, links pseudopotential files
+(<code>.psf</code>/<code>.psml</code>), sets basis cardinality
+(<code>SZ</code>, <code>DZP</code>, <code>TZP</code>), and configures
+<code>PAO.EnergyShift</code>.</p></li>
+<li><p><strong>4⃝ DFT / XC:</strong> Exchange-correlation selection (LDA,
+GGA-PBE, PBEsol), <code>MeshCutoff</code>, Grimme DFT-D3, spin
+polarization, and DFT+U.</p></li>
+<li><p><strong>5⃝ SCF Control:</strong> Iteration limits, density matrix
+tolerances, Pulay mixing history, and electronic smearing
+temperature.</p></li>
+<li><p><strong>6⃝ K-Points:</strong> Monkhorst-Pack reciprocal grid
+configuration with automated dimensional checks
+(<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>k</mi><mi>z</mi></msub><mo>=</mo><mn>1</mn></mrow><annotation encoding="application/x-tex">k_z=1</annotation></semantics></math>
+for surfaces).</p></li>
+<li><p><strong>7⃝ Bands &amp; DOS / PDOS:</strong> High-symmetry
+Brillouin zone path generation and projected DOS energy window
+controls.</p></li>
+<li><p><strong>8⃝ Output Flags &amp; Accounting:</strong> Output toggles
+(<code>.ANI</code>, <code>.MDE</code>, <code>.RHO</code>,
+<code>.VH</code>) and Section 6.29 <code>TIMES</code> /
+<code>alloc</code> execution profiler.</p></li>
+<li><p><strong>9⃝ MD / Relaxation:</strong> Structural optimizers (CG,
+FIRE), force tolerances, variable cell relaxations, and molecular
+dynamics ensembles.</p></li>
+<li><p><strong>1⃝0 CI-NEB Suite:</strong> Climbing Image Nudged Elastic
+Band transition state search, IDPP reaction path interpolation, and
+automated directory generator.</p></li>
+<li><p><strong>1⃝1 Phonons:</strong> Finite displacement frozen-phonon
+matrix builder (<code>FC.first</code>, <code>FC.last</code>) and Vibra
+dispersion runner.</p></li>
+<li><p><strong>1⃝2 Surface &amp; Work Function Studio:</strong> Planar
+average charge density difference
+(<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>Δ</mi><mi>ρ</mi><mrow><mo stretchy="true" form="prefix">(</mo><mi>z</mi><mo stretchy="true" form="postfix">)</mo></mrow></mrow><annotation encoding="application/x-tex">\Delta\rho(z)</annotation></semantics></math>)
+integrator, multi-surface work function comparison studio, and 3D
+heterojunction band alignment diagram generator.</p></li>
+<li><p><strong>1⃝3 VASP to FDF Converter:</strong> Isolated converter
+that ingests VASP <code>POSCAR</code>/<code>CONTCAR</code> files with
+ASE GUI <code>Selective dynamics</code> and outputs complete
+<code>%block Geometry.Constraints</code> blocks.</p></li>
+</ol>
+<h1 id="step-by-step-hands-on-tutorials">Step-by-Step Hands-On
+Tutorials</h1>
+<h2
+id="tutorial-1-bulk-silicon-si-diamond-ground-state-bands-dos">Tutorial
+1: Bulk Silicon
+(<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>S</mi><mi>i</mi></mrow><annotation encoding="application/x-tex">Si</annotation></semantics></math>)
+Diamond — Ground State, Bands &amp; DOS</h2>
+<p><strong>Objective:</strong> Optimize diamond-structure Silicon,
+compute the SCF ground state, band structure, and electronic density of
+states.</p>
+<h3 id="complete-input-file-silicon.fdf">Complete Input File
+(<code>silicon.fdf</code>)</h3>
+<pre><code>SystemLabel          silicon
+SystemName           Bulk Silicon Diamond
+NumberOfAtoms        8
+NumberOfSpecies      1
+
+%block ChemicalSpeciesLabel
+  1   14  Si      Si.psf
+%endblock ChemicalSpeciesLabel
+
+LatticeConstant      5.4307 Ang
+%block LatticeVectors
+  1.000000  0.000000  0.000000
+  0.000000  1.000000  0.000000
+  0.000000  0.000000  1.000000
+%endblock LatticeVectors
+
+AtomicCoordinatesFormat Fractional
+%block AtomicCoordinatesAndAtomicSpecies
+  0.000000  0.000000  0.000000  1
+  0.500000  0.500000  0.000000  1
+  0.000000  0.500000  0.500000  1
+  0.500000  0.000000  0.500000  1
+  0.250000  0.250000  0.250000  1
+  0.750000  0.750000  0.250000  1
+  0.750000  0.250000  0.750000  1
+  0.250000  0.750000  0.750000  1
+%endblock AtomicCoordinatesAndAtomicSpecies
+
+# Basis and Grid
+PAO.BasisSize        DZP
+PAO.EnergyShift      100.0 meV
+MeshCutoff           300.0 Ry
+XC.functional        GGA
+XC.authors           PBE
+
+# SCF Parameters
+MaxSCFIterations     100
+DM.Tolerance         1.0d-4
+DM.MixingWeight      0.25
+DM.NumberPulay       8
+
+# K-Points
+%block kgrid_Monkhorst_Pack
+  6   0   0   0.5
+  0   6   0   0.5
+  0   0   6   0.5
+%endblock kgrid_Monkhorst_Pack
+
+# Band Structure Path
+BandLinesScale ReciprocalLatticeVectors
+%block BandLines
+  1   0.000  0.000  0.000  \Gamma
+ 30   0.500  0.000  0.500  X
+ 15   0.500  0.250  0.750  W
+ 20   0.500  0.500  0.500  L
+ 30   0.000  0.000  0.000  \Gamma
+%endblock BandLines
+
+# Output Flags
+WriteMullikenPop     1
+WriteForces          true
+SaveRho              true</code></pre>
+<h3 id="execution-and-analysis">Execution and Analysis</h3>
+<div class="sourceCode" id="cb21" data-language="bash"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Run SIESTA with MPI:</span></span>
+<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a><span class="ex">mpirun</span> <span class="at">-np</span> 4 siesta <span class="op">&lt;</span> silicon.fdf <span class="kw">|</span> <span class="fu">tee</span> silicon.out</span>
+<span id="cb21-3"><a href="#cb21-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-4"><a href="#cb21-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Extract band structure:</span></span>
+<span id="cb21-5"><a href="#cb21-5" aria-hidden="true" tabindex="-1"></a><span class="ex">gnubands</span> silicon.bands <span class="op">&gt;</span> bands.dat</span></code></pre></div>
+<h2
+id="tutorial-2-fapbi_3-perovskite-001-slab-cleaving-layer-freezing-work-function">Tutorial
+2:
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>F</mi><mi>A</mi><mi>P</mi><mi>b</mi><msub><mi>I</mi><mn>3</mn></msub></mrow><annotation encoding="application/x-tex">FAPbI_3</annotation></semantics></math>
+Perovskite (001) Slab — Cleaving, Layer Freezing &amp; Work
+Function</h2>
+<p><strong>Objective:</strong> Construct a polar organic-inorganic
+perovskite slab, apply
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>20</mn><mrow><mspace width="0.333em"></mspace><mtext mathvariant="normal"> Å</mtext></mrow></mrow><annotation encoding="application/x-tex">20\text{ \AA}</annotation></semantics></math>
+vacuum, freeze the bottom two substrate layers to mimic semi-infinite
+bulk, activate slab dipole corrections, and compute the work function
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>Φ</mi><annotation encoding="application/x-tex">\Phi</annotation></semantics></math>.</p>
+<h3 id="workflow-steps-in-the-gui">Workflow Steps in the GUI</h3>
+<ol>
+<li><p>In **2⃝ Structure**, click <strong>Import CIF</strong> and select
+<code>FAPbI3_cubic.cif</code>.</p></li>
+<li><p>Click <strong>Add Vacuum</strong> and specify
+<code>20.0 Å</code>. The cell vector
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>c</mi><annotation encoding="application/x-tex">c</annotation></semantics></math>
+automatically expands to
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>36.0</mn><mrow><mspace width="0.333em"></mspace><mtext mathvariant="normal"> Å</mtext></mrow></mrow><annotation encoding="application/x-tex">36.0\text{ \AA}</annotation></semantics></math>,
+and <code>Slab.DipoleCorrection true</code> is activated.</p></li>
+<li><p>Under **Atomic &amp; Layer Constraints**, freeze the bottom atoms
+(<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>z</mi><mo>&lt;</mo><mn>15</mn><mrow><mspace width="0.333em"></mspace><mtext mathvariant="normal"> Å</mtext></mrow></mrow><annotation encoding="application/x-tex">z &lt; 15\text{ \AA}</annotation></semantics></math>)
+while keeping the surface atoms free to reconstruct.</p></li>
+<li><p>Set <code>kgrid_Monkhorst_Pack</code> to
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>4</mn><mo>×</mo><mn>4</mn><mo>×</mo><mn>1</mn></mrow><annotation encoding="application/x-tex">4 \times 4 \times 1</annotation></semantics></math>.</p></li>
+<li><p>Turn on <code>SaveElectrostaticPotential true</code> in **8⃝
+Output Flags**.</p></li>
+<li><p>Export <code>FAPbI3_slab.fdf</code>.</p></li>
+</ol>
+<h3 id="complete-input-file-fapbi3_slab.fdf">Complete Input File
+(<code>FAPbI3_slab.fdf</code>)</h3>
+<pre><code>SystemLabel          FAPbI3_slab
+SystemName           FAPbI3 Perovskite (001) Surface Slab
+NumberOfAtoms        20
+NumberOfSpecies      5
+
+%block ChemicalSpeciesLabel
+  1   82  Pb      Pb.psf
+  2   53  I       I.psf
+  3    6  C       C.psf
+  4    7  N       N.psf
+  5    1  H       H.psf
+%endblock ChemicalSpeciesLabel
+
+LatticeConstant      1.0 Ang
+%block LatticeVectors
+  12.640000   0.000000   0.000000
+   0.000000  12.640000   0.000000
+   0.000000   0.000000  36.000000
+%endblock LatticeVectors
+
+AtomicCoordinatesFormat NotScaledCartesianAng
+AtomicCoordinatesOrigin COP-Z
+%block AtomicCoordinatesAndAtomicSpecies
+  # Bottom Substrate Layer (Fixed)
+  0.0000   0.0000   8.2000  1   # Pb [F F F]
+  6.3200   6.3200   8.2000  2   # I  [F F F]
+  0.0000   6.3200   8.2000  2   # I  [F F F]
+  6.3200   0.0000   8.2000  2   # I  [F F F]
+  # Surface Reconstructed Layer (Free)
+  0.0000   0.0000  14.5200  1   # Pb [T T T]
+  6.3200   6.3200  14.5200  2   # I  [T T T]
+  # Molecular Cations (FA: CH(NH2)2+)
+  3.1600   3.1600  11.3600  3   # C  [T T T]
+  3.1600   2.1000  11.3600  4   # N  [T T T]
+  3.1600   4.2200  11.3600  4   # N  [T T T]
+%endblock AtomicCoordinatesAndAtomicSpecies
+
+# Constraints (Section 7.7)
+%block Geometry.Constraints
+  atom [1 -- 4]               # Freeze bottom Pb-I layer
+  cell-vector C               # Lock vacuum length
+%endblock Geometry.Constraints
+
+# Slab Physics
+Slab.DipoleCorrection  true
+DFTD3                  true
+PAO.BasisSize          DZP
+MeshCutoff             350.0 Ry
+XC.functional          GGA
+XC.authors             PBE
+
+# 2D Surface K-Points (kz = 1)
+%block kgrid_Monkhorst_Pack
+  4   0   0   0.5
+  0   4   0   0.5
+  0   0   1   0.0
+%endblock kgrid_Monkhorst_Pack
+
+# Relaxation &amp; Potential Output
+MD.TypeOfRun           CG
+MD.NumCGsteps          150
+MD.MaxForceTol         0.04 eV/Ang
+SaveElectrostaticPotential true</code></pre>
+<h3 id="extracting-the-work-function">Extracting the Work Function</h3>
+<p>Upon completion, the electrostatic potential is stored in
+<code>FAPbI3_slab.VH</code>. Convert to planar average using
+Macroave:</p>
+<div class="sourceCode" id="cb23" data-language="bash"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a><span class="ex">macroave</span> <span class="op">&lt;</span> macroave.in</span></code></pre></div>
+<p>Upload the generated <code>planar_potential.dat</code> into **1⃝2
+Surface &amp; Work Function Studio**. The GUI plots
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mover><mi>V</mi><mo accent="true">‾</mo></mover><mrow><mo stretchy="true" form="prefix">(</mo><mi>z</mi><mo stretchy="true" form="postfix">)</mo></mrow></mrow><annotation encoding="application/x-tex">\bar{V}(z)</annotation></semantics></math>,
+detects the flat vacuum level
+(<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>V</mi><mtext mathvariant="normal">vac</mtext></msub><mo>=</mo><mn>0.30</mn><mrow><mspace width="0.333em"></mspace><mtext mathvariant="normal"> eV</mtext></mrow></mrow><annotation encoding="application/x-tex">V_{\text{vac}} = 0.30\text{ eV}</annotation></semantics></math>),
+reads the Fermi level
+(<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>E</mi><mi>F</mi></msub><mo>=</mo><mo>−</mo><mn>4.35</mn><mrow><mspace width="0.333em"></mspace><mtext mathvariant="normal"> eV</mtext></mrow></mrow><annotation encoding="application/x-tex">E_F = -4.35\text{ eV}</annotation></semantics></math>),
+and computes:
+<math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>Φ</mi><mo>=</mo><mn>0.30</mn><mrow><mspace width="0.333em"></mspace><mtext mathvariant="normal"> eV</mtext></mrow><mo>−</mo><mrow><mo stretchy="true" form="prefix">(</mo><mo>−</mo><mn>4.35</mn><mrow><mspace width="0.333em"></mspace><mtext mathvariant="normal"> eV</mtext></mrow><mo stretchy="true" form="postfix">)</mo></mrow><mo>=</mo><mn>4.65</mn><mrow><mspace width="0.333em"></mspace><mtext mathvariant="normal"> eV</mtext></mrow></mrow><annotation encoding="application/x-tex">\Phi = 0.30\text{ eV} - (-4.35\text{ eV}) = 4.65\text{ eV}</annotation></semantics></math></p>
+<h2
+id="tutorial-3-gas-adsorption-on-surface-energy-charge-density-difference">Tutorial
+3: Gas Adsorption on Surface — Energy &amp; Charge Density
+Difference</h2>
+<p><strong>Objective:</strong> Calculate the binding energy
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>E</mi><mtext mathvariant="normal">ads</mtext></msub><annotation encoding="application/x-tex">E_{\text{ads}}</annotation></semantics></math>
+of a water molecule
+(<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>H</mi><mn>2</mn></msub><mi>O</mi></mrow><annotation encoding="application/x-tex">H_2O</annotation></semantics></math>)
+on a
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>T</mi><mi>i</mi><msub><mi>O</mi><mn>2</mn></msub></mrow><annotation encoding="application/x-tex">TiO_2</annotation></semantics></math>
+anatase surface, and compute the planar charge transfer
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>Δ</mi><mi>ρ</mi><mrow><mo stretchy="true" form="prefix">(</mo><mi>z</mi><mo stretchy="true" form="postfix">)</mo></mrow></mrow><annotation encoding="application/x-tex">\Delta\rho(z)</annotation></semantics></math>.</p>
+<h3 id="the-three-independent-calculations">The Three Independent
+Calculations</h3>
+<p>To compute the adsorption energy:
+<math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>E</mi><mtext mathvariant="normal">ads</mtext></msub><mo>=</mo><msub><mi>E</mi><mtext mathvariant="normal">total</mtext></msub><mrow><mo stretchy="true" form="prefix">[</mo><mtext mathvariant="normal">Slab</mtext><mo>+</mo><mtext mathvariant="normal">Mol</mtext><mo stretchy="true" form="postfix">]</mo></mrow><mo>−</mo><msub><mi>E</mi><mtext mathvariant="normal">slab</mtext></msub><mrow><mo stretchy="true" form="prefix">[</mo><mtext mathvariant="normal">Clean Slab</mtext><mo stretchy="true" form="postfix">]</mo></mrow><mo>−</mo><msub><mi>E</mi><mtext mathvariant="normal">mol</mtext></msub><mrow><mo stretchy="true" form="prefix">[</mo><mtext mathvariant="normal">Isolated Mol</mtext><mo stretchy="true" form="postfix">]</mo></mrow></mrow><annotation encoding="application/x-tex">E_{\text{ads}} = E_{\text{total}}[\text{Slab}+\text{Mol}] - E_{\text{slab}}[\text{Clean Slab}] - E_{\text{mol}}[\text{Isolated Mol}]</annotation></semantics></math></p>
+<ol>
+<li><p><strong>System 1 (Total):</strong>
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>H</mi><mn>2</mn></msub><mi>O</mi></mrow><annotation encoding="application/x-tex">H_2O</annotation></semantics></math>
+adsorbed on
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>T</mi><mi>i</mi><msub><mi>O</mi><mn>2</mn></msub></mrow><annotation encoding="application/x-tex">TiO_2</annotation></semantics></math>
+slab in cell
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>a</mi><mo>×</mo><mi>b</mi><mo>×</mo><mi>c</mi></mrow><annotation encoding="application/x-tex">a \times b \times c</annotation></semantics></math>.
+Output:
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>E</mi><mtext mathvariant="normal">total</mtext></msub><mo>=</mo><mo>−</mo><mn>14256.789</mn><mrow><mspace width="0.333em"></mspace><mtext mathvariant="normal"> eV</mtext></mrow></mrow><annotation encoding="application/x-tex">E_{\text{total}} = -14256.789\text{ eV}</annotation></semantics></math>.</p></li>
+<li><p><strong>System 2 (Clean Slab):</strong> Bare
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>T</mi><mi>i</mi><msub><mi>O</mi><mn>2</mn></msub></mrow><annotation encoding="application/x-tex">TiO_2</annotation></semantics></math>
+slab in the exact same cell
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>a</mi><mo>×</mo><mi>b</mi><mo>×</mo><mi>c</mi></mrow><annotation encoding="application/x-tex">a \times b \times c</annotation></semantics></math>.
+Output:
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>E</mi><mtext mathvariant="normal">slab</mtext></msub><mo>=</mo><mo>−</mo><mn>13850.123</mn><mrow><mspace width="0.333em"></mspace><mtext mathvariant="normal"> eV</mtext></mrow></mrow><annotation encoding="application/x-tex">E_{\text{slab}} = -13850.123\text{ eV}</annotation></semantics></math>.</p></li>
+<li><p><strong>System 3 (Free Molecule):</strong> Isolated
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>H</mi><mn>2</mn></msub><mi>O</mi></mrow><annotation encoding="application/x-tex">H_2O</annotation></semantics></math>
+molecule in the exact same cell. Output:
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>E</mi><mtext mathvariant="normal">mol</mtext></msub><mo>=</mo><mo>−</mo><mn>405.892</mn><mrow><mspace width="0.333em"></mspace><mtext mathvariant="normal"> eV</mtext></mrow></mrow><annotation encoding="application/x-tex">E_{\text{mol}} = -405.892\text{ eV}</annotation></semantics></math>.</p></li>
+</ol>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>E</mi><mtext mathvariant="normal">ads</mtext></msub><mo>=</mo><mo>−</mo><mn>14256.789</mn><mo>−</mo><mrow><mo stretchy="true" form="prefix">(</mo><mo>−</mo><mn>13850.123</mn><mo stretchy="true" form="postfix">)</mo></mrow><mo>−</mo><mrow><mo stretchy="true" form="prefix">(</mo><mo>−</mo><mn>405.892</mn><mo stretchy="true" form="postfix">)</mo></mrow><mo>=</mo><mo>−</mo><mn>0.774</mn><mrow><mspace width="0.333em"></mspace><mtext mathvariant="normal"> eV</mtext></mrow><mspace width="1.0em"></mspace><mrow><mo stretchy="true" form="prefix">(</mo><mtext mathvariant="normal">Exothermic Physisorption</mtext><mo stretchy="true" form="postfix">)</mo></mrow></mrow><annotation encoding="application/x-tex">E_{\text{ads}} = -14256.789 - (-13850.123) - (-405.892) = -0.774\text{ eV} \quad (\text{Exothermic Physisorption})</annotation></semantics></math></p>
+<h3 id="planar-average-charge-density-difference-cdd">Planar Average
+Charge Density Difference (CDD)</h3>
+<p>Request valence charge densities: <code>SaveRho true</code>. Generate
+3D grid files:
+<math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>Δ</mi><mi>ρ</mi><mrow><mo stretchy="true" form="prefix">(</mo><mi>𝐫</mi><mo stretchy="true" form="postfix">)</mo></mrow><mo>=</mo><msub><mi>ρ</mi><mtext mathvariant="normal">total</mtext></msub><mrow><mo stretchy="true" form="prefix">(</mo><mi>𝐫</mi><mo stretchy="true" form="postfix">)</mo></mrow><mo>−</mo><msub><mi>ρ</mi><mtext mathvariant="normal">slab</mtext></msub><mrow><mo stretchy="true" form="prefix">(</mo><mi>𝐫</mi><mo stretchy="true" form="postfix">)</mo></mrow><mo>−</mo><msub><mi>ρ</mi><mtext mathvariant="normal">mol</mtext></msub><mrow><mo stretchy="true" form="prefix">(</mo><mi>𝐫</mi><mo stretchy="true" form="postfix">)</mo></mrow></mrow><annotation encoding="application/x-tex">\Delta\rho(\mathbf{r}) = \rho_{\text{total}}(\mathbf{r}) - \rho_{\text{slab}}(\mathbf{r}) - \rho_{\text{mol}}(\mathbf{r})</annotation></semantics></math>
+Integrate in the
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>x</mi><mi>y</mi></mrow><annotation encoding="application/x-tex">xy</annotation></semantics></math>-plane
+to yield the planar profile:
+<math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>Δ</mi><mover><mi>ρ</mi><mo accent="true">‾</mo></mover><mrow><mo stretchy="true" form="prefix">(</mo><mi>z</mi><mo stretchy="true" form="postfix">)</mo></mrow><mo>=</mo><mfrac><mn>1</mn><mi>A</mi></mfrac><mo>∬</mo><mi>Δ</mi><mi>ρ</mi><mrow><mo stretchy="true" form="prefix">(</mo><mi>x</mi><mo>,</mo><mi>y</mi><mo>,</mo><mi>z</mi><mo stretchy="true" form="postfix">)</mo></mrow><mi>d</mi><mi>x</mi><mi>d</mi><mi>y</mi></mrow><annotation encoding="application/x-tex">\Delta\bar{\rho}(z) = \frac{1}{A} \iint \Delta\rho(x,y,z) dx dy</annotation></semantics></math>
+and the cumulative charge transfer across the interface:
+<math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>Δ</mi><mi>Q</mi><mrow><mo stretchy="true" form="prefix">(</mo><mi>z</mi><mo stretchy="true" form="postfix">)</mo></mrow><mo>=</mo><msubsup><mo>∫</mo><mrow><mo>−</mo><mi>∞</mi></mrow><mi>z</mi></msubsup><mi>Δ</mi><mover><mi>ρ</mi><mo accent="true">‾</mo></mover><mrow><mo stretchy="true" form="prefix">(</mo><mi>z</mi><mi>′</mi><mo stretchy="true" form="postfix">)</mo></mrow><mi>d</mi><mi>z</mi><mi>′</mi></mrow><annotation encoding="application/x-tex">\Delta Q(z) = \int_{-\infty}^z \Delta\bar{\rho}(z&#39;) dz&#39;</annotation></semantics></math></p>
+<p>In **1⃝2 Surface &amp; Work Function Studio
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mo>→</mo><annotation encoding="application/x-tex">\to</annotation></semantics></math>
+Planar Average CDD**, uploading the resulting <code>.cube</code> or
+<code>.dat</code> file renders the dual-axis chart:</p>
+<ul>
+<li><p>Peak accumulation region
+(<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo>+</mo><mi>Δ</mi><mi>ρ</mi></mrow><annotation encoding="application/x-tex">+\Delta\rho</annotation></semantics></math>:
+electron buildup at the interface bond).</p></li>
+<li><p>Peak depletion region
+(<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo>−</mo><mi>Δ</mi><mi>ρ</mi></mrow><annotation encoding="application/x-tex">-\Delta\rho</annotation></semantics></math>:
+charge loss from the substrate surface).</p></li>
+<li><p>Net transferred charge
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>Δ</mi><mi>q</mi></mrow><annotation encoding="application/x-tex">\Delta q</annotation></semantics></math>
+and interface dipole
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>Δ</mi><mi>μ</mi></mrow><annotation encoding="application/x-tex">\Delta\mu</annotation></semantics></math>
+in Debye.</p></li>
+</ul>
+<div class="center">
+<hr />
+<p><br />
+<strong>End of Documentation</strong><br />
+Generated for SIESTA 5.x &amp; SIESTA Input Builder Web Studio</p>
+</div>
+</body>
+</html>

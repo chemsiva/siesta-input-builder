@@ -6,6 +6,32 @@ Equivalent to BURAI/pw.gui for Quantum ESPRESSO, but for **SIESTA 5.4.2+**.
 
 ---
 
+## 📚 Comprehensive Documentation & First-Principles Handbook (LaTeX / PDF)
+
+A complete, textbook-grade **19-page universal documentation handbook** has been prepared in full LaTeX format and compiled into a lightweight (339 KB) vector PDF:
+
+* **📄 Complete LaTeX Source:** [`docs/siesta_universal_guide.tex`](./docs/siesta_universal_guide.tex) (100% standard LaTeX, Overleaf & `pdflatex`-ready).
+* **📥 Direct PDF Download:** [`docs/SIESTA_Universal_Guide.pdf`](./docs/SIESTA_Universal_Guide.pdf) (High-resolution typography, vector equations, and compact size).
+* **🌐 In-App Access:** Click the **`📚 User Guide`** button directly in the web application toolbar to view or save the handbook.
+
+### What the Handbook Covers (Designed for Zero-Knowledge Beginners to Advanced Users)
+1. **First-Principles Foundations:** Many-body problem, Hohenberg-Kohn theorems, Kohn-Sham mapping, and LCAO vs. plane-wave DFT ($O(N)$ scaling).
+2. **FDF Language Architecture:** Case insensitivity, physical dimension units, and block formatting.
+3. **Crystal Lattice & Atomic Coordinates:** Formats (`Fractional`, `NotScaledCartesianAng`), surface vacuum padding, and slab dipole corrections.
+4. **Pseudopotentials & PAO Basis Sets:** Norm-conservation, Kleinman-Bylander projectors, PSF vs. PSML, cardinality (`SZ`, `DZP`, `TZP`), confinement radii, and `PAO.EnergyShift` (100–300 meV).
+5. **Real-Space Grid & XC Functionals:** `MeshCutoff` ($E_{\text{cut}} \leftrightarrow \Delta x$), the eggbox effect, LDA/GGA-PBE, Grimme DFT-D3, spin polarization, and spin-orbit coupling.
+6. **Self-Consistent Field (SCF):** Density matrix $P_{\mu\nu}$, Pulay DIIS mixing (`DM.NumberPulay`), tolerances, and electronic Fermi smearing.
+7. **Brillouin Zone & K-Points:** Monkhorst-Pack reciprocal meshes and surface dimensionality rules ($k_z = 1$ for slabs).
+8. **Relaxation, Section 7.7 Constraints & MD:** CG/FIRE optimizers, general constraints (`%block Geometry.Constraints`, `atom [1 -- 4]`, directional `0. 0. 1.`, `cell-vector C`), and $NVE/NVT/NPT$ ensembles.
+9. **Post-Processing & Spectroscopy:** Band lines (`gnubands`), projected DOS (`PDOS.xml`), optical dielectric functions ($\varepsilon_2(\omega)$), work functions ($\Phi = V_{\text{vac}} - E_F$, Macroave), and Section 6.29 `TIMES` execution accounting.
+10. **SIESTA Input Builder Web Studio Manual:** In-depth guide to all 13 interactive sections, 3D visualization, and theme customization.
+11. **Three Step-by-Step Hands-On Tutorials:**
+    * *Tutorial 1:* Bulk Silicon ($Si$) Diamond — Optimization, Bands \& DOS.
+    * *Tutorial 2:* $FAPbI_3$ Perovskite (001) Slab — Cleaving, Bottom-Layer Freezing, and Work Function.
+    * *Tutorial 3:* Molecule-Surface Adsorption — Binding Energy $E_{\text{ads}}$ and Planar Charge Density Difference $\Delta\rho(z)$.
+
+---
+
 ## Features
 
 | Section | What you get |
