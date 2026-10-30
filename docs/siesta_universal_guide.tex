@@ -3,7 +3,7 @@
 \usepackage[T1]{fontenc}
 \usepackage{amsmath,amssymb,amsfonts,bm}
 \usepackage{geometry}
-\geometry{a4paper, margin=20mm, top=22mm, bottom=25mm}
+\geometry{a4paper, margin=18mm, top=20mm, bottom=22mm}
 \usepackage{graphicx}
 \usepackage{booktabs}
 \usepackage{array}
@@ -15,7 +15,7 @@
 \usepackage{microtype}
 \usepackage{enumitem}
 
-% Color Definitions
+% Palette
 \definecolor{siestaBlue}{RGB}{30, 64, 175}
 \definecolor{siestaNavy}{RGB}{15, 23, 42}
 \definecolor{siestaCyan}{RGB}{2, 132, 199}
@@ -23,22 +23,19 @@
 \definecolor{siestaAmber}{RGB}{217, 119, 6}
 \definecolor{codeBg}{RGB}{248, 250, 252}
 \definecolor{codeBorder}{RGB}{203, 213, 225}
-\definecolor{boxBg}{RGB}{241, 245, 249}
 
-% Hyperlink configuration
 \hypersetup{
     colorlinks=true,
     linkcolor=siestaBlue,
     filecolor=siestaCyan,      
     urlcolor=siestaBlue,
     citecolor=siestaGreen,
-    pdftitle={SIESTA Universal User Guide & First-Principles DFT Handbook},
-    pdfauthor={Sivakumar & SIESTA Research Group},
-    pdfsubject={Comprehensive Theory, FDF Input Reference, Tutorials, and Web GUI Documentation},
-    pdfkeywords={SIESTA, DFT, LCAO, FDF, Electronic Structure, Perovskites, Work Function, NEB}
+    pdftitle={SIESTA Input Builder: Comprehensive User Manual & Hidden Features Handbook},
+    pdfauthor={Sivakumar & Materials Science DFT Consortium},
+    pdfsubject={Detailed Step-by-Step Operations, Hidden Features, and Workflow Guide for SIESTA Input Builder GUI},
+    pdfkeywords={SIESTA, GUI, FDF, VASP, ASE GUI, Constraints, CI-NEB, Phonons, Work Function, Band Alignment}
 }
 
-% Section Titles Styling
 \titleformat{\section}
   {\normalfont\Large\bfseries\color{siestaNavy}}{\thesection}{1em}{}[\titlerule]
 \titleformat{\subsection}
@@ -46,7 +43,6 @@
 \titleformat{\subsubsection}
   {\normalfont\normalsize\bfseries\color{siestaCyan}}{\thesubsubsection}{1em}{}
 
-% Listings Styling
 \lstset{
     backgroundcolor=\color{codeBg},
     basicstyle=\ttfamily\footnotesize,
@@ -64,765 +60,432 @@
     xrightmargin=2mm
 }
 
-% Header and Footer
 \pagestyle{fancy}
 \fancyhf{}
-\fancyhead[L]{\small\color{gray}\textit{SIESTA Universal User Guide \& First-Principles Handbook}}
-\fancyhead[R]{\small\color{siestaBlue}\textbf{SIESTA 5.x / Web Studio}}
+\fancyhead[L]{\small\color{gray}\textit{SIESTA Input Builder: Complete GUI Manual \& Hidden Features}}
+\fancyhead[R]{\small\color{siestaBlue}\textbf{Web Studio Operations Guide}}
 \fancyfoot[C]{\thepage}
 \renewcommand{\headrulewidth}{0.4pt}
 \renewcommand{\footrulewidth}{0.4pt}
 
-\title{\Huge \textbf{SIESTA Universal User Guide \& First-Principles DFT Handbook}\\[0.3em]
-\large \textit{From Fundamental Quantum Mechanics to High-Throughput Calculations: Theory, FDF Architecture, Advanced Workflows, and GUI Studio Operations}}
+\title{\Huge \textbf{SIESTA Input Builder Web Studio}\\[0.3em]
+\Large \textbf{The Complete GUI User Manual \& Hidden Features Handbook}\\[0.4em]
+\large \textit{A Comprehensive, Step-by-Step Operational Reference Covering Every Button, Section, Converter, Analysis Suite, and Power-User Workflow}}
 \author{\textbf{Sivakumar \& Materials Science DFT Consortium}\\
 \small Computational Materials Laboratory \& Surface Engineering Group\\
-\footnotesize Interactive Web Studio: \url{https://chemsiva.github.io/siesta-input-builder/}}
-\date{\textbf{October 2026} \quad | \quad \textbf{Target: SIESTA 5.x / 5.4.2 \& Web Studio}}
+\footnotesize Online Web Application: \url{https://chemsiva.github.io/siesta-input-builder/}\\
+\footnotesize GitHub Repository: \url{https://github.com/chemsiva/siesta-input-builder}}
+\date{\textbf{October 2026} \quad | \quad \textbf{App Version 5.4.2 (Production)}}
 
 \begin{document}
 \maketitle
-% ── TITLE PAGE ──────────────────────────────────────────────────────────────
-\begin{titlepage}
-    \centering
-    \vspace*{1.5cm}
-    
-    {\Huge \bfseries \color{siestaNavy} SIESTA Universal User Guide\\[0.3em]
-    \Large \& First-Principles DFT Handbook}
-    
-    \vspace{0.8cm}
-    {\large \color{siestaCyan} \textbf{From Fundamental Quantum Mechanics to High-Throughput Calculations:\\
-    Theory, FDF Architecture, Advanced Workflows, and GUI Studio Operations}}
-    
-    \vspace{1.5cm}
-    \rule{0.6\textwidth}{1.5pt}
-    \vspace{1.5cm}
-    
-    {\large \textbf{Target Codebases:}\\
-    \texttt{SIESTA 5.x (5.4.2)} \quad \& \quad \texttt{SIESTA Input Builder Web Studio}}\\[0.8cm]
-    
-    {\normalsize \textbf{Author \& Maintainer:}\\
-    \textbf{Sivakumar \& Materials Science DFT Consortium}\\
-    \textit{Computational Materials Laboratory \& Surface Engineering Group}}\\[0.4cm]
-    
-    {\footnotesize Online Interactive GUI: \url{https://chemsiva.github.io/siesta-input-builder/}\\[0.2cm]
-    Repository: \url{https://github.com/chemsiva/siesta-input-builder}}
-    
-    \vfill
-    
-    \begin{minipage}{0.85\textwidth}
-    \small \centering
-    \textit{This handbook is designed as a universal primer: a complete beginner with zero prior knowledge of density functional theory or SIESTA can master the underlying physics, parameters, and input architecture from the ground up, while experienced computational researchers can leverage the detailed operational reference, general constraints (Section 7.7), time accounting (Section 6.29), and converter pipelines.}
-    \end{minipage}
-    
-    \vspace{1cm}
-    {\small \today}
-\end{titlepage}
+
+\begin{abstract}
+\noindent The \textbf{SIESTA Input Builder} is an open-source, client-side web application designed to eliminate the steep learning curve, manual formatting errors, and scattered keyword documentation of the SIESTA density functional theory (DFT) software suite. Providing an intuitive graphical interface equivalent to BURAI or pw.gui for Quantum ESPRESSO, it covers the complete operational lifecycle: from initial crystal import (CIF/POSCAR) to advanced constraints, reaction path CI-NEB interpolation, vibrational phonon matrices, real-space surface work functions, and execution time accounting. This handbook serves as the exhaustive operational reference, detailing every screen, button, drawer, and hidden shortcut across the 13 modular sections.
+\end{abstract}
 
 \tableofcontents
 \newpage
 
-% ── CHAPTER 1 ───────────────────────────────────────────────────────────────
-\section{Foundations of SIESTA \& First-Principles Physics}
+% ── SECTION 1 ───────────────────────────────────────────────────────────────
+\section{Application Architecture \& Global Workflow}
 
-\subsection{The Quantum Many-Body Challenge and Hohenberg-Kohn Theorems}
-In condensed matter physics and quantum chemistry, the fundamental goal is to solve the time-independent Schr{\"o}dinger equation for a collection of $N$ interacting electrons and $M$ atomic nuclei:
-\begin{equation}
-\hat{H} \Psi(\mathbf{r}_1, \dots, \mathbf{r}_N; \mathbf{R}_1, \dots, \mathbf{R}_M) = E \Psi(\mathbf{r}_1, \dots, \mathbf{r}_N; \mathbf{R}_1, \dots, \mathbf{R}_M)
-\end{equation}
-Under the \textbf{Born-Oppenheimer approximation}, because atomic nuclei are thousands of times more massive than electrons ($M_{\text{nuc}} \gg m_e$), nuclear kinetic energy is decoupled, treating nuclei as static external point charges that produce a Coulomb potential $V_{\text{ext}}(\mathbf{r})$ felt by the electrons. 
-
-Even with this simplification, the exact electronic wave function $\Psi(\mathbf{r}_1, \dots, \mathbf{r}_N)$ depends on $3N$ spatial coordinates. For a modest semiconductor slab containing 100 atoms ($\sim 1000$ valence electrons), $\Psi$ lives in a 3000-dimensional Hilbert space, rendering direct wave function approaches computationally impossible for solid-state materials.
-
-\textbf{Density Functional Theory (DFT)} circumvents this exponential bottleneck through the two foundational theorems of \textbf{Hohenberg and Kohn (1964)}:
-\begin{enumerate}[leftmargin=*]
-    \item \textbf{Theorem 1 (One-to-One Mapping):} The ground-state electron density $\rho(\mathbf{r})$ uniquely determines the external potential $V_{\text{ext}}(\mathbf{r})$ up to an additive constant, and therefore uniquely determines the full Hamiltonian and all ground-state observables of the many-body system.
-    \item \textbf{Theorem 2 (Variational Principle):} There exists a universal energy functional $E[\rho]$ such that the exact ground-state density minimizes $E[\rho]$, yielding the true ground-state energy $E_0$:
-    \begin{equation}
-    E_0 \le E[\tilde{\rho}] \quad \text{for any trial density } \tilde{\rho}(\mathbf{r}) \ge 0, \quad \int \tilde{\rho}(\mathbf{r}) d^3\mathbf{r} = N
-    \end{equation}
-\end{enumerate}
-
-\subsection{The Kohn-Sham Formulation}
-To make this variational principle computationally tractable, \textbf{Kohn and Sham (1965)} replaced the intractable interacting electron system with an auxiliary, non-interacting electron system that yields the exact same ground-state density $\rho(\mathbf{r})$. The total energy functional is partitioned into four physically transparent terms:
-\begin{equation}
-E[\rho] = T_s[\rho] + \int \rho(\mathbf{r}) V_{\text{ext}}(\mathbf{r}) d^3\mathbf{r} + E_H[\rho] + E_{\text{xc}}[\rho]
-\end{equation}
-where:
+\subsection{Zero-Backend Security \& Privacy Architecture}
+Unlike cloud DFT portals that require uploading sensitive structure files to third-party remote servers, the SIESTA Input Builder runs \textbf{100\% inside your local browser}:
 \begin{itemize}[leftmargin=*]
-    \item $T_s[\rho] = -\frac{\hbar^2}{2m} \sum_{i=1}^N \int \psi_i^*(\mathbf{r}) \nabla^2 \psi_i(\mathbf{r}) d^3\mathbf{r}$ is the kinetic energy of non-interacting electrons described by single-particle Kohn-Sham orbitals $\psi_i(\mathbf{r})$.
-    \item $E_H[\rho] = \frac{e^2}{2} \iint \frac{\rho(\mathbf{r})\rho(\mathbf{r}')}{|\mathbf{r} - \mathbf{r}'|} d^3\mathbf{r} d^3\mathbf{r}'$ is the classical electrostatic Hartree electron-electron repulsion.
-    \item $E_{\text{xc}}[\rho]$ is the \textbf{Exchange-Correlation (XC) functional}, which encapsulates all quantum mechanical many-body effects: Pauli exchange repulsion and dynamic electron correlation.
+    \item \textbf{No Server Computing:} Built with React 19, Vite, and Zustand. All CIF parsing, VASP coordinate transformations, 3D WebGL rendering, and FDF generation take place in your browser's V8 JavaScript engine.
+    \item \textbf{Confidentiality of Novel Materials:} Proprietary atomic coordinates, unreleased battery/catalyst crystal structures, and unpublished coordinates never cross the network. You can disconnect your internet entirely after opening the site, and the application remains fully functional.
+    \item \textbf{Zero Installation Friction:} Requires no Python environments, no compilation of GUI toolkits (Tkinter/Qt), and no local server daemons. Works across Linux, macOS, Windows, and tablet browsers.
 \end{itemize}
 
-Varying $E[\rho]$ with respect to $\psi_i^*(\mathbf{r})$ yields the canonical \textbf{Kohn-Sham Equations}:
-\begin{equation}
-\left( -\frac{\hbar^2}{2m}\nabla^2 + V_{\text{eff}}[\rho](\mathbf{r}) \right) \psi_i(\mathbf{r}) = \varepsilon_i \psi_i(\mathbf{r}), \quad \text{where } \rho(\mathbf{r}) = \sum_{i=1}^N |\psi_i(\mathbf{r})|^2
-\end{equation}
-with the effective single-particle potential defined as:
-\begin{equation}
-V_{\text{eff}}(\mathbf{r}) = V_{\text{ext}}(\mathbf{r}) + e^2 \int \frac{\rho(\mathbf{r}')}{|\mathbf{r} - \mathbf{r}'|} d^3\mathbf{r}' + \frac{\delta E_{\text{xc}}[\rho]}{\delta \rho(\mathbf{r})}
-\end{equation}
-Because $V_{\text{eff}}$ depends on $\rho(\mathbf{r})$, which in turn depends on the unknown wavefunctions $\psi_i(\mathbf{r})$, the Kohn-Sham equations must be solved iteratively until self-consistency is achieved (\textbf{Self-Consistent Field, SCF}).
+\subsection{The Three-Panel Layout}
+The application interface is divided into three functional areas:
+\begin{enumerate}[leftmargin=*]
+    \item \textbf{Top Toolbar (Header):} Global project controls, one-click template presets, convergence sweep package generators, CIF/FDF import, validation engine, export actions, and Dark/Light theme switching.
+    \item \textbf{Left Navigation Sidebar:} The master index providing rapid switching between all 13 specialized calculation sections, accompanied by a dynamic real-time validation warning badge.
+    \item \textbf{Main Workspace Pane:} The active form interface with contextual tooltips, parameter units, interactive data grids, 3D visualizers, and analysis studios.
+    \item \textbf{Right-Hand Live FDF Preview Pane:} A persistent 320px wide code drawer that regenerates the exact, formatted, production-ready \texttt{.fdf} file on every single keystroke.
+\end{enumerate}
 
-\subsection{Plane-Wave DFT vs. Linear Combination of Atomic Orbitals (LCAO)}
-To solve the differential Kohn-Sham equations on a computer, the continuous orbitals $\psi_i(\mathbf{r})$ must be expanded in a discrete mathematical basis set:
-\begin{equation}
-\psi_i(\mathbf{r}) = \sum_{\mu} c_{\mu i} \phi_{\mu}(\mathbf{r})
-\end{equation}
-The choice of basis functions $\phi_{\mu}(\mathbf{r})$ fundamentally distinguishes computational DFT codes:
+\subsection{Dark and Light Mode Switching}
+Located in the upper right of the Toolbar:
+\begin{itemize}[leftmargin=*]
+    \item \textbf{\texttt{🌙 Dark} Mode (Default):} Tailored for long computing sessions and night research. High-contrast slate backgrounds (\texttt{\#0f1117}) with vibrant syntax accents.
+    \item \textbf{\texttt{☀️ Light} Mode:} Crisp, publication-white canvas (\texttt{\#ffffff}) with deep slate typography (\texttt{\#0f172a}). Ideal for capturing clean figures, creating presentation slides, and working in bright daylight.
+    \item \textbf{State Persistence:} The selected theme is stored in browser \texttt{localStorage} under \texttt{siesta\_theme}, restoring your preferred appearance across browser refreshes.
+\end{itemize}
+
+\newpage
+% ── SECTION 2 ───────────────────────────────────────────────────────────────
+\section{The Global Toolbar \& Top Navigation}
+
+\subsection{Pre-Configured Calculation Templates (\texttt{📋 Templates ▾})}
+The \textbf{Templates} dropdown allows instant population of standard scientific workflows in a single click:
+\begin{itemize}[leftmargin=*]
+    \item \textbf{Bulk SCF (Single-Point):} Sets up high-precision total energy calculation on periodic crystals. Configures \texttt{MaxSCFIterations 100}, \texttt{DM.Tolerance 1.0d-4}, \texttt{MeshCutoff 300 Ry}, and Monkhorst-Pack $k$-grid.
+    \item \textbf{Geometry Relaxation (CG):} Configures atomic position minimization via Conjugate Gradient (\texttt{MD.TypeOfRun CG}), sets force tolerance to \texttt{0.04 eV/\AA}, and requests force output (\texttt{WriteForces true}).
+    \item \textbf{Variable-Cell Relaxation:} Optimizes both atomic positions and cell vectors (\texttt{MD.VariableCell true}), maintaining stress tolerance at \texttt{1.0 GPa}.
+    \item \textbf{Band Structure Calculation:} Configures SCF convergence followed by dispersion tracking along high-symmetry $k$-lines (\texttt{BandLinesScale ReciprocalLatticeVectors}).
+    \item \textbf{Slab / Surface Calculation:} Automatically expands unit cell along $z$, enables \texttt{Slab.DipoleCorrection true}, enforces $k_z = 1$, and requests electrostatic potential output (\texttt{SaveElectrostaticPotential true}).
+    \item \textbf{Density of States (DOS + PDOS):} Configures orbital-resolved projected DOS energy window (\texttt{EF -10.0 10.0 0.1 1000 eV}) and dense $k$-mesh.
+\end{itemize}
+
+\subsection{Automated Convergence Suite Generator (\texttt{⚡ Convergence Suite ▾})}
+Achieving publication-grade DFT results requires proving that your energy and lattice parameters are converged with respect to numerical cutoffs. The toolbar provides automated zip package generators:
+\begin{enumerate}[leftmargin=*]
+    \item \textbf{MeshCutoff Sweep (\texttt{MeshCutoff Sweep (.zip)}):}
+    \begin{itemize}
+        \item Generates a complete series of individual FDF files stepping from 150 Ry to 500 Ry (150, 200, 250, 300, 350, 400, 450, 500 Ry).
+        \item Includes an automated parallel bash runner script (\texttt{run\_mesh.sh}) with SLURM/MPI execution commands.
+        \item Includes a Python script (\texttt{plot\_mesh\_convergence.py}) using \texttt{matplotlib} to extract total energies from stdout and plot the convergence plateau ($|\Delta E| < 1\text{ meV/atom}$).
+    \end{itemize}
+    \item \textbf{K-Grid Sweep (\texttt{K-Grid Sweep (.zip)}):}
+    \begin{itemize}
+        \item Generates a series of $k$-mesh densities ($4\times4\times4, 6\times6\times6, 8\times8\times8, 10\times10\times10, 12\times12\times12$).
+        \item Automatically respects 2D slab geometry if active ($N_x \times N_y \times 1$).
+        \item Bundles automated runner and convergence plotting scripts.
+    \end{itemize}
+\end{enumerate}
+
+\subsection{File Import Engines: CIF and FDF}
+\begin{itemize}[leftmargin=*]
+    \item \textbf{\texttt{💎 Import CIF}:} Ingests raw \texttt{.cif} files from databases (Materials Project, ICSD, COD, AFLOW, VESTA). The client-side CIF parser extracts:
+    \begin{itemize}
+        \item Lattice parameters ($a, b, c, \alpha, \beta, \gamma$) and converts them to Cartesian lattice vectors.
+        \item Atomic coordinates and fractional space-group symmetry expansions.
+        \item Chemical element symbols and automatically assigns atomic numbers $Z$.
+        \item Populates Section \textcircled{1}, \textcircled{2}, and \textcircled{3} simultaneously.
+    \end{itemize}
+    \item \textbf{\texttt{📂 Load .fdf}:} Round-trip loader. Ingests any legacy or modern SIESTA input file, parses keywords and blocks, and repopulates every form control across all sections.
+\end{itemize}
+
+\subsection{Interactive Validation Engine (\texttt{🔍 Validate})}
+Clicking **Validate** runs a comprehensive consistency check against official SIESTA rules:
+\begin{itemize}[leftmargin=*]
+    \item Flags empty or invalid \texttt{SystemLabel} identifiers.
+    \item Verifies that species indices in \texttt{AtomicCoordinatesAndAtomicSpecies} match entries in \texttt{ChemicalSpeciesLabel}.
+    \item Warns if \texttt{MD.VariableCell true} is active on a surface slab with unconstrained $c$-axis.
+    \item Flags non-physical cutoffs (e.g., \texttt{MeshCutoff < 100 Ry}).
+    \item Highlights errors with a red badge in the sidebar and lists exact remedy steps.
+\end{itemize}
+
+\subsection{Export Mechanisms: Plain FDF vs. Complete Cluster Package}
+\begin{itemize}[leftmargin=*]
+    \item \textbf{\texttt{⬇ Download .fdf}:} Downloads the single active \texttt{.fdf} input file.
+    \item \textbf{\texttt{📦 Download Package}:} The recommended export for HPC clusters. Downloads a ready-to-run \texttt{.zip} package containing:
+    \begin{enumerate}
+        \item \texttt{SystemLabel.fdf}: The complete calculation input.
+        \item \texttt{run\_siesta.sh}: Production bash submission script configured with your specified pseudopotential directory:
+\begin{lstlisting}[language=bash]
+#!/bin/bash
+# Auto-generated by SIESTA Input Builder
+export SIESTA_PS_PATH="/scratch/user/pseudos"
+export SIESTA_PP_PATH="/scratch/user/pseudos"
+mpirun -np 4 siesta < SystemLabel.fdf | tee SystemLabel.out
+\end{lstlisting}
+        \item \texttt{README\_RUN.txt}: Execution instructions, MPI core recommendations, and post-processing commands.
+    \end{enumerate}
+\end{itemize}
+
+\newpage
+% ── SECTION 3 ───────────────────────────────────────────────────────────────
+\section{Section-by-Section Walkthrough \& Hidden Details}
+
+\subsection{Section \textcircled{1} System: Basic Identifiers \& Auto-Detection}
+\begin{itemize}[leftmargin=*]
+    \item \textbf{\texttt{SystemLabel}:} The core naming string prefixed to all calculation output files (e.g. \texttt{SystemLabel.out}, \texttt{.DM}, \texttt{.bands}, \texttt{.ANI}, \texttt{.VH}, \texttt{.times}). Avoid spaces or special characters.
+    \item \textbf{\texttt{SystemName}:} A descriptive title for human readability.
+    \item \textbf{Hidden Power Detail (SIESTA 5 Auto-Detection):} In legacy SIESTA 4.x, \texttt{NumberOfAtoms} and \texttt{NumberOfSpecies} were mandatory. In modern SIESTA 5.x, these values are automatically counted by the code from the coordinate and species blocks. If you leave these fields blank in the GUI, the builder cleanly omits them from the FDF, preventing count mismatch errors when adding or removing atoms!
+\end{itemize}
+
+\subsection{Section \textcircled{2} Structure: Lattice, Slabs \& 3D Crystal Viewer}
+
+\subsubsection{Coordinate Formats and Units}
+The \texttt{AtomicCoordinatesFormat} selector toggles how atomic positions are interpreted:
+\begin{itemize}[leftmargin=*]
+    \item \texttt{Fractional}: Dimensionless values $0.0 \le u, v, w < 1.0$ relative to unit cell basis vectors.
+    \item \texttt{NotScaledCartesianAng}: Direct Cartesian positions $(x, y, z)$ in \AA ngstr{\"o}ms.
+\end{itemize}
+
+\subsubsection{Slab Cleavage \& Vacuum Engineering}
+Located in the dedicated **🛠️ Slab \& Vacuum Tools** card:
+\begin{itemize}[leftmargin=*]
+    \item \textbf{Add Vacuum Along Z:} Specify desired vacuum thickness (e.g. \texttt{15.0 \AA} or \texttt{20.0 \AA}). Clicking **Add Vacuum** automatically expands the $a_3 / c$ lattice vector and turns on \texttt{Slab.DipoleCorrection true} in Section \textcircled{4}.
+    \item \textbf{Center Slab in Cell:} Shifts atomic $z$-coordinates so that vacuum is symmetrically distributed above and below the atomic layers, preventing boundary clipping.
+    \item \textbf{Supercell Multiplier:} Enter $N_x, N_y, N_z$ (e.g. $2 \times 2 \times 1$) to replicate unit cell atoms into an expanded supercell for defect or adsorption modeling.
+\end{itemize}
+
+\subsubsection{Atomic Coordinates Table: Hidden Batch Clipboard Paste}
+\begin{itemize}[leftmargin=*]
+    \item Adding/removing atoms row by row is supported via **+ Add Atom** and the red **✕** button.
+    \item \textbf{Hidden Power Detail (Batch Paste):} You do \textit{not} need to type coordinates one by one! If you copy tabular text from Excel, VESTA, or a text file formatted as:
+\begin{verbatim}
+0.000000   0.000000   0.000000   1   Pb
+0.500000   0.500000   0.000000   2   I
+\end{verbatim}
+    simply click on any table cell and press \textbf{Ctrl+V} (or Cmd+V). The builder automatically parses the rows, expands the table, and populates $x, y, z$, species indices, and labels instantly!
+\end{itemize}
+
+\subsubsection{Interactive 3D Crystal Visualizer (WebGL \& Canvas 2D)}
+By default, the 3D viewer is set to **OFF** to guarantee zero lag when opening the page on low-power devices.
+Clicking **Turn ON 3D Viewer** activates the interactive viewport:
+\begin{itemize}[leftmargin=*]
+    \item \textbf{Interactive Orbit Controls:} Left-click drag to rotate; right-click drag to pan; mouse scroll to zoom in/out.
+    \item \textbf{Perspective vs Orthographic:} Switch between real perspective and orthogonal projections.
+    \item \textbf{Axes \& Unit Cell:} Toggle RGB Cartesian axes ($a_1 = \text{red}, a_2 = \text{green}, a_3 = \text{blue}$) and unit cell bounding box.
+    \item \textbf{Camera Snapping:} One-click projection buttons to snap directly to Top view (XY), Side view (XZ), or Front view (YZ).
+    \item \textbf{High-Resolution Snapshot:} Click **📸 Screenshot** to capture a publication-grade transparent PNG image of your crystal structure directly from the canvas.
+    \item \textbf{Dual-Engine Fallback:} If running inside a virtual machine or browser with WebGL disabled, the viewer automatically switches to an optimized HTML5 Canvas 2D engine.
+\end{itemize}
+
+\subsection{Section \textcircled{3} Species \& Basis: Pseudopotential Directory Scanner}
+
+\subsubsection{The Remote Server Path Embedding Problem}
+A frequent frustration in SIESTA calculations: you build an input on your laptop, copy the \texttt{.fdf} to a remote supercomputer cluster, and the job immediately crashes with:
+\begin{verbatim}
+Could not find pseudopotential file: Pb.psf
+\end{verbatim}
+In SIESTA, \texttt{\%block ChemicalSpeciesLabel} supports an optional fourth column specifying the absolute filesystem path to the pseudopotential file:
+\begin{lstlisting}
+%block ChemicalSpeciesLabel
+  1   82  Pb   /scratch/SIVAKUMAR/pseudos/Pb.psf
+  2   53  I    /scratch/SIVAKUMAR/pseudos/I.psf
+%endblock ChemicalSpeciesLabel
+\end{lstlisting}
+When specified, SIESTA reads the pseudopotentials directly from that directory regardless of where you submit the job from!
+
+\subsubsection{Folder Scanner \& Real-Time Matcher}
+In **Step 1**, enter the absolute path where your pseudopotentials reside on the cluster (e.g., \texttt{/scratch/user/pseudos}).
+In **Step 2**, click **📂 Scan Folder** and choose the local folder on your computer:
+\begin{itemize}[leftmargin=*]
+    \item The browser uses HTML5 `webkitdirectory` to scan filenames locally without uploading file content.
+    \item Click **⚡ Auto-Assign All**: The builder matches elements (e.g. symbol `Pb` matches `Pb.psf`, `Pb_pbe.psf`, or `Pb.psml`).
+    \item \textbf{Status Badges:} The table displays green **`✓ Found`** badges for confirmed files and amber **`⚠️ Missing`** badges for missing pseudopotentials.
+\end{itemize}
+
+\subsubsection{Basis Set Customization}
+\begin{itemize}[leftmargin=*]
+    \item \textbf{\texttt{PAO.BasisSize}:} Select \texttt{DZP} for production calculations; \texttt{SZ} for quick initial geometry screening.
+    \item \textbf{\texttt{PAO.EnergyShift}:} Slider and text box with unit conversion (meV, Ry, eV). Default is \texttt{100 meV}.
+    \item \textbf{Soft Confinement Drawer:} Toggle \texttt{PAO.SoftDefault true} to soften orbital second derivatives at cutoff boundaries, suppressing eggbox oscillations.
+\end{itemize}
+
+\subsection{Section \textcircled{4} DFT / XC: Exchange-Correlation, vdW \& DFT+U}
+\begin{itemize}[leftmargin=*]
+    \item \textbf{XC Functional \& Authors:} Select functional type (GGA, LDA, VDW) and author parameterization (PBE, PBEsol, CA, revPBE).
+    \item \textbf{\texttt{MeshCutoff}:} Energy cutoff governing real-space grid fineness. Standard values: 250–350 Ry for semiconductors; 350–450 Ry for oxides and transition metals.
+    \item \textbf{Grimme DFT-D3 Dispersion:} Toggle \texttt{DFTD3 true} with choice of zero damping or Becke-Johnson (BJ) damping.
+    \item \textbf{Spin Mode:} Toggle between \texttt{unpolarized}, \texttt{polarized} (collinear), \texttt{non-collinear}, and \texttt{spin-orbit}.
+    \item \textbf{🧲 Magnetic State Assistant:} Click presets for Ferromagnetic (all spins aligned), Antiferromagnetic (alternating $\pm S$), or Non-collinear spiral spins to auto-format the \texttt{\%block DM.InitSpin} block.
+    \item \textbf{🔬 DFT+U Assistant (\texttt{\%block DFTU.Proj}):} For transition metals ($Ni, Co, Fe, Ti$) or rare earths ($Ce$) where standard DFT fails due to self-interaction errors:
+    \begin{itemize}
+        \item Enable DFT+U and select species.
+        \item Specify orbital shell ($d$ or $f$), Hubbard on-site Coulomb $U$ (eV), and Hund's exchange $J$ (eV).
+        \item Automatically formats the formal SIESTA \texttt{\%block DFTU.Proj} block.
+    \end{itemize}
+\end{itemize}
+
+\subsection{Section \textcircled{5} SCF Control: Convergence \& Mixing}
+\begin{itemize}[leftmargin=*]
+    \item \textbf{\texttt{MaxSCFIterations}:} Maximum iteration limit (typically 100–150).
+    \item \textbf{\texttt{DM.Tolerance}:} Convergence density matrix threshold (typically \texttt{1.0d-4} to \texttt{1.0d-5}).
+    \item \textbf{\texttt{DM.MixingWeight}:} Linear mixing parameter. \textbf{Hidden Troubleshooting Tip:} If your calculation diverges or oscillates with wild energy swings, reduce mixing weight from \texttt{0.25} down to \texttt{0.05} or \texttt{0.08}.
+    \item \textbf{\texttt{DM.NumberPulay}:} Pulay DIIS history depth (typically 6 to 8).
+    \item \textbf{\texttt{ElectronicTemperature}:} Fermi-Dirac smearing width (typically \texttt{25 meV} for metals; \texttt{0 meV} for insulators).
+    \item \textbf{\texttt{DM.UseSaveDM}:} Toggle to \texttt{true} when restarting a calculation from an existing \texttt{SystemLabel.DM} density matrix file.
+\end{itemize}
+
+\subsection{Section \textcircled{6} K-Points: Reciprocal Mesh \& High-Symmetry Band Path}
+
+\subsubsection{Reciprocal Mesh Setup}
+Configure Monkhorst-Pack grid divisions ($N_x \times N_y \times N_z$) and displacement shifts ($0.5$ for off-$\Gamma$, $0.0$ for $\Gamma$-centered).
+\textbf{Dimensionality Protection:} If modeling a 2D slab or surface, the builder displays a guidance note reminding you to set $k_z = 1$.
+
+\subsubsection{⚡ Automated High-Symmetry Band Path Generator}
+Located in the **High-Symmetry Band Path Generator** card:
+\begin{itemize}[leftmargin=*]
+    \item Click **⚡ Auto-Detect Lattice Path**: The builder inspects your lattice vectors and identifies the Bravais lattice type (Cubic, FCC, BCC, Tetragonal, Hexagonal, Rhombohedral, Slabs).
+    \item It pre-populates standard crystallography paths (e.g. $\Gamma \to X \to W \to L \to \Gamma$ for FCC crystals; $\Gamma \to M \to K \to \Gamma$ for hexagonal/2D systems).
+    \item Customize division points per line segment and click **Apply to BandLines**.
+    \item \textbf{Fatbands Export:} Toggle \texttt{WFS.Write.For.Bands true} to output wavefunctions into \texttt{SystemLabel.fullBZ.WFSX} for orbital-projected band structure analysis.
+\end{itemize}
+
+\subsection{Section \textcircled{7} Bands \& DOS / PDOS: Electronic Structure}
+\begin{itemize}[leftmargin=*]
+    \item \textbf{Projected DOS (\texttt{\%block ProjectedDensityOfStates}):} Configure energy window ($E_{\text{min}}$ to $E_{\text{max}}$), Gaussian peak broadening width ($\sigma$), number of points, and energy units. Toggle \texttt{EF} to align energy relative to the Fermi level.
+    \item \textbf{Custom PDOS k-grid:} Toggle \texttt{PDOS.kgrid.MonkhorstPack} to use a denser $k$-point mesh for the DOS calculation than was used for the self-consistent SCF charge density.
+    \item \textbf{Local Density of States (LDOS):} Spatial energy window slice (\texttt{\%block LocalDensityOfStates}).
+    \item \textbf{\texttt{WriteEigenvalues}:} Toggle to write all Kohn-Sham eigenvalues to \texttt{SystemLabel.EIG}.
+\end{itemize}
+
+\subsection{Section \textcircled{8} Output Flags \& Results Viewer}
+This section contains two distinct workspaces selected via top tab pills:
+
+\subsubsection{Tab 1: FDF Output Flags}
+Configure which files SIESTA produces:
+\begin{itemize}[leftmargin=*]
+    \item \textbf{Trajectories:} \texttt{WriteMDXmol true} ($\implies$ \texttt{.ANI} for VMD/JMol/OVITO), \texttt{WriteMDhistory true} ($\implies$ \texttt{.MDE} thermodynamic record), \texttt{WriteCoorXmol true} ($\implies$ \texttt{.xyz}).
+    \item \textbf{Real-Space Grids:} \texttt{SaveRho} (charge density), \texttt{SaveDeltaRho} (charge difference), \texttt{SaveElectrostaticPotential} ($\implies$ \texttt{.VH} for work functions), \texttt{SaveTotalPotential} (\texttt{.VT}), \texttt{SaveHS} (\texttt{.HSX} matrices).
+    \item \textbf{Section 6.29 Accounting Flags:} \texttt{AllocReportLevel} (0 to 4 in \texttt{.alloc}), \texttt{TimerReportThreshold}, \texttt{UseParallelTimer}, \texttt{MaxWalltime} queue limit, and \texttt{MaxWalltime.Slack}.
+\end{itemize}
+
+\subsubsection{Tab 2: Results Analysis \& Viewer Workspace}
+Drag and drop (or upload) calculation output files:
+\begin{itemize}[leftmargin=*]
+    \item \textbf{Log Inspector (\texttt{.out}):} Extracts final total energy, Fermi energy, mesh cutoff used, cell volume, forces, and normal completion status.
+    \item \textbf{Convergence Charts (\texttt{.MDE} / \texttt{.out}):} Interactive SVG curves showing total energy convergence across geometry steps and SCF density matrix residual history.
+    \item \textbf{3D Trajectory Player (\texttt{.ANI}):} Play molecular dynamics or relaxation movies. Scrub through frames with a slider, control playback speed, step forward/backward, and toggle between WebGL and Canvas 2D rendering.
+    \item \textbf{Electronic Band Structure Plotter (\texttt{.bands}):} Renders $E(\mathbf{k})$ dispersion with adjustable Fermi level offset, high-symmetry tick labels, and PNG/SVG export.
+    \item \textbf{DOS Plotter Suite (\texttt{.EIG} / \texttt{.PDOS.xml}):} Calculates Total DOS using the official `Util/Eig2DOS` algorithm with Gaussian or Lorentzian broadening, decomposes orbital projections ($s, p, d, f$), and exports data columns.
+    \item \textbf{Simulated STM Topography:} Renders constant-height and constant-current STM topography maps based on the Tersoff-Hamann approximation.
+    \item \textbf{⏱️ TIMES Execution Profiler:} Upload your \texttt{SystemLabel.times} or \texttt{TIMES} file. Displays total elapsed wall-clock time, cumulative core CPU hours, MPI node count, load balancing ratio ($Avg/Max$), top routine bottleneck bar charts, and a searchable, sortable routine table with 1-click clipboard copy!
+\end{itemize}
+
+\subsection{Section \textcircled{9} MD / Relaxation: Geometry Optimization \& Dynamics}
+\begin{itemize}[leftmargin=*]
+    \item \textbf{Optimizers:} Select \texttt{CG} (standard conjugate gradient), \texttt{Broyden}, or \texttt{FIRE} (superior for complex structures far from equilibrium).
+    \item \textbf{Tolerances:} Set maximum atomic force component (\texttt{MD.MaxForceTol}, e.g. \texttt{0.04 eV/\AA}) and maximum stress component (\texttt{MD.MaxStressTol}, e.g. \texttt{1.0 GPa}).
+    \item \textbf{Cell Relaxation:} Toggle \texttt{MD.VariableCell true} to relax cell vectors, or activate \texttt{Constant.Volume} to relax cell shape while keeping total volume fixed.
+    \item \textbf{Restarting Relaxations:} Check \texttt{MD.UseSaveCG true} to resume conjugate-gradient history from \texttt{SystemLabel.CG}.
+    \item \textbf{Molecular Dynamics Ensembles:} Toggle \texttt{Verlet} (microcanonical $NVE$), \texttt{Nose} (canonical $NVT$ thermostat), or \texttt{ParrinelloRahman} (isobaric-isothermal $NPT$). Set time step (\texttt{MD.LengthTimeStep}, e.g. \texttt{1.0 fs}) and temperatures.
+\end{itemize}
+
+\subsection{Section \textcircled{10} CI-NEB Suite: Transition State Search}
+\begin{itemize}[leftmargin=*]
+    \item \textbf{Climbing Image NEB:} Identifies minimum energy pathways (MEP) and saddle-point transition states for chemical reactions, vacancy diffusion, and ion migration.
+    \item \textbf{IDPP Interpolation:} Upload Initial and Final state CIF or FDF files. The builder uses Image Dependent Pair Potential (IDPP) interpolation to generate $N$ smooth, unskewed intermediate reaction frames without atom collisions.
+    \item \textbf{3D Reaction Pathway Slider:} Scrub through images to inspect the reaction path in 3D.
+    \item \textbf{Integrated Pseudopotential Verification:} Confirms that all reacting elements have valid pseudopotential files available.
+    \item \textbf{1-Click Download CI-NEB Suite (.zip):} Generates all image FDF files (\texttt{image\_00.fdf} to \texttt{image\_0N.fdf}), automated ASE CI-NEB driver (\texttt{cineb\_siesta\_driver.py}), barrier plotter (\texttt{plot\_neb\_barrier.py}), and parallel SLURM runner (\texttt{run\_cineb.sh}).
+\end{itemize}
+
+\subsection{Section \textcircled{11} Phonons \& Vibrations: Force Constants \& Vibra}
+\begin{itemize}[leftmargin=*]
+    \item \textbf{Finite Displacement Method:} Calculates harmonic force constants by displacing atoms in small finite steps (\texttt{MD.TypeOfRun FC}).
+    \item \textbf{Displacement Amplitude:} \texttt{FC.Displacement} (default \texttt{0.04 Bohr} $\approx 0.021\text{ \AA}$).
+    \item \textbf{Atom Subsets:} Select subset of atoms to displace (\texttt{FC.first} and \texttt{FC.last}) to focus on surface adsorbate vibrations while omitting substrate atoms.
+    \item \textbf{Polar Materials \& LO-TO Splitting:} Toggle \texttt{BornCharge true} to compute Born effective charge tensors and macroscopic dielectric matrices.
+    \item \textbf{Supercell Builder:} Expands the unit cell into a $2\times2\times2$ supercell to account for interatomic force ranges beyond the primary cell.
+    \item \textbf{1-Click Download Phonon Suite (.zip):} Generates \texttt{supercell\_fc.fdf}, \texttt{vibra.fdf}, \texttt{plot\_phonon\_dispersion.py}, and \texttt{run\_phonon.sh}.
+\end{itemize}
+
+\subsection{Section \textcircled{12} Surface, Work Function \& Adsorption Analysis}
+A dedicated post-DFT surface science laboratory containing 5 specialized tools:
+\begin{enumerate}[leftmargin=*]
+    \item \textbf{Adsorption Energy ($E_{\text{ads}}$) Calculator:} Input total energy of the complex, clean slab, and isolated molecule to calculate binding strength:
+    \begin{equation}
+    E_{\text{ads}} = E_{\text{total}} - E_{\text{slab}} - E_{\text{mol}}
+    \end{equation}
+    Categorizes interaction as physical physisorption ($|E_{\text{ads}}| < 0.8\text{ eV}$) or chemical bonding ($|E_{\text{ads}}| > 1.0\text{ eV}$).
+    \item \textbf{Planar Average Charge Density Difference (CDD):} Upload difference cube or data file. Displays real-space charge redistribution $\Delta\bar{\rho}(z)$, electron accumulation zones (bonding), depletion zones (charge loss), and cumulative charge transfer $\Delta Q(z)$ with interface dipole $\mu$ in Debye.
+    \item \textbf{Multi-Surface Work Function Comparison Studio:} Compare multiple surface states (e.g. clean perovskite vs passivated perovskite). Automatically aligns Fermi levels, extracts asymptotic vacuum plateaus $V_{\text{vac}}$, computes work functions ($\Phi = V_{\text{vac}} - E_F$), evaluates dipole steps ($\Delta V$), and exports vector SVG, 300 DPI PNG, 300 DPI TIFF, or raw column data.
+    \item \textbf{3D Energy Band Alignment & Heterojunction Diagram:} Construct publication-ready band alignment diagrams for solar cells, LEDs, and catalysts. Add custom layers (absorber, ETL, HTL, metal contacts), adjust CBM/VBM levels, toggle curved carrier extraction arrows ($e^-$ and $h^+$), and choose 3D perspective shading.
+    \item \textbf{SIESTA Grid Workflow Drawer:} Provides verified terminal commands for Util/Macroave (\texttt{macroave < macroave.in}) and Util/Grid (\texttt{grid2cube SystemLabel.VH}).
+\end{enumerate}
+
+\subsection{Section \textcircled{13} VASP to FDF Converter (ASE GUI Constraints)}
+Designed specifically for researchers who set up geometry constraints in ASE GUI and save as VASP POSCAR:
+\begin{itemize}[leftmargin=*]
+    \item \textbf{Side-by-Side Dual-Pane Interface:} Paste or upload a VASP \texttt{POSCAR} or \texttt{CONTCAR} file on the left; view the live generated SIESTA \texttt{.fdf} on the right.
+    \item \textbf{ASE GUI Selective Dynamics Parser:} Automatically parses \texttt{Selective dynamics} and flags:
+    \begin{itemize}
+        \item \texttt{F F F}: Fully fixed in all directions $\implies$ serialized as \texttt{atom [1 -- 4]}.
+        \item \texttt{T T F}: Fixed along $z$ only $\implies$ serialized with trailing dot real notation: \texttt{atom i 0. 0. 1.} (allows in-plane $xy$ relaxation while preventing out-of-plane buckling).
+        \item \texttt{F F T}: Fixed in $xy$ plane only $\implies$ serialized as \texttt{atom i 1. 1. 0.}.
+        \item \texttt{T T T}: Completely free to relax.
+    \end{itemize}
+    \item \textbf{SIESTA Section 7.7 Controls:}
+    \begin{itemize}
+        \item Syntax selector: \texttt{atom [1 -- 4]} (modern bracket notation), \texttt{atom from 1 to 4}, or explicit list \texttt{atom 1 2 3 4}.
+        \item Cell vector locks: Checkbox for \texttt{cell-vector C} to freeze the vacuum axis during relaxation.
+        \item Stress tensor locks: Checkboxes for \texttt{stress XX}, \texttt{YY}, \texttt{ZZ}, \texttt{XY}.
+        \item Element locks: Checkboxes to freeze all atoms of a species by atomic number (e.g. \texttt{Z 82} for Pb).
+    \end{itemize}
+    \item \textbf{Direct PP Folder Field:} Enter pseudopotential directory path directly in the converter ribbon.
+    \item \textbf{🚀 Load to Workspace Button:} Clicking this transfers the converted crystal coordinates, lattice vectors, chemical species, and pseudopotential paths into Section \textcircled{2} and the 3D visualizer!
+\end{itemize}
+
+\subsection{The Live .fdf Preview Pane}
+\begin{itemize}[leftmargin=*]
+    \item Real-time bi-directional reflection: Every input field, checkbox, slider, or table edit re-serializes the FDF instantly.
+    \item Syntax color coding: Comments (\texttt{\# ...}) appear in muted gray italic; data block delimiters (\texttt{\%block} / \texttt{\%endblock}) appear in bold amber; keywords appear in high-contrast text.
+    \item Line number counter in the header indicates the total length of the generated file.
+\end{itemize}
+
+\newpage
+% ── SECTION 4 ───────────────────────────────────────────────────────────────
+\section{Step-by-Step Practical Tutorials}
+
+\subsection{Tutorial A: Bulk Silicon Optimization \& Band Structure}
+\begin{enumerate}[leftmargin=*]
+    \item Click **📋 Templates ▾** in the top toolbar and select **Bulk SCF (single-point)**.
+    \item Set \texttt{SystemLabel} to \texttt{silicon\_bulk} in Section \textcircled{1}.
+    \item In Section \textcircled{3}, click **📂 Scan Folder** to match \texttt{Si.psf} or \texttt{Si.psml}.
+    \item In Section \textcircled{6}, click **⚡ Auto-Detect Lattice Path** to populate the FCC path: $\Gamma \to X \to W \to L \to \Gamma$.
+    \item In Section \textcircled{9}, select optimizer \texttt{CG} and set \texttt{MD.MaxForceTol 0.02 eV/Ang}.
+    \item Click **📦 Download Package** in the toolbar.
+    \item On your cluster, extract the package and submit:
+\begin{lstlisting}[language=bash]
+unzip silicon_bulk.zip && cd silicon_bulk
+bash run_siesta.sh
+\end{lstlisting}
+    \item After completion, open Section \textcircled{8} Tab 2, drag and drop \texttt{silicon\_bulk.bands}, and inspect the electronic dispersion curves!
+\end{enumerate}
+
+\subsection{Tutorial B: $FAPbI_3$ Perovskite Slab with Fixed Substrate}
+\begin{enumerate}[leftmargin=*]
+    \item In the top toolbar, click **💎 Import CIF** and select \texttt{FAPbI3\_cubic.cif}.
+    \item In Section \textcircled{2}, locate the **🛠️ Slab \& Vacuum Tools** card. Set vacuum thickness to \texttt{20.0 \AA} and click **Add Vacuum**. Click **Center Slab in Cell**.
+    \item Open Section \textcircled{13} **VASP to FDF Converter** if importing an ASE GUI relaxed geometry, or freeze bottom layers ($z < 15\text{ \AA}$) via the Section 7.7 constraint controls. Check \texttt{cell-vector C} to ensure the vacuum gap remains constant.
+    \item In Section \textcircled{4}, ensure \texttt{Slab.DipoleCorrection true} and \texttt{DFTD3 true} are enabled. Set \texttt{MeshCutoff 350 Ry}.
+    \item In Section \textcircled{6}, verify the $k$-grid is set to $4 \times 4 \times 1$.
+    \item In Section \textcircled{8}, enable \texttt{SaveElectrostaticPotential true} and \texttt{WriteMDXmol true}.
+    \item Click **⬇ Download .fdf**.
+    \item Upon calculation completion, drag and drop \texttt{FAPbI3\_slab.ANI} into Section \textcircled{8} to play the relaxation movie in 3D!
+    \item Run \texttt{grid2cube FAPbI3\_slab.VH} and upload \texttt{FAPbI3\_slab.cube} into Section \textcircled{12} to extract the vacuum plateau and calculate the work function: $\Phi = V_{\text{vac}} - E_F$.
+\end{enumerate}
+
+\newpage
+% ── SECTION 5 ───────────────────────────────────────────────────────────────
+\section{Troubleshooting, Edge Cases \& Power-User Tips}
 
 \begin{table}[h]
 \centering
 \small
-\begin{tabular}{lll}
+\begin{tabular}{p{4.2cm} p{5.5cm} p{6.8cm}}
 \toprule
-\textbf{Feature} & \textbf{Plane-Wave Codes (QE, VASP)} & \textbf{LCAO Codes (SIESTA)} \\
+\textbf{Symptom / Error} & \textbf{Physical / Numerical Root Cause} & \textbf{Immediate GUI Remedy} \\
 \midrule
-\textbf{Basis Function $\phi_{\mu}$} & Orthogonal Fourier waves: $e^{i(\mathbf{k}+\mathbf{G})\cdot\mathbf{r}}$ & Strictly localized numerical atomic orbitals: $R_{nl}(r) Y_{lm}(\hat{r})$ \\
-\textbf{Systematic Convergence} & Trivial: increase energy cutoff $E_{\text{cut}}$ & Requires selecting radial cutoffs and polarization shells ($SZ, DZP, TZP$) \\
-\textbf{Vacuum Efficiency} & Very poor: empty vacuum space requires plane waves everywhere & \textbf{Extremely efficient}: empty vacuum has zero orbitals $\implies$ zero compute cost \\
-\textbf{Scaling with Size $N$} & Cubic $O(N^3)$ or $O(N^2 \log N)$ FFT cost & \textbf{Linear $O(N)$ or sparse $O(N)$ Hamiltonian} \\
-\textbf{Sparsity} & Dense matrices in real space & \textbf{Strictly sparse Hamiltonian \& Overlap matrices} \\
-\textbf{Ideal Applications} & Dense 3D metals, isotropic bulk solids & \textbf{Surface slabs, 2D layers, large clusters, nanoribbons, biomolecules} \\
+\texttt{SCF does not converge} (energy oscillates wildly) & Charge sloshing between localized orbitals or metallic surface states & Go to Section \textcircled{5}: Lower \texttt{DM.MixingWeight} from 0.25 to 0.05. Increase \texttt{ElectronicTemperature} to 25–50 meV. \\
+\addlinespace
+\texttt{Could not find pseudopotential} & Missing `.psf`/`.psml` file or incorrect path on remote cluster & In Section \textcircled{3}, specify the exact cluster folder in Step 1. The builder embeds the full path into \texttt{\%block ChemicalSpeciesLabel}. \\
+\addlinespace
+\texttt{Vacuum collapsing during relaxation} & \texttt{MD.VariableCell true} was enabled without locking the $c$-axis & In Section \textcircled{13} or \textcircled{9}, activate \texttt{cell-vector C} in \texttt{\%block Geometry.Constraints} so only in-plane $a, b$ relax. \\
+\addlinespace
+\texttt{Eggbox ripple in forces} & Discrete real-space grid spacing is too coarse relative to core states & In Section \textcircled{4}, increase \texttt{MeshCutoff} to $\ge 350\text{ Ry}$. In Section \textcircled{3}, enable \texttt{PAO.SoftDefault true}. \\
+\addlinespace
+\texttt{Calculation runs out of wall time} & Long relaxation or molecular dynamics killed mid-step by SLURM & In Section \textcircled{8}, set \texttt{MaxWalltime} (e.g. \texttt{23.5 hours}) and \texttt{MaxWalltime.Slack 60 s} for a clean emergency restart. \\
+\addlinespace
+\texttt{Ghost dipole electric field in vacuum} & Asymmetric slab with polar adsorbate induced periodic image field & In Section \textcircled{4}, enable \texttt{Slab.DipoleCorrection true} and set direction to \texttt{z}. \\
 \bottomrule
 \end{tabular}
-\caption{Comparison between plane-wave DFT methods and the localized atomic orbital approach in SIESTA.}
+\caption{Comprehensive diagnostic matrix and troubleshooting remedies for SIESTA calculations.}
 \end{table}
 
-\subsection{Why SIESTA? The $O(N)$ Localized Orbital Paradigm}
-SIESTA (\textit{Spanish Initiative for Electronic Simulations with Thousands of Atoms}) was conceived by Emilio Artacho, Alberto Garc{\'i}a, Julian Gale, Javier Junquera, Richard Martin, Pablo Ordej{\'o}n, Daniel S{\'a}nchez-Portal, and Jos{\'e} M. Soler. 
-
-The defining breakthrough of SIESTA is that its basis orbitals $\phi_{\mu}(\mathbf{r})$ are \textbf{strictly zero} beyond a finite cutoff radius $r_{c,\mu}$:
-\begin{equation}
-\phi_{\mu}(\mathbf{r}) \equiv 0 \quad \text{for } |\mathbf{r} - \mathbf{R}_I| > r_{c,\mu}
-\end{equation}
-Because orbitals strictly vanish beyond $r_c$, the overlap matrix $S_{\mu\nu} = \langle \phi_{\mu} | \phi_{\nu} \rangle$ and Hamiltonian matrix $H_{\mu\nu} = \langle \phi_{\mu} | \hat{H} | \phi_{\nu} \rangle$ are \textbf{sparse banded matrices}: matrix elements are strictly zero unless two atoms are within distance $r_{c,\mu} + r_{c,\nu}$. 
-As a direct consequence:
+\subsection{Keyboard Shortcuts and Hidden Productivity Tips}
 \begin{itemize}[leftmargin=*]
-    \item Matrix construction scales strictly as $\mathcal{O}(N)$.
-    \item Storing matrices requires memory proportional to $\mathcal{O}(N)$ rather than $\mathcal{O}(N^2)$.
-    \item Systems comprising thousands of atoms (e.g. $FAPbI_3$ perovskite slabs with organic ligands) can be calculated on standard computing clusters where plane-wave codes would run out of memory.
-\end{itemize}
-
-\newpage
-% ── CHAPTER 2 ───────────────────────────────────────────────────────────────
-\section{The FDF (Flexible Data Format) Language}
-
-\subsection{Syntax, Tokens, and Data Blocks}
-All control parameters, structural descriptions, and calculation directives in SIESTA are provided through a unified plain-text file known as the \textbf{FDF (Flexible Data Format)} file (conventionally named with the \texttt{.fdf} extension).
-
-Key rules of the FDF format:
-\begin{enumerate}[leftmargin=*]
-    \item \textbf{Case Insensitivity:} FDF keywords are case-insensitive. \texttt{MeshCutoff}, \texttt{meshcutoff}, and \texttt{Mesh.Cutoff} resolve to the exact same parameter.
-    \item \textbf{Punctuation Tolerance:} Characters like periods (\texttt{.}), hyphens (\texttt{-}), and underscores (\texttt{\_}) in variable names are largely treated as interchangeable separators in modern SIESTA versions.
-    \item \textbf{Single Values:} Specified as \texttt{Keyword Value [Unit]}:
-\begin{lstlisting}
-MeshCutoff         350.0 Ry
-ElectronicTemperature  25.0 meV
-\end{lstlisting}
-    \item \textbf{Logical Values:} Booleans can be specified using \texttt{true}/\texttt{false}, \texttt{yes}/\texttt{no}, or single letters \texttt{T}/\texttt{F}.
-    \item \textbf{Data Blocks:} Structured arrays, coordinate tables, and matrix specifications are enclosed in \texttt{\%block BlockName} and \texttt{\%endblock BlockName}:
-\begin{lstlisting}
-%block ChemicalSpeciesLabel
-  1   14  Si      Si.psf
-%endblock ChemicalSpeciesLabel
-\end{lstlisting}
-    \item \textbf{Comments:} Any text preceded by \texttt{\#} or \texttt{!} is treated as a comment and ignored by the parser.
-\end{enumerate}
-
-\subsection{Physical Dimensions and Unit Scaling}
-SIESTA provides automatic physical unit conversion. A user can specify units in their preferred scientific convention, and SIESTA internally scales them to atomic units (Hartree, Bohr):
-
-\begin{table}[h]
-\centering
-\small
-\begin{tabular}{lll}
-\toprule
-\textbf{Physical Quantity} & \textbf{Supported FDF Units} & \textbf{Common Conversions} \\
-\midrule
-Length & \texttt{Ang}, \texttt{Bohr}, \texttt{nm}, \texttt{pm} & $1\text{ \AA} = 10^{-10}\text{ m} \approx 1.889726\text{ Bohr}$ \\
-Energy & \texttt{eV}, \texttt{Ry}, \texttt{Hartree}, \texttt{kcal/mol}, \texttt{kJ/mol}, \texttt{meV} & $1\text{ Ry} = 13.60569\text{ eV} = 0.5\text{ Hartree}$ \\
-Pressure / Stress & \texttt{GPa}, \texttt{kBar}, \texttt{bar}, \texttt{Pa}, \texttt{Ry/Bohr**3}, \texttt{eV/Ang**3} & $1\text{ GPa} = 10\text{ kBar} = 0.0062415\text{ eV/\AA}^3$ \\
-Force & \texttt{eV/Ang}, \texttt{Ry/Bohr}, \texttt{Hartree/Bohr} & $1\text{ eV/\AA} \approx 0.036749\text{ Ry/Bohr}$ \\
-Temperature & \texttt{K}, \texttt{eV}, \texttt{meV}, \texttt{Ry} & $1\text{ eV} \approx 11604.5\text{ K}, \quad 300\text{ K} \approx 25.85\text{ meV}$ \\
-Time & \texttt{fs}, \texttt{ps}, \texttt{s}, \texttt{mins}, \texttt{hours}, \texttt{days} & $1\text{ fs} = 10^{-15}\text{ s}$ \\
-\bottomrule
-\end{tabular}
-\caption{Supported physical units and dimensional scaling in SIESTA FDF files.}
-\end{table}
-
-\newpage
-% ── CHAPTER 3 ───────────────────────────────────────────────────────────────
-\section{Crystal Structure, Lattice \& Geometry Setup}
-
-\subsection{Lattice Representation: Vectors vs. Parameters}
-Every periodic calculation requires defining the unit cell Bravais lattice. In SIESTA, this is governed by the global scaling parameter \texttt{LatticeConstant} and one of two mutually exclusive blocks:
-
-\subsubsection{Option A: Explicit Lattice Vectors (Recommended)}
-\begin{lstlisting}
-LatticeConstant 1.0 Ang
-%block LatticeVectors
-  12.640000   0.000000   0.000000
-   0.000000  12.640000   0.000000
-   0.000000   0.000000  36.000000
-%endblock LatticeVectors
-\end{lstlisting}
-Here, each row represents the Cartesian components of basis vectors $\mathbf{a}_1, \mathbf{a}_2, \mathbf{a}_3$. Because \texttt{LatticeConstant} is set to \texttt{1.0 Ang}, the numbers inside the block represent absolute Cartesian lengths in \AA ngstr{\"o}ms.
-
-\subsubsection{Option B: Crystallographic Lattice Parameters}
-\begin{lstlisting}
-LatticeConstant 5.4307 Ang
-%block LatticeParameters
-  1.0  1.0  1.0  90.0  90.0  90.0
-%endblock LatticeParameters
-\end{lstlisting}
-The row defines $a/a_0, b/a_0, c/a_0, \alpha, \beta, \gamma$, where $\alpha$ is the angle between $\mathbf{a}_2$ and $\mathbf{a}_3$, $\beta$ between $\mathbf{a}_1$ and $\mathbf{a}_3$, and $\gamma$ between $\mathbf{a}_1$ and $\mathbf{a}_2$.
-
-\subsection{Atomic Coordinates Formats}
-The spatial positions of all atoms in the simulation cell are declared in the \texttt{\%block AtomicCoordinatesAndAtomicSpecies} block. The interpretation of these coordinates is dictated by \texttt{AtomicCoordinatesFormat}:
-\begin{itemize}[leftmargin=*]
-    \item \texttt{Fractional}: Dimensionless crystal coordinates $(u, v, w)$ such that position $\mathbf{R} = u \mathbf{a}_1 + v \mathbf{a}_2 + w \mathbf{a}_3$, with $0 \le u, v, w < 1$.
-    \item \texttt{NotScaledCartesianAng}: Unscaled Cartesian coordinates $(x, y, z)$ in \AA ngstr{\"o}ms.
-    \item \texttt{NotScaledCartesianBohr}: Unscaled Cartesian coordinates in atomic units (Bohr).
-    \item \texttt{ScaledCartesian}: Cartesian coordinates multiplied by the global \texttt{LatticeConstant}.
-\end{itemize}
-
-\begin{lstlisting}
-AtomicCoordinatesFormat Fractional
-%block AtomicCoordinatesAndAtomicSpecies
-  0.00000000  0.00000000  0.15000000  1   # Pb atom at bottom
-  0.50000000  0.50000000  0.15000000  2   # I atom
-%endblock AtomicCoordinatesAndAtomicSpecies
-\end{lstlisting}
-The fourth column is the integer species index corresponding to the sequential index in \texttt{\%block ChemicalSpeciesLabel}.
-
-\subsection{Surface Slabs, Vacuum Padding, and Dipole Correction}
-When modeling surfaces, interfaces, or 2D materials (graphene, perovskite nanosheets, transition metal dichalcogenides), three-dimensional periodic boundary conditions (PBC) are still enforced by the FFT grid. To prevent spurious electronic interactions between periodic vertical images of the slab along the surface normal ($z$), one must:
-\begin{enumerate}[leftmargin=*]
-    \item \textbf{Add Sufficient Vacuum:} Typically $15\text{ \AA} \le d_{\text{vac}} \le 25\text{ \AA}$ between the highest atom of one slab and the lowest atom of the periodic replica.
-    \item \textbf{Center the Slab:} Shift atomic coordinates so the vacuum is evenly split above and below the material (\texttt{AtomicCoordinatesOrigin COP-Z}).
-    \item \textbf{Apply Dipole Correction:} If the slab is asymmetric (e.g., polar surface termination or molecule adsorbed on one side only), an artificial net dipole moment $\mathbf{p}$ arises across the cell. This induces a fictitious linear electric field across the vacuum. Setting:
-\begin{lstlisting}
-Slab.DipoleCorrection true
-\end{lstlisting}
-    instructs SIESTA to introduce an internal compensating dipole sheet in the vacuum gap, flattening the potential and yielding exact, uncorrupted work functions.
-\end{enumerate}
-
-\newpage
-% ── CHAPTER 4 ───────────────────────────────────────────────────────────────
-\section{Pseudopotentials \& PAO Basis Sets}
-
-\subsection{The Pseudopotential Concept (Norm-Conservation \& Kleinman-Bylander)}
-Core electrons (e.g. $1s^2 2s^2 2p^6$ in Silicon) are tightly bound to the nucleus and chemically inert. However, their wavefunctions oscillate violently near the core to maintain orthogonality with deeper shells. In pseudopotential theory:
-\begin{enumerate}[leftmargin=*]
-    \item Core electrons and the nuclear Coulomb potential are replaced by an effective smooth \textbf{pseudopotential} $V_{\text{pseudo}}(r)$.
-    \item Beyond a core radius $r_c$, the pseudo-wavefunction $\tilde{\psi}(r)$ matches the all-electron wavefunction $\psi(r)$ exactly.
-    \item Under \textbf{norm-conservation}, the integral of $|\tilde{\psi}(r)|^2$ inside $r_c$ equals that of the all-electron wavefunction, ensuring correct electrostatic scattering properties across varying chemical environments.
-\end{enumerate}
-SIESTA requires norm-conserving pseudopotentials in the separable \textbf{Kleinman-Bylander (KB)} form:
-\begin{equation}
-\hat{V}_{\text{NL}} = \sum_{l,m} \frac{| \chi_{lm} \rangle \langle \chi_{lm} |}{\langle \chi_{lm} | \delta V_l | \chi_{lm} \rangle}
-\end{equation}
-
-\subsection{Pseudopotential File Formats: PSF and Modern PSML}
-\begin{itemize}[leftmargin=*]
-    \item \textbf{PSF (Traditional ASCII Format):} Stores radial grid data, logarithmic derivatives, and local/non-local projectors. Named \texttt{[Element].psf} (e.g., \texttt{Pb.psf}, \texttt{I.psf}).
-    \item \textbf{PSML (Pseudopotential Markup Language):} The modern XML-based standard adopted by SIESTA 5.x. Enables full provenance tracking, relativistic spin-orbit projectors, and semicore configuration verification.
-\end{itemize}
-
-\subsection{Numerical Atomic Orbitals (NAOs) and Basis Cardinality}
-Unlike Gaussian orbitals used in quantum chemistry, SIESTA computes radial basis functions numerically by solving the Schr{\"o}dinger equation for the isolated pseudo-atom enclosed in a spherical confinement well:
-\begin{equation}
-\phi_{nlm}(\mathbf{r}) = R_{nl}(r) Y_{lm}(\hat{\mathbf{r}})
-\end{equation}
-The basis set hierarchy is defined by \texttt{PAO.BasisSize}:
-\begin{itemize}[leftmargin=*]
-    \item \textbf{\texttt{SZ} (Single-Zeta):} Minimal basis. Exactly one radial function per valence orbital (e.g. for Carbon $2s, 2p$: 1 $s$ function and 3 $p$ functions = 4 basis functions). Fast, qualitative.
-    \item \textbf{\texttt{DZ} (Double-Zeta):} Two radial functions per valence orbital ($2s, 2s', 2p, 2p'$). Essential for chemical bonding and valence deformation.
-    \item \textbf{\texttt{DZP} (Double-Zeta Polarized):} \textbf{The standard for production research.} Takes \texttt{DZ} and adds a polarization shell with angular momentum $l+1$ (e.g. adds $3d$ orbitals to Carbon $2p$). Allows electron clouds to distort under asymmetric surface fields.
-    \item \textbf{\texttt{TZP} / \texttt{TZ2P}:} Triple-zeta with multiple polarization shells. High-precision limit, approaching the complete basis set (CBS) plane-wave accuracy.
-\end{itemize}
-
-\subsection{The Spatial Confinement Parameter: \texttt{PAO.EnergyShift}}
-How does SIESTA determine where to truncate the orbital so it strictly equals zero at $r_c$?
-Instead of forcing the user to guess radii for every shell of every element, SIESTA provides the universal thermodynamic parameter \texttt{PAO.EnergyShift}:
-\begin{equation}
-\delta E = \frac{\hbar^2 \pi^2}{2 m_e r_{c,nl}^2}
-\end{equation}
-\begin{itemize}[leftmargin=*]
-    \item \textbf{Physical Meaning:} It represents the energy increase experienced by an electron when it is confined inside a spherical box of radius $r_c$.
-    \item \textbf{Standard Value:} Default is \texttt{100 meV} to \texttt{250 meV}.
-    \item \textbf{Behavior:} A \textit{smaller} energy shift (e.g. \texttt{50 meV}) gives a larger $r_c$, expanding the basis set to capture diffuse vacuum states at the cost of denser matrices. A \textit{larger} energy shift (e.g. \texttt{300 meV}) makes orbitals more compact and faster, but may under-represent surface dipole relaxation.
-\end{itemize}
-
-\newpage
-% ── CHAPTER 5 ───────────────────────────────────────────────────────────────
-\section{Real-Space Grid \& Exchange-Correlation (XC)}
-
-\subsection{The Real-Space Mesh and \texttt{MeshCutoff}}
-While Hamiltonian and overlap matrices are computed on atomic basis orbitals, the electron density $\rho(\mathbf{r})$ and Hartree/XC potentials are represented on a 3D regular Cartesian real-space grid.
-The grid fineness is specified by \texttt{MeshCutoff}:
-\begin{equation}
-E_{\text{cut}} = \frac{\hbar^2 k_{\text{max}}^2}{2 m_e} \implies \Delta x \approx \frac{\pi}{k_{\text{max}}} = \frac{\pi}{\sqrt{2 m_e E_{\text{cut}}}}
-\end{equation}
-\begin{itemize}[leftmargin=*]
-    \item For $E_{\text{cut}} = 200\text{ Ry} \implies \Delta x \approx 0.12\text{ \AA}$.
-    \item For $E_{\text{cut}} = 350\text{ Ry} \implies \Delta x \approx 0.09\text{ \AA}$.
-    \item \textbf{Rule of Thumb:} Always perform a mesh cutoff convergence test. Standard semiconductors require $250\text{--}350\text{ Ry}$. Highly localized elements ($O, F, Fe$) require $350\text{--}450\text{ Ry}$.
-\end{itemize}
-
-\subsection{The Eggbox Effect}
-Because the real-space grid is discrete and does not automatically displace with the atoms as they move, shifting an atom across grid points induces an artificial periodic ripple in the total energy and forces, termed the \textbf{eggbox effect}:
-\begin{itemize}[leftmargin=*]
-    \item \textbf{Remedy 1:} Increase \texttt{MeshCutoff} ($> 300\text{ Ry}$).
-    \item \textbf{Remedy 2:} Use modern grid-cell sampling (\texttt{GridCellSampling true}).
-    \item \textbf{Remedy 3:} Use soft confinement potentials (\texttt{PAO.SoftDefault true}) to smooth the orbital second derivatives near $r_c$.
-\end{itemize}
-
-\subsection{Exchange-Correlation (XC) Functionals}
-SIESTA supports both local and gradient-corrected approximations:
-\begin{lstlisting}
-XC.functional   GGA
-XC.authors      PBE
-\end{lstlisting}
-\begin{itemize}[leftmargin=*]
-    \item \textbf{LDA (Local Density Approximation):} \texttt{XC.functional LDA}, \texttt{XC.authors CA} (Ceperley-Alder parameterized by Perdew-Zunger). Reliable for bulk moduli, underestimates lattice parameters by $1\text{--}2\%$.
-    \item \textbf{GGA (Generalized Gradient Approximation):} \texttt{XC.functional GGA}, \texttt{XC.authors PBE} (Perdew-Burke-Ernzerhof). The workhorse functional for solid-state chemistry and surfaces.
-    \item \textbf{PBEsol:} \texttt{XC.authors PBEsol}. Refined GGA specifically tuned for equilibrium lattice constants and bulk phonon frequencies.
-    \item \textbf{van der Waals Dispersion (Grimme DFT-D3):} Crucial for molecular adsorption, perovskite organic-inorganic interfaces, and layered materials:
-\begin{lstlisting}
-DFTD3           true
-\end{lstlisting}
-\end{itemize}
-
-\subsection{Spin Polarization, Non-Collinear Magnetism \& Spin-Orbit Coupling}
-SIESTA provides three levels of magnetic treatment:
-\begin{enumerate}[leftmargin=*]
-    \item \textbf{Collinear Spin Polarized:} $\alpha$ and $\beta$ spins along a single quantization axis:
-\begin{lstlisting}
-Spin            polarized
-\end{lstlisting}
-    \item \textbf{Non-Collinear Spin:} Vector spin density $\mathbf{S}(\mathbf{r}) = (S_x, S_y, S_z)$ pointing arbitrarily in 3D space:
-\begin{lstlisting}
-Spin            non-collinear
-\end{lstlisting}
-    \item \textbf{Fully Relativistic Spin-Orbit Coupling (SOC):} Essential for heavy elements (Lead $Pb$, Iodine $I$, Bismuth $Bi$, Gold $Au$):
-\begin{lstlisting}
-Spin            spin-orbit
-\end{lstlisting}
-\end{enumerate}
-
-\newpage
-% ── CHAPTER 6 ───────────────────────────────────────────────────────────────
-\section{Self-Consistent Field (SCF) Control}
-
-\subsection{The Density Matrix Formulation}
-Instead of dealing with individual Kohn-Sham wavefunctions, SIESTA expresses all physical observables via the single-particle \textbf{density matrix} $P_{\mu\nu}$:
-\begin{equation}
-P_{\mu\nu} = \sum_i f_i c_{\mu i} c_{\nu i}^*
-\end{equation}
-where $f_i$ is the Fermi-Dirac occupation factor. The real-space electron density is reconstructed as:
-\begin{equation}
-\rho(\mathbf{r}) = \sum_{\mu,\nu} P_{\mu\nu} \phi_{\mu}^*(\mathbf{r}) \phi_{\nu}(\mathbf{r})
-\end{equation}
-
-\subsection{SCF Convergence Criteria and Mixing Algorithms}
-During each SCF iteration $m$, the computed density matrix $P^{(m)}$ differs from the input density matrix $P_{\text{in}}^{(m)}$. A simple substitution $P_{\text{in}}^{(m+1)} = P^{(m)}$ leads to violent charge sloshing and divergence. Therefore, mixing algorithms are applied:
-
-\begin{lstlisting}
-MaxSCFIterations       150
-DM.Tolerance           1.0d-4
-DM.MixingWeight        0.25
-DM.NumberPulay         8
-\end{lstlisting}
-\begin{itemize}[leftmargin=*]
-    \item \textbf{\texttt{DM.Tolerance}:} The calculation is declared converged when:
-    \begin{equation}
-    \max_{\mu,\nu} |P_{\mu\nu}^{(m)} - P_{\mu\nu}^{(m-1)}| < \texttt{DM.Tolerance} \quad (\text{typically } 10^{-4}\text{ to } 10^{-5})
-    \end{equation}
-    \item \textbf{\texttt{DM.MixingWeight} ($\alpha$):} Fraction of the newly calculated density matrix mixed with the old matrix. For difficult systems (surfaces, transition metals, low bandgap perovskites), lower this value to \texttt{0.05} or \texttt{0.10} to prevent divergence.
-    \item \textbf{\texttt{DM.NumberPulay}:} Depth of the Pulay Direct Inversion in the Iterative Subspace (DIIS) history. Using 6 to 8 history steps accelerates convergence exponentially after the initial linear regime.
-\end{itemize}
-
-\subsection{Electronic Temperature (Fermi Smearing)}
-For metallic systems or surfaces with near-zero bandgaps, sharp discontinuities in Fermi occupations at $T=0$ destabilize SCF convergence. Introducing a finite electronic temperature smears occupations via the Fermi-Dirac function:
-\begin{equation}
-f(\varepsilon) = \frac{1}{e^{(\varepsilon - E_F)/k_B T_{\text{elec}}} + 1}
-\end{equation}
-\begin{lstlisting}
-ElectronicTemperature  25.0 meV
-\end{lstlisting}
-This represents $T \approx 290\text{ K}$, smoothing occupation transitions and ensuring rapid, monotonic convergence.
-
-\newpage
-% ── CHAPTER 7 ───────────────────────────────────────────────────────────────
-\section{Brillouin Zone Sampling \& K-Points}
-
-\subsection{Reciprocal Space Integration \& Monkhorst-Pack Grids}
-In crystalline solids, translational symmetry dictates that wavefunctions obey Bloch's theorem: $\psi_{n\mathbf{k}}(\mathbf{r}) = e^{i\mathbf{k}\cdot\mathbf{r}} u_{n\mathbf{k}}(\mathbf{r})$. Physical properties require integration over the first Brillouin zone:
-\begin{equation}
-\bar{g} = \frac{\Omega}{(2\pi)^3} \int_{\text{BZ}} g(\mathbf{k}) d^3\mathbf{k} \approx \sum_{\mathbf{k}} w_{\mathbf{k}} g(\mathbf{k})
-\end{equation}
-SIESTA generates discrete $k$-point grids using the \textbf{Monkhorst-Pack (MP)} scheme:
-\begin{lstlisting}
-%block kgrid_Monkhorst_Pack
-  4   0   0   0.5
-  0   4   0   0.5
-  0   0   1   0.0
-%endblock kgrid_Monkhorst_Pack
-\end{lstlisting}
-The first three numbers in each row define the divisions along reciprocal vectors $\mathbf{b}_1, \mathbf{b}_2, \mathbf{b}_3$. The fourth number is the origin shift (typically \texttt{0.5} to avoid high-symmetry points or \texttt{0.0} for $\Gamma$-centered meshes).
-
-\subsection{Dimensionality Rules for K-Points}
-\begin{itemize}[leftmargin=*]
-    \item \textbf{3D Bulk Crystals (e.g. Silicon, Perovskite bulk):} Full 3D grid ($6 \times 6 \times 6$ or $8 \times 8 \times 8$).
-    \item \textbf{2D Surfaces \& Slabs:} \textbf{Strictly 1 point along $z$} ($k_z = 1$, e.g. $4 \times 4 \times 1$). Because the slab has vacuum along $z$, there is zero physical dispersion along the reciprocal $z$-axis. Setting $k_z > 1$ wastes massive compute power with zero physical benefit.
-    \item \textbf{1D Nanowires / Nanotubes:} 1 point along $x$ and $y$ ($1 \times 1 \times 8$).
-    \item \textbf{0D Molecules / Isolated Clusters:} Single $\Gamma$-point calculation ($1 \times 1 \times 1$).
-\end{itemize}
-
-\newpage
-% ── CHAPTER 8 ───────────────────────────────────────────────────────────────
-\section{Structural Relaxation, General Constraints \& Molecular Dynamics}
-
-\subsection{Geometry Optimization Algorithms}
-Structural relaxation minimizes the total energy with respect to nuclear positions and cell vectors until atomic forces and stress tensors fall below strict tolerances:
-\begin{lstlisting}
-MD.TypeOfRun       CG
-MD.NumCGsteps      200
-MD.MaxForceTol     0.04 eV/Ang
-MD.MaxStressTol    1.0 GPa
-MD.VariableCell    false
-\end{lstlisting}
-\begin{itemize}[leftmargin=*]
-    \item \textbf{\texttt{MD.TypeOfRun}:} Options include \texttt{CG} (Conjugate Gradient, standard), \texttt{Broyden} (quasi-Newton), and \texttt{FIRE} (Fast Inertial Relaxation Engine, superior for complex interfaces and loose initial configurations).
-    \item \textbf{\texttt{MD.MaxForceTol}:} The maximum force component allowed on any atom for convergence (typically $0.02\text{--}0.04\text{ eV/\AA}$).
-    \item \textbf{\texttt{MD.VariableCell}:} Set to \texttt{true} to relax cell vectors simultaneously. \textbf{Critical Warning:} Never enable \texttt{MD.VariableCell true} on a surface slab without fixing the $c$-axis, or the simulation will compress the vacuum gap!
-\end{itemize}
-
-\subsection{SIESTA Section 7.7: Use of General Constraints}
-SIESTA provides a versatile constraints engine (\texttt{\%block Geometry.Constraints}) to freeze or couple degrees of freedom during relaxation:
-
-\begin{lstlisting}
-%block Geometry.Constraints
-  atom [1 -- 12]              # Freeze atoms 1 through 12 completely
-  atom 15  0.  0.  1.         # Fix atom 15 along Z only (allow XY relaxation)
-  cell-vector C               # Freeze out-of-plane vacuum axis
-  stress XX YY                # Constrain in-plane stress components
-  Z 82                        # Freeze all Lead (Pb) atoms by atomic number
-%endblock Geometry.Constraints
-\end{lstlisting}
-
-\subsubsection{Key Constraint Syntax Rules}
-\begin{itemize}[leftmargin=*]
-    \item \textbf{Range specifications:} Supports \texttt{atom [1 -- 4]}, \texttt{atom from 1 to 4 step 1}, and space-separated lists \texttt{atom 1 2 3 4}.
-    \item \textbf{Directional Constraints:} Append three real numbers representing a Cartesian projection vector. \textbf{Crucial Rule:} Reals \textit{must} include a trailing decimal point (e.g., \texttt{0. 0. 1.}). SIESTA subtracts the force component projected onto this vector:
-    \begin{equation}
-    \mathbf{F}_{\text{active}} = \mathbf{F} - (\mathbf{F} \cdot \hat{\mathbf{n}}) \hat{\mathbf{n}}
-    \end{equation}
-    \item \textbf{Cell Constraints:} \texttt{cell-vector C} locks the vacuum height, allowing in-plane cell vectors $A$ and $B$ to relax without collapsing the vacuum.
-\end{itemize}
-
-\newpage
-% ── CHAPTER 9 ───────────────────────────────────────────────────────────────
-\section{Post-Processing, Spectroscopy \& Performance Accounting}
-
-\subsection{Band Structure Calculations (\texttt{\%block BandLines})}
-Electronic dispersion curves $E_n(\mathbf{k})$ along high-symmetry Brillouin zone paths:
-\begin{lstlisting}
-BandLinesScale ReciprocalLatticeVectors
-%block BandLines
-  1   0.000  0.000  0.000  \Gamma
- 25   0.500  0.000  0.500  X
- 15   0.500  0.250  0.750  W
- 20   0.500  0.500  0.500  L
- 25   0.000  0.000  0.000  \Gamma
-%endblock BandLines
-\end{lstlisting}
-SIESTA writes \texttt{SystemLabel.bands}, which can be plotted directly using the web studio or converted via \texttt{gnubands SystemLabel.bands > bands.dat}.
-
-\subsection{Projected Density of States (PDOS)}
-Orbital-resolved density of states $g_{\mu}(E) = \sum_{n,\mathbf{k}} w_{\mathbf{k}} |\langle \phi_{\mu} | \psi_{n\mathbf{k}} \rangle|^2 \delta(E - E_{n\mathbf{k}})$:
-\begin{lstlisting}
-%block ProjectedDensityOfStates
-  EF  -10.0   10.0   0.100   1000   eV
-%endblock ProjectedDensityOfStates
-\end{lstlisting}
-Outputs \texttt{SystemLabel.PDOS.xml}, decomposing contributions into atomic species, angular momentum shells ($s, p, d, f$), and magnetic orbital orientations ($p_x, p_y, p_z, d_{z^2}, d_{x^2-y^2}$).
-
-\subsection{Work Function Determination ($\Phi = V_{\text{vac}} - E_F$)}
-The work function $\Phi$ is the minimum energy required to remove an electron from the Fermi level of a solid to the electrostatic vacuum plateau outside the surface:
-\begin{equation}
-\Phi = V_{\text{vac}} - E_F
-\end{equation}
-\begin{enumerate}[leftmargin=*]
-    \item Request the electrostatic potential grid: \texttt{SaveElectrostaticPotential true} $\implies$ generates \texttt{SystemLabel.VH}.
-    \item Compute planar average $\bar{V}(z) = \frac{1}{A} \iint V(\mathbf{r}) dx dy$ using \texttt{Util/Macroave} or \texttt{grid2cube}.
-    \item Identify the asymptotic flat plateau $V_{\text{vac}}$ in the middle of the vacuum region.
-    \item Subtract the self-consistent Fermi level: $\Phi = V_{\text{vac}} - E_F$.
-\end{enumerate}
-
-\subsection{Section 6.29: Memory, CPU-time \& Wall-Time Accounting}
-Large-scale HPC calculations require monitoring memory and execution bottlenecks:
-\begin{lstlisting}
-AllocReportLevel        2           # Detailed memory report in SystemLabel.alloc
-AllocReportThreshold    1000000     # Report arrays larger than 1 MB
-TimerReportThreshold    0.001       # Print routines taking > 0.1% CPU in TIMES
-UseParallelTimer        true        # Write MPI timing breakdown to SystemLabel.times
-MaxWalltime             24 hours    # Queue time ceiling before clean abort
-MaxWalltime.Slack       10 s        # Emergency shutdown buffer
-\end{lstlisting}
-
-\newpage
-% ── CHAPTER 10 ──────────────────────────────────────────────────────────────
-\section{The SIESTA Input Builder Web Studio Manual}
-
-\subsection{Application Overview \& Zero-Backend Architecture}
-The \textbf{SIESTA Input Builder} is a pure client-side web application running entirely inside the modern browser via React 19, Vite, and Zustand. 
-
-\textbf{Core Advantages:}
-\begin{itemize}[leftmargin=*]
-    \item \textbf{Zero Server Compute \& Total Privacy:} Input building, CIF parsing, and data conversion execute strictly in local browser memory. No proprietary crystal coordinates, structures, or logs are uploaded to any external server.
-    \item \textbf{Real-Time Bi-Directional Preview:} Any keystroke in the form immediately updates the live, syntax-colored \texttt{.fdf} code preview panel.
-    \item \textbf{Cross-Code Ecosystem:} Includes specialized converters to translate between VASP POSCAR (with ASE GUI Selective Dynamics), CIF crystallographic files, and SIESTA.
-\end{itemize}
-
-\subsection{Walkthrough of the Navigation Modules}
-\begin{enumerate}[leftmargin=*]
-    \item \textbf{\textcircled{1} System:} Sets \texttt{SystemLabel}, \texttt{SystemName}, and optional atom/species counts.
-    \item \textbf{\textcircled{2} Structure:} Full interactive coordinate table, crystallographic unit cell parameters, vacuum cleavage tools, supercell expansion, and 3D WebGL Crystal Viewer.
-    \item \textbf{\textcircled{3} Species \& Basis:} Defines chemical elements, links pseudopotential files (\texttt{.psf}/\texttt{.psml}), sets basis cardinality (\texttt{SZ}, \texttt{DZP}, \texttt{TZP}), and configures \texttt{PAO.EnergyShift}.
-    \item \textbf{\textcircled{4} DFT / XC:} Exchange-correlation selection (LDA, GGA-PBE, PBEsol), \texttt{MeshCutoff}, Grimme DFT-D3, spin polarization, and DFT+U.
-    \item \textbf{\textcircled{5} SCF Control:} Iteration limits, density matrix tolerances, Pulay mixing history, and electronic smearing temperature.
-    \item \textbf{\textcircled{6} K-Points:} Monkhorst-Pack reciprocal grid configuration with automated dimensional checks ($k_z=1$ for surfaces).
-    \item \textbf{\textcircled{7} Bands \& DOS / PDOS:} High-symmetry Brillouin zone path generation and projected DOS energy window controls.
-    \item \textbf{\textcircled{8} Output Flags \& Accounting:} Output toggles (\texttt{.ANI}, \texttt{.MDE}, \texttt{.RHO}, \texttt{.VH}) and Section 6.29 \texttt{TIMES} / \texttt{alloc} execution profiler.
-    \item \textbf{\textcircled{9} MD / Relaxation:} Structural optimizers (CG, FIRE), force tolerances, variable cell relaxations, and molecular dynamics ensembles.
-    \item \textbf{\textcircled{10} CI-NEB Suite:} Climbing Image Nudged Elastic Band transition state search, IDPP reaction path interpolation, and automated directory generator.
-    \item \textbf{\textcircled{11} Phonons:} Finite displacement frozen-phonon matrix builder (\texttt{FC.first}, \texttt{FC.last}) and Vibra dispersion runner.
-    \item \textbf{\textcircled{12} Surface \& Work Function Studio:} Planar average charge density difference ($\Delta\rho(z)$) integrator, multi-surface work function comparison studio, and 3D heterojunction band alignment diagram generator.
-    \item \textbf{\textcircled{13} VASP to FDF Converter:} Isolated converter that ingests VASP \texttt{POSCAR}/\texttt{CONTCAR} files with ASE GUI \texttt{Selective dynamics} and outputs complete \texttt{\%block Geometry.Constraints} blocks.
-\end{enumerate}
-
-\newpage
-% ── CHAPTER 11 ──────────────────────────────────────────────────────────────
-\section{Step-by-Step Hands-On Tutorials}
-
-\subsection{Tutorial 1: Bulk Silicon ($Si$) Diamond — Ground State, Bands \& DOS}
-\textbf{Objective:} Optimize diamond-structure Silicon, compute the SCF ground state, band structure, and electronic density of states.
-
-\subsubsection{Complete Input File (\texttt{silicon.fdf})}
-\begin{lstlisting}
-SystemLabel          silicon
-SystemName           Bulk Silicon Diamond
-NumberOfAtoms        8
-NumberOfSpecies      1
-
-%block ChemicalSpeciesLabel
-  1   14  Si      Si.psf
-%endblock ChemicalSpeciesLabel
-
-LatticeConstant      5.4307 Ang
-%block LatticeVectors
-  1.000000  0.000000  0.000000
-  0.000000  1.000000  0.000000
-  0.000000  0.000000  1.000000
-%endblock LatticeVectors
-
-AtomicCoordinatesFormat Fractional
-%block AtomicCoordinatesAndAtomicSpecies
-  0.000000  0.000000  0.000000  1
-  0.500000  0.500000  0.000000  1
-  0.000000  0.500000  0.500000  1
-  0.500000  0.000000  0.500000  1
-  0.250000  0.250000  0.250000  1
-  0.750000  0.750000  0.250000  1
-  0.750000  0.250000  0.750000  1
-  0.250000  0.750000  0.750000  1
-%endblock AtomicCoordinatesAndAtomicSpecies
-
-# Basis and Grid
-PAO.BasisSize        DZP
-PAO.EnergyShift      100.0 meV
-MeshCutoff           300.0 Ry
-XC.functional        GGA
-XC.authors           PBE
-
-# SCF Parameters
-MaxSCFIterations     100
-DM.Tolerance         1.0d-4
-DM.MixingWeight      0.25
-DM.NumberPulay       8
-
-# K-Points
-%block kgrid_Monkhorst_Pack
-  6   0   0   0.5
-  0   6   0   0.5
-  0   0   6   0.5
-%endblock kgrid_Monkhorst_Pack
-
-# Band Structure Path
-BandLinesScale ReciprocalLatticeVectors
-%block BandLines
-  1   0.000  0.000  0.000  \Gamma
- 30   0.500  0.000  0.500  X
- 15   0.500  0.250  0.750  W
- 20   0.500  0.500  0.500  L
- 30   0.000  0.000  0.000  \Gamma
-%endblock BandLines
-
-# Output Flags
-WriteMullikenPop     1
-WriteForces          true
-SaveRho              true
-\end{lstlisting}
-
-\subsubsection{Execution and Analysis}
-\begin{lstlisting}[language=bash]
-# Run SIESTA with MPI:
-mpirun -np 4 siesta < silicon.fdf | tee silicon.out
-
-# Extract band structure:
-gnubands silicon.bands > bands.dat
-\end{lstlisting}
-
-\newpage
-\subsection{Tutorial 2: $FAPbI_3$ Perovskite (001) Slab — Cleaving, Layer Freezing \& Work Function}
-\textbf{Objective:} Construct a polar organic-inorganic perovskite slab, apply $20\text{ \AA}$ vacuum, freeze the bottom two substrate layers to mimic semi-infinite bulk, activate slab dipole corrections, and compute the work function $\Phi$.
-
-\subsubsection{Workflow Steps in the GUI}
-\begin{enumerate}[leftmargin=*]
-    \item In **\textcircled{2} Structure**, click \textbf{Import CIF} and select \texttt{FAPbI3\_cubic.cif}.
-    \item Click \textbf{Add Vacuum} and specify \texttt{20.0 \AA}. The cell vector $c$ automatically expands to $36.0\text{ \AA}$, and \texttt{Slab.DipoleCorrection true} is activated.
-    \item Under **Atomic \& Layer Constraints**, freeze the bottom atoms ($z < 15\text{ \AA}$) while keeping the surface atoms free to reconstruct.
-    \item Set \texttt{kgrid\_Monkhorst\_Pack} to $4 \times 4 \times 1$.
-    \item Turn on \texttt{SaveElectrostaticPotential true} in **\textcircled{8} Output Flags**.
-    \item Export \texttt{FAPbI3\_slab.fdf}.
-\end{enumerate}
-
-\subsubsection{Complete Input File (\texttt{FAPbI3\_slab.fdf})}
-\begin{lstlisting}
-SystemLabel          FAPbI3_slab
-SystemName           FAPbI3 Perovskite (001) Surface Slab
-NumberOfAtoms        20
-NumberOfSpecies      5
-
-%block ChemicalSpeciesLabel
-  1   82  Pb      Pb.psf
-  2   53  I       I.psf
-  3    6  C       C.psf
-  4    7  N       N.psf
-  5    1  H       H.psf
-%endblock ChemicalSpeciesLabel
-
-LatticeConstant      1.0 Ang
-%block LatticeVectors
-  12.640000   0.000000   0.000000
-   0.000000  12.640000   0.000000
-   0.000000   0.000000  36.000000
-%endblock LatticeVectors
-
-AtomicCoordinatesFormat NotScaledCartesianAng
-AtomicCoordinatesOrigin COP-Z
-%block AtomicCoordinatesAndAtomicSpecies
-  # Bottom Substrate Layer (Fixed)
-  0.0000   0.0000   8.2000  1   # Pb [F F F]
-  6.3200   6.3200   8.2000  2   # I  [F F F]
-  0.0000   6.3200   8.2000  2   # I  [F F F]
-  6.3200   0.0000   8.2000  2   # I  [F F F]
-  # Surface Reconstructed Layer (Free)
-  0.0000   0.0000  14.5200  1   # Pb [T T T]
-  6.3200   6.3200  14.5200  2   # I  [T T T]
-  # Molecular Cations (FA: CH(NH2)2+)
-  3.1600   3.1600  11.3600  3   # C  [T T T]
-  3.1600   2.1000  11.3600  4   # N  [T T T]
-  3.1600   4.2200  11.3600  4   # N  [T T T]
-%endblock AtomicCoordinatesAndAtomicSpecies
-
-# Constraints (Section 7.7)
-%block Geometry.Constraints
-  atom [1 -- 4]               # Freeze bottom Pb-I layer
-  cell-vector C               # Lock vacuum length
-%endblock Geometry.Constraints
-
-# Slab Physics
-Slab.DipoleCorrection  true
-DFTD3                  true
-PAO.BasisSize          DZP
-MeshCutoff             350.0 Ry
-XC.functional          GGA
-XC.authors             PBE
-
-# 2D Surface K-Points (kz = 1)
-%block kgrid_Monkhorst_Pack
-  4   0   0   0.5
-  0   4   0   0.5
-  0   0   1   0.0
-%endblock kgrid_Monkhorst_Pack
-
-# Relaxation & Potential Output
-MD.TypeOfRun           CG
-MD.NumCGsteps          150
-MD.MaxForceTol         0.04 eV/Ang
-SaveElectrostaticPotential true
-\end{lstlisting}
-
-\subsubsection{Extracting the Work Function}
-Upon completion, the electrostatic potential is stored in \texttt{FAPbI3\_slab.VH}. Convert to planar average using Macroave:
-\begin{lstlisting}[language=bash]
-macroave < macroave.in
-\end{lstlisting}
-Upload the generated \texttt{planar\_potential.dat} into **\textcircled{12} Surface \& Work Function Studio**. The GUI plots $\bar{V}(z)$, detects the flat vacuum level ($V_{\text{vac}} = 0.30\text{ eV}$), reads the Fermi level ($E_F = -4.35\text{ eV}$), and computes:
-\begin{equation}
-\Phi = 0.30\text{ eV} - (-4.35\text{ eV}) = 4.65\text{ eV}
-\end{equation}
-
-\newpage
-\subsection{Tutorial 3: Gas Adsorption on Surface — Energy \& Charge Density Difference}
-\textbf{Objective:} Calculate the binding energy $E_{\text{ads}}$ of a water molecule ($H_2O$) on a $TiO_2$ anatase surface, and compute the planar charge transfer $\Delta\rho(z)$.
-
-\subsubsection{The Three Independent Calculations}
-To compute the adsorption energy:
-\begin{equation}
-E_{\text{ads}} = E_{\text{total}}[\text{Slab}+\text{Mol}] - E_{\text{slab}}[\text{Clean Slab}] - E_{\text{mol}}[\text{Isolated Mol}]
-\end{equation}
-\begin{enumerate}[leftmargin=*]
-    \item \textbf{System 1 (Total):} $H_2O$ adsorbed on $TiO_2$ slab in cell $a \times b \times c$. Output: $E_{\text{total}} = -14256.789\text{ eV}$.
-    \item \textbf{System 2 (Clean Slab):} Bare $TiO_2$ slab in the exact same cell $a \times b \times c$. Output: $E_{\text{slab}} = -13850.123\text{ eV}$.
-    \item \textbf{System 3 (Free Molecule):} Isolated $H_2O$ molecule in the exact same cell. Output: $E_{\text{mol}} = -405.892\text{ eV}$.
-\end{enumerate}
-
-\begin{equation}
-E_{\text{ads}} = -14256.789 - (-13850.123) - (-405.892) = -0.774\text{ eV} \quad (\text{Exothermic Physisorption})
-\end{equation}
-
-\subsubsection{Planar Average Charge Density Difference (CDD)}
-Request valence charge densities: \texttt{SaveRho true}. Generate 3D grid files:
-\begin{equation}
-\Delta\rho(\mathbf{r}) = \rho_{\text{total}}(\mathbf{r}) - \rho_{\text{slab}}(\mathbf{r}) - \rho_{\text{mol}}(\mathbf{r})
-\end{equation}
-Integrate in the $xy$-plane to yield the planar profile:
-\begin{equation}
-\Delta\bar{\rho}(z) = \frac{1}{A} \iint \Delta\rho(x,y,z) dx dy
-\end{equation}
-and the cumulative charge transfer across the interface:
-\begin{equation}
-\Delta Q(z) = \int_{-\infty}^z \Delta\bar{\rho}(z') dz'
-\end{equation}
-
-In **\textcircled{12} Surface \& Work Function Studio $\to$ Planar Average CDD**, uploading the resulting \texttt{.cube} or \texttt{.dat} file renders the dual-axis chart:
-\begin{itemize}[leftmargin=*]
-    \item Peak accumulation region ($+\Delta\rho$: electron buildup at the interface bond).
-    \item Peak depletion region ($-\Delta\rho$: charge loss from the substrate surface).
-    \item Net transferred charge $\Delta q$ and interface dipole $\Delta\mu$ in Debye.
+    \item \textbf{Tab-Separated Paste in Atom Table:} Highlight any cell in the atomic coordinates grid in Section \textcircled{2} and press \textbf{Ctrl+V} to paste multi-column data directly from VESTA or text editors.
+    \item \textbf{Camera Projection Snapping:} In the 3D Crystal Viewer, press the camera projection buttons to jump directly to primary axes ($X, Y, Z$).
+    \item \textbf{1-Click Table Copy in TIMES Analyzer:} In Section \textcircled{8} Tab 2, clicking **📋 Copy** on the execution timer table copies formatted routine timings directly to your clipboard for pasting into reports or spreadsheets.
+    \item \textbf{Direct Workspace Transfer:} In Section \textcircled{13} (VASP Converter), clicking **🚀 Load to Workspace** converts your POSCAR structure, parses selective dynamics into Section 7.7 constraints, and injects the geometry directly into Section \textcircled{2} and the 3D viewer without requiring manual file exports!
 \end{itemize}
 
 \vspace{1cm}
 \begin{center}
-\rule{0.5\textwidth}{0.8pt}\\[0.3cm]
-\small \textbf{End of Documentation}\\[0.1cm]
-\footnotesize Generated for SIESTA 5.x \& SIESTA Input Builder Web Studio
+\rule{0.6\textwidth}{0.8pt}\\[0.3cm]
+\small \textbf{SIESTA Input Builder Web Studio — Documentation Version 5.4.2}\\[0.1cm]
+\footnotesize Maintained by Sivakumar \& Materials Science DFT Consortium\\
+\url{https://chemsiva.github.io/siesta-input-builder/}
 \end{center}
 
 \end{document}
