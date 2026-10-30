@@ -30,10 +30,11 @@ export function TrajectoryViewer({ aniData, cellVectors }) {
  // Canvas 2D Interactive Orbit & Zoom State
  const [rotX, setRotX] = useState(0.3);
  const [rotY, setRotY] = useState(0.4);
- const [zoom, setZoom] = useState(1.0);
- const [pan, setPan] = useState({ x: 0, y: 0 });
- const isDraggingRef = useRef(false);
- const lastMouseRef = useRef({ x: 0, y: 0 });
+  const [zoom, setZoom] = useState(1.0);
+  const initialDistRef = useRef(1);
+  const [pan, setPan] = useState({ x: 0, y: 0 });
+  const isDraggingRef = useRef(false);
+  const lastMouseRef = useRef({ x: 0, y: 0 });
 
  // WebGL Refs
  const cameraRef = useRef(null);
@@ -141,11 +142,21 @@ export function TrajectoryViewer({ aniData, cellVectors }) {
  maxRadiusRef.current = maxDist;
 
  const camDist = Math.max(18, maxDist * 2.5);
- camera.position.set(0, 0, camDist);
- camera.lookAt(0, 0, 0);
- controls.target.set(0, 0, 0);
- controls.update();
+    camera.position.set(0, 0, camDist);
+    initialDistRef.current = camDist;
+    camera.lookAt(0, 0, 0);
+    controls.target.set(0, 0, 0);
+    controls.update();
 
+    controls.addEventListener('change', () => {
+      if (initialDistRef.current > 0 && camera && controls) {
+        const curDist = camera.position.distanceTo(controls.target);
+        if (curDist > 0) {
+          const zScale = initialDistRef.current / curDist;
+          setZoom(parseFloat(zScale.toFixed(2)));
+        }
+      }
+    });
  // Atoms
  const geoCache = {};
  const meshes = [];
@@ -587,18 +598,22 @@ export function TrajectoryViewer({ aniData, cellVectors }) {
  }
  };
 
- const zoomCamera = (factor) => {
- if (engineMode === 'webgl' && cameraRef.current && controlsRef.current) {
- const camera = cameraRef.current;
- const target = controlsRef.current.target;
- const offset = new THREE.Vector3().subVectors(camera.position, target);
- offset.multiplyScalar(factor);
- camera.position.copy(target).add(offset);
- controlsRef.current.update();
- } else {
- setZoom(z => Math.max(0.2, Math.min(5.0, z * (factor < 1 ? 1.2 : 0.8))));
- }
- };
+  const zoomCamera = (factor) => {
+    if (engineMode === 'webgl' && cameraRef.current && controlsRef.current) {
+      const camera = cameraRef.current;
+      const target = controlsRef.current.target;
+      const offset = new THREE.Vector3().subVectors(camera.position, target);
+      offset.multiplyScalar(factor);
+      camera.position.copy(target).add(offset);
+      controlsRef.current.update();
+      if (initialDistRef.current > 0) {
+        const curDist = camera.position.distanceTo(target);
+        if (curDist > 0) setZoom(parseFloat((initialDistRef.current / curDist).toFixed(2)));
+      }
+    } else {
+      setZoom(z => Math.max(0.2, Math.min(5.0, parseFloat((z * (factor < 1 ? 1.25 : 0.8)).toFixed(2)))));
+    }
+  };
 
  const setViewPlane = (plane) => {
  const camDist = Math.max(18, maxRadiusRef.current * 2.5);
@@ -728,9 +743,34 @@ export function TrajectoryViewer({ aniData, cellVectors }) {
  display: 'block',
  }}
  />
- )}
+        )}
 
- {/* Floating Frame Chip */}
+        {/* Floating On-Canvas Zoom Indicator Badge */}
+        <div style={{
+          position: 'absolute',
+          bottom: '10px',
+          left: '10px',
+          background: 'rgba(15, 23, 42, 0.85)',
+          backdropFilter: 'blur(4px)',
+          border: '1px solid rgba(148, 163, 184, 0.3)',
+          borderRadius: '4px',
+          padding: '0.15rem 0.5rem',
+          fontSize: '0.72rem',
+          fontFamily: 'monospace',
+          fontWeight: 700,
+          color: '#38bdf8',
+          pointerEvents: 'none',
+          zIndex: 8,
+          display: 'flex',
+          alignItems: 'center',
+          gap: '0.35rem',
+          boxShadow: '0 2px 6px rgba(0,0,0,0.3)'
+        }}>
+          <span style={{ color: 'var(--muted)', fontWeight: 500 }}>Zoom:</span>
+          <span>{Math.round(zoom * 100)}%</span>
+        </div>
+
+        {/* Floating Frame Chip */}
  <div style={{
  position: 'absolute',
  top: '8px',
@@ -816,44 +856,79 @@ export function TrajectoryViewer({ aniData, cellVectors }) {
  <span style={{ fontSize: '0.7rem', color: 'var(--muted)', fontWeight: 600 }}>
  Rotate:
  </span>
- <button type="button" className="btn btn-xs btn-secondary" onClick={() => rotateCamera(-0.15, 0)} title="Rotate Left">
- Reset Left
- </button>
- <button type="button" className="btn btn-xs btn-secondary" onClick={() => rotateCamera(0.15, 0)} title="Rotate Right">
- ↻ Right
- </button>
- <button type="button" className="btn btn-xs btn-secondary" onClick={() => rotateCamera(0, -0.15)} title="Tilt Up / Top">
- Top
- </button>
- <button type="button" className="btn btn-xs btn-secondary" onClick={() => rotateCamera(0, 0.15)} title="Tilt Down">
- Down
- </button>
- </div>
+          <button type="button" className="btn btn-xs btn-secondary" onClick={() => rotateCamera(-0.15, 0)} title="Rotate Left">
+            Left
+          </button>
+          <button type="button" className="btn btn-xs btn-secondary" onClick={() => rotateCamera(0.15, 0)} title="Rotate Right">
+            Right
+          </button>
+          <button type="button" className="btn btn-xs btn-secondary" onClick={() => rotateCamera(0, -0.15)} title="Tilt Up / Top">
+            Top
+          </button>
+          <button type="button" className="btn btn-xs btn-secondary" onClick={() => rotateCamera(0, 0.15)} title="Tilt Down">
+            Down
+          </button>
+        </div>
 
- {/* Zoom & View Presets */}
- <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', flexWrap: 'wrap' }}>
- <span style={{ fontSize: '0.7rem', color: 'var(--muted)', fontWeight: 600 }}>
- Views:
- </span>
- <button type="button" className="btn btn-xs btn-secondary" onClick={() => zoomCamera(0.85)} title="Zoom In">
- 
- </button>
- <button type="button" className="btn btn-xs btn-secondary" onClick={() => zoomCamera(1.18)} title="Zoom Out">
- 
- </button>
- <button type="button" className="btn btn-xs btn-secondary" onClick={() => setViewPlane('xy')} title="Top View (XY Plane)">
- XY
- </button>
- <button type="button" className="btn btn-xs btn-secondary" onClick={() => setViewPlane('xz')} title="Front View (XZ Plane)">
- XZ
- </button>
- <button type="button" className="btn btn-xs btn-secondary" onClick={() => setViewPlane('yz')} title="Side View (YZ Plane)">
- YZ
- </button>
- <button type="button" className="btn btn-xs btn-secondary" onClick={handleResetCamera} title="Reset Camera to Center">
- Reset
- </button>
- </div>
+        {/* Zoom Controls with Real-time Indication */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', flexWrap: 'wrap' }}>
+          <span style={{ fontSize: '0.7rem', color: 'var(--muted)', fontWeight: 600 }}>
+            Zoom:
+          </span>
+          <button
+            type="button"
+            className="btn btn-xs btn-secondary"
+            onClick={() => zoomCamera(0.82)}
+            title="Zoom In (+)">
+            Zoom +
+          </button>
+          <span
+            style={{
+              fontSize: '0.72rem',
+              fontFamily: 'monospace',
+              fontWeight: 700,
+              color: 'var(--accent)',
+              padding: '0.1rem 0.4rem',
+              background: 'var(--surface)',
+              border: '1px solid var(--border)',
+              borderRadius: '4px',
+              minWidth: '48px',
+              textAlign: 'center'
+            }}
+            title="Current magnification zoom level">
+            {Math.round(zoom * 100)}%
+          </span>
+          <button
+            type="button"
+            className="btn btn-xs btn-secondary"
+            onClick={() => zoomCamera(1.22)}
+            title="Zoom Out (-)">
+            Zoom -
+          </button>
+          <button
+            type="button"
+            className="btn btn-xs btn-secondary"
+            onClick={handleResetCamera}
+            title="Reset Zoom to 100% and Center Camera">
+            100% (Fit)
+          </button>
+        </div>
+
+        {/* View Plane Presets */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', flexWrap: 'wrap' }}>
+          <span style={{ fontSize: '0.7rem', color: 'var(--muted)', fontWeight: 600 }}>
+            Views:
+          </span>
+          <button type="button" className="btn btn-xs btn-secondary" onClick={() => setViewPlane('xy')} title="Top View (XY Plane)">
+            XY
+          </button>
+          <button type="button" className="btn btn-xs btn-secondary" onClick={() => setViewPlane('xz')} title="Front View (XZ Plane)">
+            XZ
+          </button>
+          <button type="button" className="btn btn-xs btn-secondary" onClick={() => setViewPlane('yz')} title="Side View (YZ Plane)">
+            YZ
+          </button>
+        </div>
  </div>
 
  {/* Scrub Slider */}

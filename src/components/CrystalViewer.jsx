@@ -128,10 +128,11 @@ export function CrystalViewer({ structure }) {
  // 2D Canvas interactive rotation & zoom state
  const [rotX, setRotX] = useState(0.45);
  const [rotY, setRotY] = useState(0.65);
- const [zoom, setZoom] = useState(1.0);
- const [pan, setPan] = useState({ x: 0, y: 0 });
- const isDraggingRef = useRef(false);
- const lastMouseRef = useRef({ x: 0, y: 0 });
+  const [zoom, setZoom] = useState(1.0);
+  const [pan, setPan] = useState({ x: 0, y: 0 });
+  const initialDistRef = useRef(1);
+  const isDraggingRef = useRef(false);
+  const lastMouseRef = useRef({ x: 0, y: 0 });
 
  // Convert atomic coordinates to Cartesian Ångström
  const getCartesianAtoms = () => {
@@ -415,11 +416,21 @@ export function CrystalViewer({ structure }) {
  const size = box.getSize(new THREE.Vector3());
  const maxDim = Math.max(size.x, size.y, size.z, 6);
 
- camera.position.set(center.x + maxDim * 1.3, center.y + maxDim * 1.0, center.z + maxDim * 1.6);
- camera.lookAt(center);
- controls.target.copy(center);
- controls.update();
- // Immediately render initial frame synchronously
+    camera.position.set(center.x + maxDim * 1.3, center.y + maxDim * 1.0, center.z + maxDim * 1.6);
+    camera.lookAt(center);
+    controls.target.copy(center);
+    controls.update();
+    initialDistRef.current = camera.position.distanceTo(center);
+
+    controls.addEventListener('change', () => {
+      if (initialDistRef.current > 0 && camera && controls) {
+        const curDist = camera.position.distanceTo(controls.target);
+        if (curDist > 0) {
+          const zScale = initialDistRef.current / curDist;
+          setZoom(parseFloat(zScale.toFixed(2)));
+        }
+      }
+    });
  try {
  renderer.render(scene, camera);
  } catch (e) {
@@ -664,19 +675,20 @@ export function CrystalViewer({ structure }) {
  };
 
  const handleWheel = (e) => {
- e.preventDefault();
- setZoom(z => Math.max(0.4, Math.min(3.5, z * (e.deltaY > 0 ? 0.92 : 1.08))));
- };
+    e.preventDefault();
+    setZoom(z => Math.max(0.2, Math.min(5.0, parseFloat((z * (e.deltaY > 0 ? 0.90 : 1.10)).toFixed(2)))));
+  };
 
  const resetCamera = () => {
  setRotX(0.45);
  setRotY(0.65);
- setZoom(1.0);
- setPan({ x: 0, y: 0 });
- if (engineMode === 'webgl' && controlsRef.current && cameraRef.current) {
- controlsRef.current.reset();
- }
- };
+    setZoom(1.0);
+    setPan({ x: 0, y: 0 });
+    if (engineMode === 'webgl' && controlsRef.current && cameraRef.current) {
+      controlsRef.current.reset();
+      setZoom(1.0);
+    }
+  };
 
  const rotateCamera = (deltaYaw, deltaPitch) => {
  if (engineMode === 'webgl' && cameraRef.current && controlsRef.current) {
@@ -715,19 +727,24 @@ export function CrystalViewer({ structure }) {
  }
  };
 
- const zoomCamera = (factor) => {
- if (engineMode === 'webgl' && cameraRef.current && controlsRef.current) {
- const camera = cameraRef.current;
- const target = controlsRef.current.target;
- const offset = new THREE.Vector3().subVectors(camera.position, target);
- offset.multiplyScalar(factor);
- camera.position.copy(target).add(offset);
- controlsRef.current.update();
- } else {
- setZoom(z => Math.max(0.2, Math.min(5.0, z * (factor < 1 ? 1.2 : 0.8))));
- }
- };
-
+  const zoomCamera = (factor) => {
+    if (engineMode === 'webgl' && cameraRef.current && controlsRef.current) {
+      const camera = cameraRef.current;
+      const target = controlsRef.current.target;
+      const offset = new THREE.Vector3().subVectors(camera.position, target);
+      offset.multiplyScalar(factor);
+      camera.position.copy(target).add(offset);
+      controlsRef.current.update();
+      if (initialDistRef.current > 0) {
+        const curDist = camera.position.distanceTo(target);
+        if (curDist > 0) {
+          setZoom(parseFloat((initialDistRef.current / curDist).toFixed(2)));
+        }
+      }
+    } else {
+      setZoom(z => Math.max(0.2, Math.min(5.0, parseFloat((z * (factor < 1 ? 1.25 : 0.8)).toFixed(2)))));
+    }
+  };
  const setViewPlane = (plane) => {
  const [lcVal] = (structure.LatticeConstant || '1.0 Ang').split(' ');
  const scale = parseFloat(lcVal) || 1.0;
@@ -777,7 +794,7 @@ export function CrystalViewer({ structure }) {
  {/* Viewer toolbar */}
  <div className="viewer-toolbar" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.4rem' }}>
  <div className="viewer-controls-group" style={{ display: 'flex', gap: '0.35rem', alignItems: 'center', flexWrap: 'wrap' }}>
- <button className="btn btn-secondary btn-sm" onClick={resetCamera} title="Reset camera">Reset Reset</button>
+            <button className="btn btn-secondary btn-sm" onClick={resetCamera} title="Reset camera">Reset View</button>
  <button
  className={`btn btn-sm ${supercell ? 'btn-primary' : 'btn-secondary'}`}
  onClick={() => setSupercell(!supercell)}
@@ -816,23 +833,50 @@ export function CrystalViewer({ structure }) {
  </div>
  </div>
 
- {/* 3D Canvas Mount (WebGL or 2D Fallback) */}
- {engineMode === 'webgl' ? (
- <div ref={mountRef} className="viewer-canvas" style={{ width: '100%', height: '420px', position: 'relative' }} />
- ) : (
- <canvas
- ref={canvas2dRef}
- width={860}
- height={420}
- className="viewer-canvas"
- style={{ width: '100%', height: '420px', cursor: 'grab', display: 'block' }}
- onMouseDown={handleMouseDown}
- onMouseMove={handleMouseMove}
- onMouseUp={handleMouseUp}
- onMouseLeave={handleMouseUp}
- onWheel={handleWheel}
- />
- )}
+      {/* 3D Canvas Mount (WebGL or 2D Fallback) */}
+      <div style={{ position: 'relative', width: '100%', height: '420px', overflow: 'hidden' }}>
+        {engineMode === 'webgl' ? (
+          <div ref={mountRef} className="viewer-canvas" style={{ width: '100%', height: '100%' }} />
+        ) : (
+          <canvas
+            ref={canvas2dRef}
+            width={860}
+            height={420}
+            className="viewer-canvas"
+            style={{ width: '100%', height: '100%', cursor: 'grab', display: 'block' }}
+            onMouseDown={handleMouseDown}
+            onMouseMove={handleMouseMove}
+            onMouseUp={handleMouseUp}
+            onMouseLeave={handleMouseUp}
+            onWheel={handleWheel}
+          />
+        )}
+
+        {/* Floating On-Canvas Zoom Indicator Badge */}
+        <div style={{
+          position: 'absolute',
+          bottom: '12px',
+          left: '12px',
+          background: 'rgba(15, 23, 42, 0.85)',
+          backdropFilter: 'blur(4px)',
+          border: '1px solid rgba(148, 163, 184, 0.3)',
+          borderRadius: '4px',
+          padding: '0.2rem 0.55rem',
+          fontSize: '0.72rem',
+          fontFamily: 'monospace',
+          fontWeight: 700,
+          color: '#38bdf8',
+          pointerEvents: 'none',
+          zIndex: 6,
+          display: 'flex',
+          alignItems: 'center',
+          gap: '0.35rem',
+          boxShadow: '0 2px 6px rgba(0,0,0,0.3)'
+        }}>
+          <span style={{ color: 'var(--muted)', fontWeight: 500 }}>Zoom:</span>
+          <span>{Math.round(zoom * 100)}%</span>
+        </div>
+      </div>
  {/* Directional Navigation Toolbar (Slide, Rotate, Zoom) */}
  <div style={{
  display: 'flex',
@@ -868,44 +912,79 @@ export function CrystalViewer({ structure }) {
  <span style={{ fontSize: '0.7rem', color: 'var(--muted)', fontWeight: 600 }}>
  Rotate:
  </span>
- <button type="button" className="btn btn-xs btn-secondary" onClick={() => rotateCamera(-0.15, 0)} title="Rotate Left">
- Reset Left
- </button>
- <button type="button" className="btn btn-xs btn-secondary" onClick={() => rotateCamera(0.15, 0)} title="Rotate Right">
- ↻ Right
- </button>
- <button type="button" className="btn btn-xs btn-secondary" onClick={() => rotateCamera(0, -0.15)} title="Tilt Up / Top">
- Top
- </button>
- <button type="button" className="btn btn-xs btn-secondary" onClick={() => rotateCamera(0, 0.15)} title="Tilt Down">
- Down
- </button>
- </div>
+          <button type="button" className="btn btn-xs btn-secondary" onClick={() => rotateCamera(-0.15, 0)} title="Rotate Left">
+            Left
+          </button>
+          <button type="button" className="btn btn-xs btn-secondary" onClick={() => rotateCamera(0.15, 0)} title="Rotate Right">
+            Right
+          </button>
+          <button type="button" className="btn btn-xs btn-secondary" onClick={() => rotateCamera(0, -0.15)} title="Tilt Up / Top">
+            Top
+          </button>
+          <button type="button" className="btn btn-xs btn-secondary" onClick={() => rotateCamera(0, 0.15)} title="Tilt Down">
+            Down
+          </button>
+        </div>
 
- {/* Zoom & View Presets */}
- <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', flexWrap: 'wrap' }}>
- <span style={{ fontSize: '0.7rem', color: 'var(--muted)', fontWeight: 600 }}>
- Views:
- </span>
- <button type="button" className="btn btn-xs btn-secondary" onClick={() => zoomCamera(0.85)} title="Zoom In">
- 
- </button>
- <button type="button" className="btn btn-xs btn-secondary" onClick={() => zoomCamera(1.18)} title="Zoom Out">
- 
- </button>
- <button type="button" className="btn btn-xs btn-secondary" onClick={() => setViewPlane('xy')} title="Top View (XY Plane)">
- XY
- </button>
- <button type="button" className="btn btn-xs btn-secondary" onClick={() => setViewPlane('xz')} title="Front View (XZ Plane)">
- XZ
- </button>
- <button type="button" className="btn btn-xs btn-secondary" onClick={() => setViewPlane('yz')} title="Side View (YZ Plane)">
- YZ
- </button>
- <button type="button" className="btn btn-xs btn-secondary" onClick={resetCamera} title="Reset Camera">
- Reset
- </button>
- </div>
+        {/* Zoom Controls with Real-time Indication */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', flexWrap: 'wrap' }}>
+          <span style={{ fontSize: '0.7rem', color: 'var(--muted)', fontWeight: 600 }}>
+            Zoom:
+          </span>
+          <button
+            type="button"
+            className="btn btn-xs btn-secondary"
+            onClick={() => zoomCamera(0.82)}
+            title="Zoom In (+)">
+            Zoom +
+          </button>
+          <span
+            style={{
+              fontSize: '0.72rem',
+              fontFamily: 'monospace',
+              fontWeight: 700,
+              color: 'var(--accent)',
+              padding: '0.1rem 0.4rem',
+              background: 'var(--surface)',
+              border: '1px solid var(--border)',
+              borderRadius: '4px',
+              minWidth: '48px',
+              textAlign: 'center'
+            }}
+            title="Current magnification zoom level">
+            {Math.round(zoom * 100)}%
+          </span>
+          <button
+            type="button"
+            className="btn btn-xs btn-secondary"
+            onClick={() => zoomCamera(1.22)}
+            title="Zoom Out (-)">
+            Zoom -
+          </button>
+          <button
+            type="button"
+            className="btn btn-xs btn-secondary"
+            onClick={resetCamera}
+            title="Reset Zoom to 100% and Center Camera">
+            100% (Fit)
+          </button>
+        </div>
+
+        {/* View Plane Presets */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', flexWrap: 'wrap' }}>
+          <span style={{ fontSize: '0.7rem', color: 'var(--muted)', fontWeight: 600 }}>
+            Views:
+          </span>
+          <button type="button" className="btn btn-xs btn-secondary" onClick={() => setViewPlane('xy')} title="Top View (XY Plane)">
+            XY
+          </button>
+          <button type="button" className="btn btn-xs btn-secondary" onClick={() => setViewPlane('xz')} title="Front View (XZ Plane)">
+            XZ
+          </button>
+          <button type="button" className="btn btn-xs btn-secondary" onClick={() => setViewPlane('yz')} title="Side View (YZ Plane)">
+            YZ
+          </button>
+        </div>
  </div>
 
  {/* Empty State Overlay when atoms.length === 0 */}

@@ -105,13 +105,12 @@ export function StructureSection() {
  : 'Turn ON to inspect unit cell, atoms, and bonds in 3D'}
  </span>
  </div>
- <button
- className={`btn ${showViewer ? 'btn-secondary' : 'btn-primary'}`}
- onClick={() => setShowViewer(!showViewer)}
- >
- {showViewer ? 'Clear Close 3D View' : ' Turn ON 3D Viewer'}
- </button>
- </div>
+        <button
+          className={`btn ${showViewer ? 'btn-secondary' : 'btn-primary'}`}
+          onClick={() => setShowViewer(!showViewer)}>
+          {showViewer ? 'Close 3D View' : 'Turn ON 3D Viewer'}
+        </button>
+      </div>
 
  {showViewer && (
  <ErrorBoundary componentName="3D Crystal Visualizer">
