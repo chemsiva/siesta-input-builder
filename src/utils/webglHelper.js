@@ -78,22 +78,28 @@ export function disposeWebGLRenderer(renderer, container = null) {
 }
 
 /**
- * Scans the DOM for any inactive or orphaned WebGL canvases and calls loseContext()
+ * Scans the DOM for any inactive, hidden, or orphaned WebGL canvases and calls loseContext()
  * to free up slots in the browser's GPU context pool.
  */
-export function purgeAllStaleWebGLContexts() {
+export function purgeAllStaleWebGLContexts(exceptCanvas = null) {
   if (typeof document === 'undefined') return;
   try {
     const canvases = document.querySelectorAll('canvas');
     canvases.forEach(canvas => {
-      // If canvas is disconnected or hidden
-      if (!canvas.isConnected || canvas.style.display === 'none') {
-        const gl = canvas.getContext('webgl') || canvas.getContext('webgl2') || canvas.getContext('experimental-webgl');
+      if (exceptCanvas && canvas === exceptCanvas) return;
+      // Check if canvas is disconnected or not visible in layout
+      const isHidden = !canvas.isConnected || canvas.offsetParent === null || canvas.style.display === 'none' || canvas.clientHeight === 0;
+      if (isHidden) {
+        const gl = canvas.getContext('webgl2') || canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
         if (gl) {
           const ext = gl.getExtension('WEBGL_lose_context');
-          if (ext) ext.loseContext();
+          if (ext && typeof ext.loseContext === 'function') {
+            ext.loseContext();
+          }
         }
       }
     });
-  } catch {}
+  } catch (e) {
+    console.warn('Error purging stale WebGL contexts:', e);
+  }
 }
