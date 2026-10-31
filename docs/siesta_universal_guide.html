@@ -195,6 +195,11 @@ Surface, Work Function &amp; Adsorption Analysis</a></li>
 <li><a href="#section-13-vasp-to-fdf-converter-ase-gui-constraints"
 id="toc-section-13-vasp-to-fdf-converter-ase-gui-constraints">Section 13
 VASP to FDF Converter (ASE GUI Constraints)</a></li>
+<li><a
+href="#section-14-charge-transfer-real-space-grid-densities-analysis-section-6.24"
+id="toc-section-14-charge-transfer-real-space-grid-densities-analysis-section-6.24">Section
+14 Charge Transfer &amp; Real-Space Grid Densities Analysis (Section
+6.24)</a></li>
 <li><a href="#the-live-.fdf-preview-pane"
 id="toc-the-live-.fdf-preview-pane">The Live .fdf Preview Pane</a></li>
 </ul></li>
@@ -984,6 +989,73 @@ visualizer!</p></li>
 <figcaption>Section 13 VASP to FDF Converter: Side-by-side dual-pane
 workspace, ASE GUI Selective Dynamics parsing, Section 7.7 General
 Constraints controls, and 1-click Load to Workspace.</figcaption>
+</figure>
+<h2
+id="section-14-charge-transfer-real-space-grid-densities-analysis-section-6.24">Section
+14 Charge Transfer &amp; Real-Space Grid Densities Analysis (Section
+6.24)</h2>
+<p>SIESTA evaluates electron charge densities, deformation densities,
+and electrostatic potentials directly on the real-space mesh used by
+DHSCF. Section 14 provides a comprehensive suite to configure mesh
+output and analyze charge transfer:</p>
+<ul>
+<li><p><strong>Charge Densities on Mesh:</strong> Toggles for
+<code>SaveRho</code>
+(<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>ρ</mi><mrow><mo stretchy="true" form="prefix">(</mo><mi>𝐫</mi><mo stretchy="true" form="postfix">)</mo></mrow></mrow><annotation encoding="application/x-tex">\rho(\mathbf{r})</annotation></semantics></math>
+valence density in <code>.RHO</code>), <code>SaveDeltaRho</code>
+(<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>δ</mi><mi>ρ</mi><mrow><mo stretchy="true" form="prefix">(</mo><mi>𝐫</mi><mo stretchy="true" form="postfix">)</mo></mrow><mo>=</mo><mi>ρ</mi><mrow><mo stretchy="true" form="prefix">(</mo><mi>𝐫</mi><mo stretchy="true" form="postfix">)</mo></mrow><mo>−</mo><msub><mi>ρ</mi><mtext mathvariant="normal">atm</mtext></msub><mrow><mo stretchy="true" form="prefix">(</mo><mi>𝐫</mi><mo stretchy="true" form="postfix">)</mo></mrow></mrow><annotation encoding="application/x-tex">\delta\rho(\mathbf{r}) = \rho(\mathbf{r}) - \rho_{\text{atm}}(\mathbf{r})</annotation></semantics></math>
+deformation density in <code>.DRHO</code>), <code>SaveRhoXC</code>
+(valence density + core corrections for XC energy in
+<code>.RHOXC</code>), <code>SaveIonicCharge</code> (soft diffuse ionic
+charge in <code>.IOCH</code>), and <code>SaveTotalCharge</code>
+(<code>.TOCH</code>).</p></li>
+<li><p><strong>Electrostatic &amp; Effective Potentials:</strong>
+Toggles for <code>SaveElectrostaticPotential</code>
+(<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>V</mi><mi>H</mi></msub><mo>+</mo><msub><mi>V</mi><mtext mathvariant="normal">local</mtext></msub></mrow><annotation encoding="application/x-tex">V_H + V_{\text{local}}</annotation></semantics></math>
+in <code>.VH</code>), <code>SaveTotalPotential</code>
+(<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>V</mi><mi>H</mi></msub><mo>+</mo><msub><mi>V</mi><mtext mathvariant="normal">xc</mtext></msub><mo>+</mo><msub><mi>V</mi><mtext mathvariant="normal">local</mtext></msub></mrow><annotation encoding="application/x-tex">V_H + V_{\text{xc}} + V_{\text{local}}</annotation></semantics></math>
+in <code>.VT</code>), and <code>SaveNeutralAtomPotential</code>
+(<code>.VNA</code>). Enabling <code>SaveTotalPotential</code>
+automatically triggers the output of the vacuum level in stdout for work
+function calculations.</p></li>
+<li><p><strong>Henkelman Bader Analysis Options:</strong> Toggles
+<code>SaveBaderCharge</code> to add generalized Gaussian model core
+charges to the valence density (<code>.BADER</code>), configurable via
+<code>bader-core-radius-standard</code> (default 1.3 Bohr) and
+<code>bader-core-radius-hydrogen</code> (default 0.4 Bohr).</p></li>
+<li><p><strong>Bader Charge Transfer Studio
+(<code>ACF.dat</code>):</strong> Upload or paste Henkelman Bader output
+to compute net charge transfer
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>Δ</mi><msub><mi>Q</mi><mi>i</mi></msub><mo>=</mo><msub><mi>Z</mi><mrow><mtext mathvariant="normal">val</mtext><mo>,</mo><mi>i</mi></mrow></msub><mo>−</mo><msub><mi>Q</mi><mrow><mtext mathvariant="normal">Bader</mtext><mo>,</mo><mi>i</mi></mrow></msub></mrow><annotation encoding="application/x-tex">\Delta Q_i = Z_{\text{val}, i} - Q_{\text{Bader}, i}</annotation></semantics></math>
+per atom and species, total electron conservation, and interfacial
+dipole moment
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>μ</mi><mi>z</mi></msub><annotation encoding="application/x-tex">\mu_z</annotation></semantics></math>
+(in Debye and
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>e</mi><mo>⋅</mo><mtext mathvariant="normal">Å</mtext></mrow><annotation encoding="application/x-tex">e\cdot\text{\AA}</annotation></semantics></math>).</p></li>
+<li><p><strong>Planar Average Charge Displacement
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>Δ</mi><mover><mi>ρ</mi><mo accent="true">‾</mo></mover><mrow><mo stretchy="true" form="prefix">(</mo><mi>z</mi><mo stretchy="true" form="postfix">)</mo></mrow></mrow><annotation encoding="application/x-tex">\Delta\bar{\rho}(z)</annotation></semantics></math>
+&amp;
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>Δ</mi><mi>Q</mi><mrow><mo stretchy="true" form="prefix">(</mo><mi>z</mi><mo stretchy="true" form="postfix">)</mo></mrow></mrow><annotation encoding="application/x-tex">\Delta Q(z)</annotation></semantics></math>:</strong>
+Dual-axis interactive SVG chart displaying planar average charge
+redistribution and cumulative transferred charge
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>Δ</mi><mi>Q</mi><mrow><mo stretchy="true" form="prefix">(</mo><mi>z</mi><mo stretchy="true" form="postfix">)</mo></mrow><mo>=</mo><mo>∫</mo><mi>Δ</mi><mover><mi>ρ</mi><mo accent="true">‾</mo></mover><mrow><mo stretchy="true" form="prefix">(</mo><mi>z</mi><mi>′</mi><mo stretchy="true" form="postfix">)</mo></mrow><mspace width="0.167em"></mspace><mi>d</mi><mi>z</mi><mi>′</mi></mrow><annotation encoding="application/x-tex">\Delta Q(z) = \int \Delta\bar{\rho}(z&#39;) \, dz&#39;</annotation></semantics></math>
+across interfaces and slabs.</p></li>
+<li><p><strong>3D Charge Difference
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>Δ</mi><mi>ρ</mi><mrow><mo stretchy="true" form="prefix">(</mo><mi>𝐫</mi><mo stretchy="true" form="postfix">)</mo></mrow></mrow><annotation encoding="application/x-tex">\Delta\rho(\mathbf{r})</annotation></semantics></math>
+Viewer:</strong> Interactive Dual-Engine (WebGL + 2D Canvas) 3D
+isosurface viewer rendering charge accumulation
+(<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo>+</mo><mi>δ</mi><mi>ρ</mi></mrow><annotation encoding="application/x-tex">+\delta\rho</annotation></semantics></math>,
+cyan) and depletion
+(<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo>−</mo><mi>δ</mi><mi>ρ</mi></mrow><annotation encoding="application/x-tex">-\delta\rho</annotation></semantics></math>,
+amber) lobes.</p></li>
+</ul>
+<figure>
+<img src="figures/fig12_chargetransfer.png" style="width:92.0%" />
+<figcaption>Section 14 Charge Transfer Analysis: Bader Charge Transfer
+Studio (ACF.dat), per-atom net
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>Δ</mi><mi>Q</mi></mrow><annotation encoding="application/x-tex">\Delta Q</annotation></semantics></math>
+partitioning, interfacial dipole moment, and 1-click Section 6.24
+real-space grid presets.</figcaption>
 </figure>
 <h2 id="the-live-.fdf-preview-pane">The Live .fdf Preview Pane</h2>
 <ul>

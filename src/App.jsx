@@ -17,6 +17,8 @@ import { NEBSection } from './sections/NEBSection';
 import { PhononSection } from './sections/PhononSection';
 import { AdsorptionSection } from './sections/AdsorptionSection';
 import { VaspConverterSection } from './sections/VaspConverterSection';
+import { ChargeTransferSection } from './sections/ChargeTransferSection';
+
 function renderSection(section) {
  switch (section) {
  case 'system': return <SystemSection />;
@@ -31,8 +33,9 @@ function renderSection(section) {
  case 'neb': return <NEBSection />;
  case 'phonon': return <PhononSection />;
  case 'adsorption': return <AdsorptionSection />;
- case 'vasp': return <VaspConverterSection />;
- default: return <SystemSection />;
+    case 'vasp': return <VaspConverterSection />;
+    case 'charge': return <ChargeTransferSection />;
+    default: return <SystemSection />;
  }
 }
 export default function App() {

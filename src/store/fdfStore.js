@@ -131,9 +131,15 @@ const defaultState = {
  output: {
  WriteMullikenPop: '0', WriteForces: 'false', WriteCoorStep: 'false',
  WriteCoorXmol: 'false', WriteMDXmol: 'false', WriteMDhistory: 'false',
- SaveRho: 'false', SaveDeltaRho: 'false',
- SaveElectrostaticPotential: 'false', SaveTotalPotential: 'false',
- LongOutput: 'false', SaveHS: 'false', WriteDM: 'true',
+      SaveRho: 'false', SaveDeltaRho: 'false', SaveRhoXC: 'false',
+      SaveElectrostaticPotential: 'false', SaveNeutralAtomPotential: 'false', SaveTotalPotential: 'false',
+      SaveIonicCharge: 'false', SaveTotalCharge: 'false',
+      'SaveGridFunc.Format': 'binary',
+      SaveBaderCharge: 'false',
+      'bader-core-radius-standard': '1.3 Bohr',
+      'bader-core-radius-hydrogen': '0.4 Bohr',
+      AnalyzeChargeDensityOnly: 'false',
+      LongOutput: 'false', SaveHS: 'false', WriteDM: 'true',
  // COOP / COHP
  'COOP.Write': 'false',
  'WFS.Energy.Min': '',

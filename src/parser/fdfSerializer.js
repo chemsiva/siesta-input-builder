@@ -314,18 +314,31 @@ export function serializeFDF(state) {
  sections.push(kLines.join('\n'));
 
  // ── Output flags ──────────────────────────────────────────────────────────
- const outFlags = [
- 'WriteMullikenPop','WriteForces','WriteCoorStep','WriteCoorXmol',
- 'WriteMDXmol','WriteMDhistory',
- 'SaveRho','SaveDeltaRho','SaveElectrostaticPotential','SaveTotalPotential',
- 'LongOutput','SaveHS','WriteDM',
- ];
- sections.push(sec('Output', outFlags.map(k => {
- const v = output[k];
- if (v === undefined || v === '' || v === null) return null;
- if (v === 'false' || v === 'F' || v === false) return null;
- return line(k, v);
- })));
+  const outFlags = [
+    'WriteMullikenPop','WriteForces','WriteCoorStep','WriteCoorXmol',
+    'WriteMDXmol','WriteMDhistory',
+    'SaveRho','SaveDeltaRho','SaveRhoXC',
+    'SaveElectrostaticPotential','SaveNeutralAtomPotential','SaveTotalPotential',
+    'SaveIonicCharge','SaveTotalCharge',
+    'SaveBaderCharge',
+    'AnalyzeChargeDensityOnly',
+    'LongOutput','SaveHS','WriteDM',
+  ];
+  const outLines = outFlags.map(k => {
+    const v = output[k];
+    if (v === undefined || v === '' || v === null) return null;
+    if (v === 'false' || v === 'F' || v === false) return null;
+    return line(k, v);
+  }).filter(Boolean);
+
+  if (output['SaveGridFunc.Format'] && output['SaveGridFunc.Format'] !== 'binary') {
+    outLines.push(line('SaveGridFunc.Format', output['SaveGridFunc.Format']));
+  }
+  if (output.SaveBaderCharge === 'true') {
+    if (output['bader-core-radius-standard']) outLines.push(line('bader-core-radius-standard', output['bader-core-radius-standard']));
+    if (output['bader-core-radius-hydrogen']) outLines.push(line('bader-core-radius-hydrogen', output['bader-core-radius-hydrogen']));
+  }
+  sections.push(sec('Output', outLines));
 
  // ── COOP / COHP ───────────────────────────────────────────────────────────
  if (output['COOP.Write'] === 'true') {

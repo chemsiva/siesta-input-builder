@@ -13,7 +13,8 @@ const SECTIONS = [
  { id: 'neb', num: '10', label: 'CI-NEB' },
  { id: 'phonon', num: '11', label: 'Phonons' },
  { id: 'adsorption', num: '12', label: 'Surface & Work Function' },
- { id: 'vasp', num: '13', label: 'VASP Converter' },
+  { id: 'vasp', num: '13', label: 'VASP Converter' },
+  { id: 'charge', num: '14', label: 'Charge Transfer & Densities' },
 ];
 export function Sidebar() {
  const activeSection = useFDFStore(s => s.activeSection);

@@ -473,6 +473,24 @@ Designed specifically for researchers who set up geometry constraints in ASE GUI
 \includegraphics[width=0.92\textwidth]{figures/fig10_vasp_converter.png}
 \caption{Section 13 VASP to FDF Converter: Side-by-side dual-pane workspace, ASE GUI Selective Dynamics parsing, Section 7.7 General Constraints controls, and 1-click Load to Workspace.}
 \end{figure}
+
+\subsection{Section 14 Charge Transfer \& Real-Space Grid Densities Analysis (Section 6.24)}
+SIESTA evaluates electron charge densities, deformation densities, and electrostatic potentials directly on the real-space mesh used by DHSCF. Section 14 provides a comprehensive suite to configure mesh output and analyze charge transfer:
+\begin{itemize}[leftmargin=*]
+    \item \textbf{Charge Densities on Mesh:} Toggles for \texttt{SaveRho} ($\rho(\mathbf{r})$ valence density in \texttt{.RHO}), \texttt{SaveDeltaRho} ($\delta\rho(\mathbf{r}) = \rho(\mathbf{r}) - \rho_{\text{atm}}(\mathbf{r})$ deformation density in \texttt{.DRHO}), \texttt{SaveRhoXC} (valence density + core corrections for XC energy in \texttt{.RHOXC}), \texttt{SaveIonicCharge} (soft diffuse ionic charge in \texttt{.IOCH}), and \texttt{SaveTotalCharge} (\texttt{.TOCH}).
+    \item \textbf{Electrostatic \& Effective Potentials:} Toggles for \texttt{SaveElectrostaticPotential} ($V_H + V_{\text{local}}$ in \texttt{.VH}), \texttt{SaveTotalPotential} ($V_H + V_{\text{xc}} + V_{\text{local}}$ in \texttt{.VT}), and \texttt{SaveNeutralAtomPotential} (\texttt{.VNA}). Enabling \texttt{SaveTotalPotential} automatically triggers the output of the vacuum level in stdout for work function calculations.
+    \item \textbf{Henkelman Bader Analysis Options:} Toggles \texttt{SaveBaderCharge} to add generalized Gaussian model core charges to the valence density (\texttt{.BADER}), configurable via \texttt{bader-core-radius-standard} (default 1.3~Bohr) and \texttt{bader-core-radius-hydrogen} (default 0.4~Bohr).
+    \item \textbf{Bader Charge Transfer Studio (\texttt{ACF.dat}):} Upload or paste Henkelman Bader output to compute net charge transfer $\Delta Q_i = Z_{\text{val}, i} - Q_{\text{Bader}, i}$ per atom and species, total electron conservation, and interfacial dipole moment $\mu_z$ (in Debye and $e\cdot\text{\AA}$).
+    \item \textbf{Planar Average Charge Displacement $\Delta\bar{\rho}(z)$ \& $\Delta Q(z)$:} Dual-axis interactive SVG chart displaying planar average charge redistribution and cumulative transferred charge $\Delta Q(z) = \int \Delta\bar{\rho}(z') \, dz'$ across interfaces and slabs.
+    \item \textbf{3D Charge Difference $\Delta\rho(\mathbf{r})$ Viewer:} Interactive Dual-Engine (WebGL + 2D Canvas) 3D isosurface viewer rendering charge accumulation ($+\delta\rho$, cyan) and depletion ($-\delta\rho$, amber) lobes.
+\end{itemize}
+
+\begin{figure}[h!]
+\centering
+\includegraphics[width=0.92\textwidth]{figures/fig12_chargetransfer.png}
+\caption{Section 14 Charge Transfer Analysis: Bader Charge Transfer Studio (ACF.dat), per-atom net $\Delta Q$ partitioning, interfacial dipole moment, and 1-click Section 6.24 real-space grid presets.}
+\end{figure}
+
 \subsection{The Live .fdf Preview Pane}
 \begin{itemize}[leftmargin=*]
  \item Real-time bi-directional reflection: Every input field, checkbox, slider, or table edit re-serializes the FDF instantly.
