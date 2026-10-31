@@ -3,6 +3,7 @@ import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { useFDFStore } from '../store/fdfStore';
 import { ELEMENT_DATA } from '../utils/elementData.js';
+import { createSafeWebGLRenderer, disposeWebGLRenderer } from '../utils/webglHelper.js';
 export { ELEMENT_DATA };
 
 const Z_TO_SYMBOL = {
@@ -242,33 +243,17 @@ export function CrystalViewer({ structure }) {
  const width = container.clientWidth || 600;
  const height = 400;
 
- let renderer;
- try {
- const testCanvas = document.createElement('canvas');
- const testGL = testCanvas.getContext('webgl2') || testCanvas.getContext('webgl') || testCanvas.getContext('experimental-webgl');
- if (!testGL) {
- throw new Error('WebGL not supported');
- }
- renderer = new THREE.WebGLRenderer({
- antialias: true,
- alpha: true,
- preserveDrawingBuffer: true,
- failIfMajorPerformanceCaveat: false,
- });
- } catch {
- try {
- renderer = new THREE.WebGLRenderer({
- antialias: false,
- alpha: false,
- preserveDrawingBuffer: true,
- failIfMajorPerformanceCaveat: false,
- });
- } catch (err2) {
- console.warn('WebGL context unavailable in browser. Falling back to 2D Canvas engine:', err2);
- setEngineMode('canvas2d');
- return;
- }
- }
+    const renderer = createSafeWebGLRenderer({
+      antialias: true,
+      alpha: true,
+      preserveDrawingBuffer: true,
+    });
+
+    if (!renderer) {
+      console.warn('WebGL context unavailable or exhausted. Auto-switching to 2D Canvas engine.');
+      setEngineMode('canvas2d');
+      return;
+    }
 
  renderer.setSize(width, height);
  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
@@ -463,19 +448,14 @@ export function CrystalViewer({ structure }) {
  };
  window.addEventListener('resize', handleResize);
 
- return () => {
- cancelAnimationFrame(animId);
- window.removeEventListener('resize', handleResize);
- if (renderer) {
- if (renderer.domElement && renderer.domElement.parentNode === container) {
- container.removeChild(renderer.domElement);
- }
- renderer.dispose();
- }
- while (container.firstChild) {
- container.removeChild(container.firstChild);
- }
- };
+    return () => {
+      cancelAnimationFrame(animId);
+      window.removeEventListener('resize', handleResize);
+      if (controlsRef.current) {
+        try { controlsRef.current.dispose(); } catch {}
+      }
+      disposeWebGLRenderer(renderer, container);
+    };
  }, [structure, showBonds, showCell, supercell, engineMode, atoms]);
 
  // ═══════════════════════════════════════════════════════════════════════════

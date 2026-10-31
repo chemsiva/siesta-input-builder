@@ -2,6 +2,7 @@ import { useEffect, useRef, useState, useMemo } from 'react';
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { ELEMENT_DATA } from '../utils/elementData.js';
+import { createSafeWebGLRenderer, disposeWebGLRenderer } from '../utils/webglHelper.js';
 
 /**
  * 3D Trajectory Animation Player for SIESTA .ANI files.
@@ -65,29 +66,17 @@ export function TrajectoryViewer({ aniData, cellVectors }) {
  container.removeChild(container.firstChild);
  }
 
- // Try creating WebGLRenderer; fallback to canvas2d immediately if exhausted
- let renderer;
- try {
- renderer = new THREE.WebGLRenderer({
- antialias: true,
- alpha: true,
- preserveDrawingBuffer: true,
- failIfMajorPerformanceCaveat: false,
- });
- } catch {
- try {
- renderer = new THREE.WebGLRenderer({
- antialias: false,
- alpha: false,
- preserveDrawingBuffer: true,
- failIfMajorPerformanceCaveat: false,
- });
- } catch (err2) {
- console.warn('WebGL context exhausted in browser. Falling back to 2D Canvas engine:', err2);
- setEngineMode('canvas2d');
- return;
- }
- }
+    const renderer = createSafeWebGLRenderer({
+      antialias: true,
+      alpha: true,
+      preserveDrawingBuffer: true,
+    });
+
+    if (!renderer) {
+      console.warn('WebGL context exhausted in browser. Falling back to 2D Canvas engine.');
+      setEngineMode('canvas2d');
+      return;
+    }
 
  renderer.setSize(width, height);
  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
@@ -273,17 +262,15 @@ export function TrajectoryViewer({ aniData, cellVectors }) {
  };
  window.addEventListener('resize', handleResize);
 
- return () => {
- cancelAnimationFrame(animId);
- window.removeEventListener('resize', handleResize);
- if (renderer) {
- if (renderer.domElement && renderer.domElement.parentNode === container) {
- container.removeChild(renderer.domElement);
- }
- renderer.dispose();
- }
- meshesRef.current = [];
- };
+    return () => {
+      cancelAnimationFrame(animId);
+      window.removeEventListener('resize', handleResize);
+      if (controlsRef.current) {
+        try { controlsRef.current.dispose(); } catch {}
+      }
+      disposeWebGLRenderer(renderer, container);
+      meshesRef.current = [];
+    };
  }, [aniData, cellVectors, engineMode]);
 
  // WebGL: update positions on frame change

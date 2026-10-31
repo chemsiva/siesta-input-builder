@@ -1,5 +1,5 @@
 import { Component } from 'react';
-
+import { purgeAllStaleWebGLContexts } from '../utils/webglHelper.js';
 /**
  * React Error Boundary component to prevent uncaught runtime errors
  * from crashing and blacking out the entire page.
@@ -35,14 +35,18 @@ export class ErrorBoundary extends Component {
  <p style={{ fontSize: '0.85rem', color: 'var(--muted, #94a3b8)', margin: '0 0 0.8rem 0' }}>
  {this.state.error?.message || 'An unexpected error occurred.'}
  </p>
- <button
- className="btn btn-sm btn-secondary"
- onClick={() => this.setState({ hasError: false, error: null })}>
- Reset Try Again
- </button>
- </div>
- );
- }
+          <button
+            type="button"
+            className="btn btn-sm btn-primary"
+            onClick={() => {
+              purgeAllStaleWebGLContexts();
+              this.setState({ hasError: false, error: null });
+            }}>
+            Reclaim GPU Contexts &amp; Reset
+          </button>
+        </div>
+      );
+    }
 
  return this.props.children;
  }

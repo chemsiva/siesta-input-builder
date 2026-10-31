@@ -3,7 +3,7 @@ import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { parseCubeFile, extractIsosurface, generateDemoOrbitalCube } from '../parser/cubeOrbitalParser.js';
 import { ELEMENT_DATA } from '../utils/elementData.js';
-
+import { createSafeWebGLRenderer, disposeWebGLRenderer, purgeAllStaleWebGLContexts } from '../utils/webglHelper.js';
 export function OrbitalVisualizer3D() {
   const containerRef = useRef(null);
   const mountRef = useRef(null);
@@ -24,7 +24,8 @@ export function OrbitalVisualizer3D() {
   const [zoom, setZoom] = useState(1.0);
   const [statusMsg, setStatusMsg] = useState('');
   const [errorMsg, setErrorMsg] = useState('');
-
+  const [webglError, setWebglError] = useState(false);
+  const [retryCount, setRetryCount] = useState(0);
   // Three.js scene references
   const sceneRef = useRef(null);
   const cameraRef = useRef(null);
@@ -76,18 +77,22 @@ export function OrbitalVisualizer3D() {
 
     const width = container.clientWidth || 860;
     const height = 450;
-
-    const renderer = new THREE.WebGLRenderer({
+    const renderer = createSafeWebGLRenderer({
       antialias: true,
-      alpha: false,
       preserveDrawingBuffer: true,
     });
+
+    if (!renderer) {
+      setWebglError(true);
+      return;
+    }
+
+    setWebglError(false);
     renderer.setSize(width, height);
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     container.innerHTML = '';
     container.appendChild(renderer.domElement);
     rendererRef.current = renderer;
-
     const scene = new THREE.Scene();
     scene.background = new THREE.Color(0x0f172a); // Deep slate background
     sceneRef.current = scene;
@@ -167,10 +172,12 @@ export function OrbitalVisualizer3D() {
     return () => {
       cancelAnimationFrame(animId);
       window.removeEventListener('resize', handleResize);
-      renderer.dispose();
-      if (container) container.innerHTML = '';
+      if (controlsRef.current) {
+        try { controlsRef.current.dispose(); } catch {}
+      }
+      disposeWebGLRenderer(renderer, container);
     };
-  }, []);
+  }, [retryCount]);
 
   // Update Molecular Atoms & Bonds Geometry
   useEffect(() => {
@@ -635,8 +642,39 @@ export function OrbitalVisualizer3D() {
         boxShadow: '0 4px 16px rgba(0, 0, 0, 0.4)',
         background: '#0f172a',
       }}>
-        <div ref={mountRef} style={{ width: '100%', height: '100%', display: 'block' }} />
-
+        {webglError ? (
+          <div style={{
+            width: '100%',
+            height: '100%',
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: '2rem',
+            textAlign: 'center',
+            background: '#090d16',
+          }}>
+            <div style={{ fontSize: '1rem', fontWeight: 700, color: '#f59e0b', marginBottom: '0.4rem' }}>
+              WebGL Context Limit Reached
+            </div>
+            <p style={{ fontSize: '0.8rem', color: 'var(--muted)', maxWidth: '440px', lineHeight: '1.45', marginBottom: '1.2rem' }}>
+              Your browser has temporarily reached its simultaneous WebGL GPU context limit. Click below to reclaim orphaned contexts and re-initialize the 3D orbital.
+            </p>
+            <button
+              type="button"
+              className="btn btn-primary"
+              onClick={() => {
+                purgeAllStaleWebGLContexts();
+                setWebglError(false);
+                setRetryCount(c => c + 1);
+              }}
+              style={{ fontSize: '0.82rem', padding: '0.4rem 1rem' }}>
+              Reclaim GPU Contexts &amp; Load 3D Orbital
+            </button>
+          </div>
+        ) : (
+          <div ref={mountRef} style={{ width: '100%', height: '100%', display: 'block' }} />
+        )}
         {/* Floating Top-Left Info Chip */}
         <div style={{
           position: 'absolute',
