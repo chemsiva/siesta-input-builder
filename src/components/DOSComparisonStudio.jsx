@@ -681,9 +681,9 @@ export function DOSComparisonStudio() {
  CSV Table
  </button>
  {datasets.length > 0 && (
- <button className="btn btn-secondary btn-xs" style={{ color: 'var(--error, #ef4444)' }} onClick={() => setDatasets([])}>
- Clear Clear
- </button>
+            <button className="btn btn-secondary btn-xs" style={{ color: 'var(--error, #ef4444)' }} onClick={() => setDatasets([])}>
+              Clear All
+            </button>
  )}
  </div>
  </div>
@@ -739,24 +739,35 @@ export function DOSComparisonStudio() {
  {ds.metrics.isMetal ? 'Metal' : `${ds.metrics.gap} eV`}
  </span>
 
- {/* Visibility Toggle */}
- <button
- type="button"
- style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '0.8rem', padding: '0 2px' }}
- onClick={() => handleToggleVisibility(ds.id)}
- title={ds.visible ? 'Hide curve' : 'Show curve'}>
- {ds.visible ? '' : ''}
- </button>
+                    {/* Visibility ON/OFF Toggle */}
+                    <button
+                      type="button"
+                      className={`btn btn-xs ${ds.visible ? 'btn-primary' : 'btn-secondary'}`}
+                      style={{
+                        padding: '0.12rem 0.4rem',
+                        fontSize: '0.68rem',
+                        fontWeight: 700,
+                        minWidth: '38px',
+                        textAlign: 'center',
+                        background: ds.visible ? 'var(--accent)' : 'var(--surface)',
+                        color: ds.visible ? '#ffffff' : 'var(--muted)',
+                        border: `1px solid ${ds.visible ? 'var(--accent)' : 'var(--border)'}`,
+                      }}
+                      onClick={() => handleToggleVisibility(ds.id)}
+                      title={ds.visible ? 'Hide curve (click to turn OFF)' : 'Show curve (click to turn ON)'}>
+                      {ds.visible ? 'ON' : 'OFF'}
+                    </button>
 
- {/* Delete button */}
- <button
- type="button"
- style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '0.8rem', color: 'var(--muted)', padding: '0 2px' }}
- onClick={() => handleRemoveDataset(ds.id)}
- title="Remove dataset">
- Clear
- </button>
- </div>
+                    {/* Delete button */}
+                    <button
+                      type="button"
+                      className="btn btn-secondary btn-xs"
+                      style={{ padding: '0.12rem 0.35rem', fontSize: '0.68rem', color: 'var(--error, #ef4444)' }}
+                      onClick={() => handleRemoveDataset(ds.id)}
+                      title="Remove dataset">
+                      ×
+                    </button>
+                  </div>
  </div>
  ))}
  </div>

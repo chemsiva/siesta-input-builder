@@ -660,11 +660,20 @@ export function WorkFunctionComparisonStudio() {
                 />
                 <button
                   type="button"
-                  className="btn btn-secondary btn-xs"
-                  style={{ padding: '0.12rem 0.4rem', fontSize: '0.68rem' }}
+                  className={`btn btn-xs ${s.visible ? 'btn-primary' : 'btn-secondary'}`}
+                  style={{
+                    padding: '0.12rem 0.4rem',
+                    fontSize: '0.68rem',
+                    fontWeight: 700,
+                    minWidth: '38px',
+                    textAlign: 'center',
+                    background: s.visible ? 'var(--accent)' : 'var(--surface)',
+                    color: s.visible ? '#ffffff' : 'var(--muted)',
+                    border: `1px solid ${s.visible ? 'var(--accent)' : 'var(--border)'}`,
+                  }}
                   onClick={() => handleToggleVisibility(s.id)}
-                  title={s.visible ? 'Hide profile' : 'Show profile'}>
-                  {s.visible ? 'Hide' : 'Show'}
+                  title={s.visible ? 'Hide profile (click to turn OFF)' : 'Show profile (click to turn ON)'}>
+                  {s.visible ? 'ON' : 'OFF'}
                 </button>
                 <button
                   type="button"
