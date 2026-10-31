@@ -15,6 +15,7 @@ const SECTIONS = [
  { id: 'adsorption', num: '12', label: 'Surface & Work Function' },
   { id: 'vasp', num: '13', label: 'VASP Converter' },
   { id: 'charge', num: '14', label: 'Charge Transfer & Densities' },
+  { id: 'optical', num: '15', label: 'Optical & Dielectric' },
 ];
 export function Sidebar() {
  const activeSection = useFDFStore(s => s.activeSection);

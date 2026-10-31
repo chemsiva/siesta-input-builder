@@ -491,6 +491,22 @@ SIESTA evaluates electron charge densities, deformation densities, and electrost
 \caption{Section 14 Charge Transfer Analysis: Bader Charge Transfer Studio (ACF.dat), per-atom net $\Delta Q$ partitioning, interfacial dipole moment, and 1-click Section 6.24 real-space grid presets.}
 \end{figure}
 
+\subsection{Section 15 Optical Properties \& UV-Vis Absorption Studio (Section 6.20)}
+SIESTA calculates the imaginary part of the frequency-dependent dielectric tensor $\varepsilon_2(\omega)$ based on dipolar transition matrix elements between occupied and unoccupied Kohn-Sham eigenstates. Section 15 provides an end-to-end optical engineering suite:
+\begin{itemize}[leftmargin=*]
+    \item \textbf{FDF Optical Configuration:} Setup for \texttt{OpticalCalculation T}, frequency window (\texttt{Optical.Energy.Minimum} to \texttt{Optical.Energy.Maximum}), Gaussian broadening (\texttt{Optical.Broaden}), rigid scissor operator shift (\texttt{Optical.Scissor}) to compensate for DFT bandgap underestimation, and Brillouin integration mesh (\texttt{\%block Optical.Mesh}).
+    \item \textbf{Polarization Geometry:} Configure \texttt{polycrystal} (isotropic average), \texttt{polarized} (electric field along \texttt{Optical.Vector}), or \texttt{unpolarized} (light propagation along \texttt{Optical.Vector}).
+    \item \textbf{Kramers-Kronig Engine:} Performs Hilbert transforms in the browser to compute the real dielectric function $\varepsilon_1(\omega)$ and extract static dielectric constant $\varepsilon_\infty = \varepsilon_1(0)$.
+    \item \textbf{UV-Vis Absorption \& Complex Refractive Index:} Generates absorption coefficient $\alpha(\omega)$ ($\text{cm}^{-1}$), refractive index $n(\omega)$, extinction coefficient $k(\omega)$, normal-incidence reflectivity $R(\omega)$, and electron energy loss function $L(\omega)$ (identifying the volume plasmon resonance $\hbar\omega_p$).
+    \item \textbf{Automated Tauc Plot Extrapolation:} Plots $(\alpha \cdot h\nu)^{1/n}$ vs $h\nu$ for direct ($n=1/2$) or indirect ($n=2$) transitions, calculates linear regression tangent lines, and extrapolates to $y=0$ to extract the optical bandgap $E_g^{\text{opt}}$.
+\end{itemize}
+
+\begin{figure}[h!]
+\centering
+\includegraphics[width=0.92\textwidth]{figures/fig13_optical.png}
+\caption{Section 15 Optical Properties Studio: Kramers-Kronig dielectric functions $\varepsilon_1(\omega)$ and $\varepsilon_2(\omega)$, AM1.5G solar visible spectrum band indicator, static constants, and 1-click Section 6.20 presets.}
+\end{figure}
+
 \subsection{The Live .fdf Preview Pane}
 \begin{itemize}[leftmargin=*]
  \item Real-time bi-directional reflection: Every input field, checkbox, slider, or table edit re-serializes the FDF instantly.

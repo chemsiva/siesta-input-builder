@@ -18,6 +18,7 @@ import { PhononSection } from './sections/PhononSection';
 import { AdsorptionSection } from './sections/AdsorptionSection';
 import { VaspConverterSection } from './sections/VaspConverterSection';
 import { ChargeTransferSection } from './sections/ChargeTransferSection';
+import { OpticalSection } from './sections/OpticalSection';
 
 function renderSection(section) {
  switch (section) {
@@ -35,6 +36,7 @@ function renderSection(section) {
  case 'adsorption': return <AdsorptionSection />;
     case 'vasp': return <VaspConverterSection />;
     case 'charge': return <ChargeTransferSection />;
+    case 'optical': return <OpticalSection />;
     default: return <SystemSection />;
  }
 }

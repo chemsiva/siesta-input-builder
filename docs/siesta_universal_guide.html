@@ -200,6 +200,11 @@ href="#section-14-charge-transfer-real-space-grid-densities-analysis-section-6.2
 id="toc-section-14-charge-transfer-real-space-grid-densities-analysis-section-6.24">Section
 14 Charge Transfer &amp; Real-Space Grid Densities Analysis (Section
 6.24)</a></li>
+<li><a
+href="#section-15-optical-properties-uv-vis-absorption-studio-section-6.20"
+id="toc-section-15-optical-properties-uv-vis-absorption-studio-section-6.20">Section
+15 Optical Properties &amp; UV-Vis Absorption Studio (Section
+6.20)</a></li>
 <li><a href="#the-live-.fdf-preview-pane"
 id="toc-the-live-.fdf-preview-pane">The Live .fdf Preview Pane</a></li>
 </ul></li>
@@ -1056,6 +1061,72 @@ Studio (ACF.dat), per-atom net
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>Δ</mi><mi>Q</mi></mrow><annotation encoding="application/x-tex">\Delta Q</annotation></semantics></math>
 partitioning, interfacial dipole moment, and 1-click Section 6.24
 real-space grid presets.</figcaption>
+</figure>
+<h2
+id="section-15-optical-properties-uv-vis-absorption-studio-section-6.20">Section
+15 Optical Properties &amp; UV-Vis Absorption Studio (Section 6.20)</h2>
+<p>SIESTA calculates the imaginary part of the frequency-dependent
+dielectric tensor
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>ε</mi><mn>2</mn></msub><mrow><mo stretchy="true" form="prefix">(</mo><mi>ω</mi><mo stretchy="true" form="postfix">)</mo></mrow></mrow><annotation encoding="application/x-tex">\varepsilon_2(\omega)</annotation></semantics></math>
+based on dipolar transition matrix elements between occupied and
+unoccupied Kohn-Sham eigenstates. Section 15 provides an end-to-end
+optical engineering suite:</p>
+<ul>
+<li><p><strong>FDF Optical Configuration:</strong> Setup for
+<code>OpticalCalculation T</code>, frequency window
+(<code>Optical.Energy.Minimum</code> to
+<code>Optical.Energy.Maximum</code>), Gaussian broadening
+(<code>Optical.Broaden</code>), rigid scissor operator shift
+(<code>Optical.Scissor</code>) to compensate for DFT bandgap
+underestimation, and Brillouin integration mesh
+(<code>%block Optical.Mesh</code>).</p></li>
+<li><p><strong>Polarization Geometry:</strong> Configure
+<code>polycrystal</code> (isotropic average), <code>polarized</code>
+(electric field along <code>Optical.Vector</code>), or
+<code>unpolarized</code> (light propagation along
+<code>Optical.Vector</code>).</p></li>
+<li><p><strong>Kramers-Kronig Engine:</strong> Performs Hilbert
+transforms in the browser to compute the real dielectric function
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>ε</mi><mn>1</mn></msub><mrow><mo stretchy="true" form="prefix">(</mo><mi>ω</mi><mo stretchy="true" form="postfix">)</mo></mrow></mrow><annotation encoding="application/x-tex">\varepsilon_1(\omega)</annotation></semantics></math>
+and extract static dielectric constant
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>ε</mi><mi>∞</mi></msub><mo>=</mo><msub><mi>ε</mi><mn>1</mn></msub><mrow><mo stretchy="true" form="prefix">(</mo><mn>0</mn><mo stretchy="true" form="postfix">)</mo></mrow></mrow><annotation encoding="application/x-tex">\varepsilon_\infty = \varepsilon_1(0)</annotation></semantics></math>.</p></li>
+<li><p><strong>UV-Vis Absorption &amp; Complex Refractive
+Index:</strong> Generates absorption coefficient
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>α</mi><mrow><mo stretchy="true" form="prefix">(</mo><mi>ω</mi><mo stretchy="true" form="postfix">)</mo></mrow></mrow><annotation encoding="application/x-tex">\alpha(\omega)</annotation></semantics></math>
+(<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msup><mtext mathvariant="normal">cm</mtext><mrow><mo>−</mo><mn>1</mn></mrow></msup><annotation encoding="application/x-tex">\text{cm}^{-1}</annotation></semantics></math>),
+refractive index
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>n</mi><mrow><mo stretchy="true" form="prefix">(</mo><mi>ω</mi><mo stretchy="true" form="postfix">)</mo></mrow></mrow><annotation encoding="application/x-tex">n(\omega)</annotation></semantics></math>,
+extinction coefficient
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>k</mi><mrow><mo stretchy="true" form="prefix">(</mo><mi>ω</mi><mo stretchy="true" form="postfix">)</mo></mrow></mrow><annotation encoding="application/x-tex">k(\omega)</annotation></semantics></math>,
+normal-incidence reflectivity
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>R</mi><mrow><mo stretchy="true" form="prefix">(</mo><mi>ω</mi><mo stretchy="true" form="postfix">)</mo></mrow></mrow><annotation encoding="application/x-tex">R(\omega)</annotation></semantics></math>,
+and electron energy loss function
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>L</mi><mrow><mo stretchy="true" form="prefix">(</mo><mi>ω</mi><mo stretchy="true" form="postfix">)</mo></mrow></mrow><annotation encoding="application/x-tex">L(\omega)</annotation></semantics></math>
+(identifying the volume plasmon resonance
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>ℏ</mi><msub><mi>ω</mi><mi>p</mi></msub></mrow><annotation encoding="application/x-tex">\hbar\omega_p</annotation></semantics></math>).</p></li>
+<li><p><strong>Automated Tauc Plot Extrapolation:</strong> Plots
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msup><mrow><mo stretchy="true" form="prefix">(</mo><mi>α</mi><mo>⋅</mo><mi>h</mi><mi>ν</mi><mo stretchy="true" form="postfix">)</mo></mrow><mrow><mn>1</mn><mi>/</mi><mi>n</mi></mrow></msup><annotation encoding="application/x-tex">(\alpha \cdot h\nu)^{1/n}</annotation></semantics></math>
+vs
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>h</mi><mi>ν</mi></mrow><annotation encoding="application/x-tex">h\nu</annotation></semantics></math>
+for direct
+(<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>n</mi><mo>=</mo><mn>1</mn><mi>/</mi><mn>2</mn></mrow><annotation encoding="application/x-tex">n=1/2</annotation></semantics></math>)
+or indirect
+(<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>n</mi><mo>=</mo><mn>2</mn></mrow><annotation encoding="application/x-tex">n=2</annotation></semantics></math>)
+transitions, calculates linear regression tangent lines, and
+extrapolates to
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>y</mi><mo>=</mo><mn>0</mn></mrow><annotation encoding="application/x-tex">y=0</annotation></semantics></math>
+to extract the optical bandgap
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msubsup><mi>E</mi><mi>g</mi><mtext mathvariant="normal">opt</mtext></msubsup><annotation encoding="application/x-tex">E_g^{\text{opt}}</annotation></semantics></math>.</p></li>
+</ul>
+<figure>
+<img src="figures/fig13_optical.png" style="width:92.0%" />
+<figcaption>Section 15 Optical Properties Studio: Kramers-Kronig
+dielectric functions
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>ε</mi><mn>1</mn></msub><mrow><mo stretchy="true" form="prefix">(</mo><mi>ω</mi><mo stretchy="true" form="postfix">)</mo></mrow></mrow><annotation encoding="application/x-tex">\varepsilon_1(\omega)</annotation></semantics></math>
+and
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>ε</mi><mn>2</mn></msub><mrow><mo stretchy="true" form="prefix">(</mo><mi>ω</mi><mo stretchy="true" form="postfix">)</mo></mrow></mrow><annotation encoding="application/x-tex">\varepsilon_2(\omega)</annotation></semantics></math>,
+AM1.5G solar visible spectrum band indicator, static constants, and
+1-click Section 6.20 presets.</figcaption>
 </figure>
 <h2 id="the-live-.fdf-preview-pane">The Live .fdf Preview Pane</h2>
 <ul>

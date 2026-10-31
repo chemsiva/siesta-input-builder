@@ -240,7 +240,19 @@ export function parseFDF(text) {
     'LongOutput','SaveHS','WriteDM',
     'AllocReportLevel','AllocReportThreshold','TimerReportThreshold',
     'UseTreeTimer','UseParallelTimer','TimingSplitScfSteps',
-    'MaxWalltime','MaxWalltime.Slack'].forEach(k => setIfPresent(result.output, k));
+    'MaxWalltime','MaxWalltime.Slack',
+    'OpticalCalculation','Optical.Energy.Minimum','Optical.Energy.Maximum',
+    'Optical.Broaden','Optical.Scissor','Optical.NumberOfBands',
+    'Optical.PolarizationType','Optical.OffsetMesh'].forEach(k => setIfPresent(result.output, k));
+
+  const optMeshBlock = blockMap['optical.mesh'];
+  if (optMeshBlock && optMeshBlock.length > 0) {
+    result.output['Optical.Mesh'] = optMeshBlock[0].trim().replace(/\s+/g, ' ');
+  }
+  const optVecBlock = blockMap['optical.vector'];
+  if (optVecBlock && optVecBlock.length > 0) {
+    result.output['Optical.Vector'] = optVecBlock[0].trim().replace(/\s+/g, ' ');
+  }
  // MD
  ['MD.TypeOfRun','MD.NumCGsteps','MD.MaxForceTol','MD.MaxStressTol','MD.VariableCell',
  'MD.MaxDispl','MD.Steps','MD.TargetPressure','MD.UseSaveXV','MD.InitialTemperature','MD.TargetTemperature',
