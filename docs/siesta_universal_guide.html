@@ -696,7 +696,28 @@ charge density.</p></li>
 window slice (<code>%block LocalDensityOfStates</code>).</p></li>
 <li><p><strong><code>WriteEigenvalues</code>:</strong> Toggle to write
 all Kohn-Sham eigenvalues to <code>SystemLabel.EIG</code>.</p></li>
+<li><p><strong>3D Molecular Orbital &amp; HOMO / LUMO Visualizer
+(<code>.cube</code>):</strong> Upload any 3D Gaussian Cube file from
+SIESTA (<code>denchar</code>, <code>grid2cube</code>), Quantum ESPRESSO
+(<code>pp.x</code>), ORCA, or Gaussian. The visualizer executes
+real-time Marching Cubes isosurface extraction in WebGL, displaying
+dual-phase lobes
+(<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo>+</mo><mi>ψ</mi></mrow><annotation encoding="application/x-tex">+\psi</annotation></semantics></math>
+in cyan,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo>−</mo><mi>ψ</mi></mrow><annotation encoding="application/x-tex">-\psi</annotation></semantics></math>
+in amber), interactive isovalue threshold sliders, transparency
+controls, CPK molecular framework (atoms and covalent bonds), and
+high-resolution PNG snapshot capture.</p></li>
 </ul>
+<figure>
+<img src="figures/fig11_homo_lumo_3d.png" style="width:92.0%" />
+<figcaption>Section 7 &amp; Section 8: Interactive 3D Molecular Orbital
+and HOMO / LUMO Isosurface Visualizer showing Benzene
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>C</mi><mn>6</mn></msub><msub><mi>H</mi><mn>6</mn></msub></mrow><annotation encoding="application/x-tex">C_6H_6</annotation></semantics></math>
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>π</mi><annotation encoding="application/x-tex">\pi</annotation></semantics></math>-orbital
+lobes, isovalue slider, phase selectors, and CPK molecular
+framework.</figcaption>
+</figure>
 <h2 id="section-8-output-flags-results-viewer">Section 8 Output Flags
 &amp; Results Viewer</h2>
 <p>This section contains two distinct workspaces selected via top tab

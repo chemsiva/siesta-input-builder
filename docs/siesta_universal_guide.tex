@@ -344,9 +344,15 @@ Located in the **High-Symmetry Band Path Generator** card:
  \item \textbf{Projected DOS (\texttt{\%block ProjectedDensityOfStates}):} Configure energy window ($E_{\text{min}}$ to $E_{\text{max}}$), Gaussian peak broadening width ($\sigma$), number of points, and energy units. Toggle \texttt{EF} to align energy relative to the Fermi level.
  \item \textbf{Custom PDOS k-grid:} Toggle \texttt{PDOS.kgrid.MonkhorstPack} to use a denser $k$-point mesh for the DOS calculation than was used for the self-consistent SCF charge density.
  \item \textbf{Local Density of States (LDOS):} Spatial energy window slice (\texttt{\%block LocalDensityOfStates}).
- \item \textbf{\texttt{WriteEigenvalues}:} Toggle to write all Kohn-Sham eigenvalues to \texttt{SystemLabel.EIG}.
+    \item \textbf{\texttt{WriteEigenvalues}:} Toggle to write all Kohn-Sham eigenvalues to \texttt{SystemLabel.EIG}.
+    \item \textbf{3D Molecular Orbital \& HOMO / LUMO Visualizer (\texttt{.cube}):} Upload any 3D Gaussian Cube file from SIESTA (\texttt{denchar}, \texttt{grid2cube}), Quantum ESPRESSO (\texttt{pp.x}), ORCA, or Gaussian. The visualizer executes real-time Marching Cubes isosurface extraction in WebGL, displaying dual-phase lobes ($+\psi$ in cyan, $-\psi$ in amber), interactive isovalue threshold sliders, transparency controls, CPK molecular framework (atoms and covalent bonds), and high-resolution PNG snapshot capture.
 \end{itemize}
 
+\begin{figure}[h!]
+\centering
+\includegraphics[width=0.92\textwidth]{figures/fig11_homo_lumo_3d.png}
+\caption{Section 7 \& Section 8: Interactive 3D Molecular Orbital and HOMO / LUMO Isosurface Visualizer showing Benzene $C_6H_6$ $\pi$-orbital lobes, isovalue slider, phase selectors, and CPK molecular framework.}
+\end{figure}
 \subsection{Section 8 Output Flags \& Results Viewer}
 This section contains two distinct workspaces selected via top tab pills:
 

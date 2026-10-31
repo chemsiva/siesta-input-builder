@@ -16,7 +16,7 @@ import { parse1DPotentialData, parsePotentialCube, generatePotentialFromOut, gen
 import { ErrorBoundary } from '../components/ErrorBoundary.jsx';
 import { parseTimesFile } from '../parser/timesParser.js';
 import { TimingAnalysisCard } from '../components/TimingAnalysisCard.jsx';
-
+import { OrbitalVisualizer3D } from '../components/OrbitalVisualizer3D.jsx';
 const TRAJ_FLAGS = [
  { key: 'WriteMDXmol', type: 'bool', label: 'WriteMDXmol (.ANI)', fileExt: '.ANI',
  help: 'Accumulate coordinates into SystemLabel.ANI (XYZ trajectory format for VMD, JMol, XCrySDen, OVITO)' },
@@ -1076,24 +1076,32 @@ FINAL_HF 1858 0.000 0.0000 11778.626 0.1914 0.995`;
  className={`btn btn-xs ${dosViewMode === 'compare' ? 'btn-primary' : 'btn-secondary'}`}
  onClick={() => setDosViewMode('compare')}>
  Multi-DOS Comparison
- </button>
- <button
- type="button"
- className={`btn btn-xs ${dosViewMode === 'stm' ? 'btn-primary' : 'btn-secondary'}`}
- onClick={() => setDosViewMode('stm')}>
- Simulated STM
- </button>
- </div>
- </div>
- {dosViewMode === 'bands' ? (
- <BandStructureChart />
- ) : dosViewMode === 'stm' ? (
- <STMVisualizer />
- ) : dosViewMode === 'compare' ? (
- <DOSComparisonStudio />
- ) : (
- <DOSPlotterSuite />
- )}
+              </button>
+              <button
+                type="button"
+                className={`btn btn-xs ${dosViewMode === 'stm' ? 'btn-primary' : 'btn-secondary'}`}
+                onClick={() => setDosViewMode('stm')}>
+                Simulated STM
+              </button>
+              <button
+                type="button"
+                className={`btn btn-xs ${dosViewMode === 'homolumo' ? 'btn-primary' : 'btn-secondary'}`}
+                onClick={() => setDosViewMode('homolumo')}>
+                3D HOMO / LUMO (.cube)
+              </button>
+            </div>
+          </div>
+          {dosViewMode === 'bands' ? (
+            <BandStructureChart />
+          ) : dosViewMode === 'stm' ? (
+            <STMVisualizer />
+          ) : dosViewMode === 'compare' ? (
+            <DOSComparisonStudio />
+          ) : dosViewMode === 'homolumo' ? (
+            <OrbitalVisualizer3D />
+          ) : (
+            <DOSPlotterSuite />
+          )}
  </div>
 
  {/* ═══════════════════════════════════════════════════════════════════ */}

@@ -5,7 +5,7 @@ import { DOSPlotterSuite } from '../components/DOSPlotterSuite.jsx';
 import { DOSComparisonStudio } from '../components/DOSComparisonStudio.jsx';
 import { STMVisualizer } from '../components/STMVisualizer.jsx';
 import { BandStructureChart } from '../components/BandStructureChart.jsx';
-
+import { OrbitalVisualizer3D } from '../components/OrbitalVisualizer3D.jsx';
 const ENERGY_UNITS = ['eV', 'Ry', 'Hartree'];
 
 export function DOSSection() {
@@ -56,25 +56,33 @@ export function DOSSection() {
  className={`btn ${activeTab === 'comparison' ? 'btn-primary' : 'btn-secondary'} btn-sm`}
  onClick={() => setActiveTab('comparison')}>
  Multi-DOS Comparison
- </button>
- <button
- type="button"
- className={`btn ${activeTab === 'stm' ? 'btn-primary' : 'btn-secondary'} btn-sm`}
- onClick={() => setActiveTab('stm')}>
- Simulated STM
- </button>
- </div>
- </div>
+          </button>
+          <button
+            type="button"
+            className={`btn ${activeTab === 'stm' ? 'btn-primary' : 'btn-secondary'} btn-sm`}
+            onClick={() => setActiveTab('stm')}>
+            Simulated STM
+          </button>
+          <button
+            type="button"
+            className={`btn ${activeTab === 'homolumo' ? 'btn-primary' : 'btn-secondary'} btn-sm`}
+            onClick={() => setActiveTab('homolumo')}>
+            3D HOMO / LUMO (.cube)
+          </button>
+        </div>
+      </div>
 
  {activeTab === 'bands' ? (
  <BandStructureChart />
- ) : activeTab === 'stm' ? (
- <STMVisualizer />
- ) : activeTab === 'comparison' ? (
- <DOSComparisonStudio />
- ) : activeTab === 'plotter' ? (
- <DOSPlotterSuite />
- ) : (
+      ) : activeTab === 'stm' ? (
+        <STMVisualizer />
+      ) : activeTab === 'comparison' ? (
+        <DOSComparisonStudio />
+      ) : activeTab === 'homolumo' ? (
+        <OrbitalVisualizer3D />
+      ) : activeTab === 'plotter' ? (
+        <DOSPlotterSuite />
+      ) : (
  <>
  <p className="section-desc">
  Calculate the Total Density of States (DOS) and Projected Density of States (PDOS) on pseudo-atomic orbitals.
