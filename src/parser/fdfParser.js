@@ -198,10 +198,22 @@ export function parseFDF(text) {
  'PAO.Polarization.NonPerturbative','PAO.Polarization.Rc-Expansion-Factor','PAO.Polarization.NonPerturbative.Fallback',
  'BasisPressure','Write.Graphviz','User.Basis','FilterCutoff'].forEach(k => setIfPresent(result.basis, k));
  // SCF
- ['MaxSCFIterations','DM.Tolerance','DM.MixingWeight','DM.NumberPulay',
- 'SCF.MustConverge','ElectronicTemperature','SolutionMethod','DM.UseSaveDM',
- 'SCF.Mixer.Method','SCF.Mixer.Weight','SCF.Mixer.History','MinSCFIterations'].forEach(k => setIfPresent(result.scf, k));
- // Aliases
+  [
+    'MaxSCFIterations','DM.Tolerance','DM.MixingWeight','DM.NumberPulay',
+    'SCF.MustConverge','ElectronicTemperature','SolutionMethod','DM.UseSaveDM',
+    'SCF.Mixer.Method','SCF.Mixer.Weight','SCF.Mixer.History','MinSCFIterations',
+    // Section 6.12.1 Diagonalization
+    'NumberOfEigenStates','Diag.Algorithm','Diag.Use2D','Diag.ProcessorY','Diag.BlockSize',
+    'Diag.ParallelOverK','Diag.WFS.Cache','Diag.ELPA.GPU','Diag.ELPA.GPU.String','Diag.Memory',
+    // Section 6.12.3 Smearing
+    'OccupationFunction','OccupationMPOrder',
+    // Section 6.12.4 OMM
+    'OMM.UseCholesky','OMM.Use2D','OMM.UseSparse','OMM.Precon','OMM.Diagon',
+    'OMM.TPreconScale','OMM.RelTol','OMM.Eigenvalues','OMM.WriteCoeffs','OMM.ReadCoeffs',
+    // Section 6.12.5 OrderN
+    'ON.functional','ON.MaxNumIter','ON.Etol','ON.eta','ON.RcLWF',
+    'ON.ChemicalPotential','ON.ChemicalPotential.Use','ON.UseSaveLWF'
+  ].forEach(k => setIfPresent(result.scf, k));
  if (g('DM.MixingWeight') && !result.scf['SCF.Mixer.Weight']) {}
  if (g('solution-method')) result.scf.SolutionMethod = g('solution-method');
 

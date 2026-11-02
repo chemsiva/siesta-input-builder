@@ -254,20 +254,67 @@ export function serializeFDF(state) {
  }
 
  // ── SCF ───────────────────────────────────────────────────────────────────
- sections.push(sec('SCF', [
- line('MaxSCFIterations', scf.MaxSCFIterations),
- scf.MinSCFIterations ? line('MinSCFIterations', scf.MinSCFIterations) : null,
- line('DM.Tolerance', scf['DM.Tolerance']),
- line('DM.MixingWeight', scf['DM.MixingWeight']),
- line('DM.NumberPulay', scf['DM.NumberPulay']),
- scf['SCF.Mixer.Method'] && scf['SCF.Mixer.Method'] !== 'pulay' ? line('SCF.Mixer.Method', scf['SCF.Mixer.Method']) : null,
- scf['SCF.Mixer.Weight'] ? line('SCF.Mixer.Weight', scf['SCF.Mixer.Weight']) : null,
- scf['SCF.Mixer.History'] ? line('SCF.Mixer.History', scf['SCF.Mixer.History']) : null,
- line('SCF.MustConverge', scf['SCF.MustConverge']),
- line('ElectronicTemperature',scf.ElectronicTemperature),
- line('SolutionMethod', scf.SolutionMethod),
- line('DM.UseSaveDM', scf['DM.UseSaveDM']),
- ]));
+  const scfLines = [
+    line('MaxSCFIterations', scf.MaxSCFIterations),
+    scf.MinSCFIterations ? line('MinSCFIterations', scf.MinSCFIterations) : null,
+    line('DM.Tolerance', scf['DM.Tolerance']),
+    line('DM.MixingWeight', scf['DM.MixingWeight']),
+    line('DM.NumberPulay', scf['DM.NumberPulay']),
+    scf['SCF.Mixer.Method'] && scf['SCF.Mixer.Method'] !== 'pulay' ? line('SCF.Mixer.Method', scf['SCF.Mixer.Method']) : null,
+    scf['SCF.Mixer.Weight'] ? line('SCF.Mixer.Weight', scf['SCF.Mixer.Weight']) : null,
+    scf['SCF.Mixer.History'] ? line('SCF.Mixer.History', scf['SCF.Mixer.History']) : null,
+    line('SCF.MustConverge', scf['SCF.MustConverge']),
+    line('ElectronicTemperature', scf.ElectronicTemperature),
+    scf.OccupationFunction && scf.OccupationFunction !== 'FD' ? line('OccupationFunction', scf.OccupationFunction) : null,
+    scf.OccupationFunction === 'MP' && scf.OccupationMPOrder ? line('OccupationMPOrder', scf.OccupationMPOrder) : null,
+    line('SolutionMethod', scf.SolutionMethod || 'diagon'),
+    line('DM.UseSaveDM', scf['DM.UseSaveDM']),
+  ];
+
+  // Section 6.12.1 Diagonalization Options
+  if (!scf.SolutionMethod || scf.SolutionMethod === 'diagon') {
+    if (scf.NumberOfEigenStates) scfLines.push(line('NumberOfEigenStates', scf.NumberOfEigenStates));
+    if (scf['Diag.Algorithm'] && scf['Diag.Algorithm'] !== 'divide-and-conquer') scfLines.push(line('Diag.Algorithm', scf['Diag.Algorithm']));
+    if (scf['Diag.ParallelOverK'] === 'true') scfLines.push(line('Diag.ParallelOverK', 'true'));
+    if (scf['Diag.Use2D'] === 'false') scfLines.push(line('Diag.Use2D', 'false'));
+    if (scf['Diag.ProcessorY']) scfLines.push(line('Diag.ProcessorY', scf['Diag.ProcessorY']));
+    if (scf['Diag.BlockSize']) scfLines.push(line('Diag.BlockSize', scf['Diag.BlockSize']));
+    if (scf['Diag.WFS.Cache'] && scf['Diag.WFS.Cache'] !== 'none') scfLines.push(line('Diag.WFS.Cache', scf['Diag.WFS.Cache']));
+    if (scf['Diag.ELPA.GPU'] === 'true') {
+      scfLines.push(line('Diag.ELPA.GPU', 'true'));
+      if (scf['Diag.ELPA.GPU.String']) scfLines.push(line('Diag.ELPA.GPU.String', scf['Diag.ELPA.GPU.String']));
+    }
+    if (scf['Diag.Memory'] && scf['Diag.Memory'] !== '1.0' && scf['Diag.Memory'] !== '1') scfLines.push(line('Diag.Memory', scf['Diag.Memory']));
+  }
+
+  // Section 6.12.4 OMM
+  if (scf.SolutionMethod === 'OMM') {
+    if (scf['OMM.UseCholesky'] === 'false') scfLines.push(line('OMM.UseCholesky', 'false'));
+    if (scf['OMM.Use2D'] === 'false') scfLines.push(line('OMM.Use2D', 'false'));
+    if (scf['OMM.UseSparse'] === 'true') scfLines.push(line('OMM.UseSparse', 'true'));
+    if (scf['OMM.Precon']) scfLines.push(line('OMM.Precon', scf['OMM.Precon']));
+    if (scf['OMM.Diagon']) scfLines.push(line('OMM.Diagon', scf['OMM.Diagon']));
+    if (scf['OMM.TPreconScale']) scfLines.push(line('OMM.TPreconScale', scf['OMM.TPreconScale']));
+    if (scf['OMM.RelTol']) scfLines.push(line('OMM.RelTol', scf['OMM.RelTol']));
+    if (scf['OMM.Eigenvalues'] === 'true') scfLines.push(line('OMM.Eigenvalues', 'true'));
+    if (scf['OMM.WriteCoeffs'] === 'true') scfLines.push(line('OMM.WriteCoeffs', 'true'));
+    if (scf['OMM.ReadCoeffs'] === 'true') scfLines.push(line('OMM.ReadCoeffs', 'true'));
+    if (scf['ON.eta']) scfLines.push(line('ON.eta', scf['ON.eta']));
+  }
+
+  // Section 6.12.5 OrderN
+  if (scf.SolutionMethod === 'OrderN') {
+    if (scf['ON.functional']) scfLines.push(line('ON.functional', scf['ON.functional']));
+    if (scf['ON.MaxNumIter']) scfLines.push(line('ON.MaxNumIter', scf['ON.MaxNumIter']));
+    if (scf['ON.Etol']) scfLines.push(line('ON.Etol', scf['ON.Etol']));
+    if (scf['ON.eta']) scfLines.push(line('ON.eta', scf['ON.eta']));
+    if (scf['ON.RcLWF']) scfLines.push(line('ON.RcLWF', scf['ON.RcLWF']));
+    if (scf['ON.ChemicalPotential'] === 'true') scfLines.push(line('ON.ChemicalPotential', 'true'));
+    if (scf['ON.ChemicalPotential.Use'] === 'true') scfLines.push(line('ON.ChemicalPotential.Use', 'true'));
+    if (scf['ON.UseSaveLWF'] === 'true') scfLines.push(line('ON.UseSaveLWF', 'true'));
+  }
+
+  sections.push(sec('SCF', scfLines));
  // ── Initial Spin Moments ──────────────────────────────────────────────────
  if (scf._dmInitSpin && scf._dmInitSpin.trim()) {
  const spinRows = scf._dmInitSpin.trim().split(/\r?\n/).map(l => ` ${l.trim()}`).filter(l => l.trim().length > 0);
