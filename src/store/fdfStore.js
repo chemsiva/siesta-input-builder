@@ -2,6 +2,7 @@ import { create } from 'zustand';
 import { parseCIF } from '../parser/cifParser.js';
 import { parseFDF } from '../parser/fdfParser.js';
 import { serializeFDF } from '../parser/fdfSerializer.js';
+import { parseSiestaOut } from '../parser/outParser.js';
 import templates from '../data/templates.json';
 
 const defaultState = {
@@ -199,8 +200,9 @@ const defaultState = {
  detectedFiles: [], // filenames discovered by folder scan
  },
  theme: typeof localStorage !== 'undefined' && localStorage.getItem('siesta_theme') === 'light' ? 'light' : 'dark',
- activeSection: 'system',
- validationErrors: [],
+  activeSection: 'system',
+  validationErrors: [],
+  outResult: null,
 };
 
 export const useFDFStore = create((set, get) => ({
@@ -232,9 +234,20 @@ export const useFDFStore = create((set, get) => ({
  const parsed = parseFDF(text);
  set({ ...parsed, activeSection: get().activeSection, validationErrors: [] });
  } catch (e) {
- console.error('FDF parse error:', e);
- }
- },
+      console.error('FDF parse error:', e);
+    }
+  },
+  setOutResult: (res) => set({ outResult: res }),
+  loadOutFromText: (text) => {
+    try {
+      const parsed = parseSiestaOut(text);
+      set({ outResult: parsed, activeSection: 'output' });
+      return parsed;
+    } catch (e) {
+      console.error('SIESTA out parse error:', e);
+      throw e;
+    }
+  },
  loadFromCIF: (cifText) => {
  try {
  const parsed = parseCIF(cifText);

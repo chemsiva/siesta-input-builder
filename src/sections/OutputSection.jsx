@@ -17,6 +17,8 @@ import { ErrorBoundary } from '../components/ErrorBoundary.jsx';
 import { parseTimesFile } from '../parser/timesParser.js';
 import { TimingAnalysisCard } from '../components/TimingAnalysisCard.jsx';
 import { OrbitalVisualizer3D } from '../components/OrbitalVisualizer3D.jsx';
+import { SimplifiedResultsNote } from '../components/SimplifiedResultsNote.jsx';
+
 const TRAJ_FLAGS = [
  { key: 'WriteMDXmol', type: 'bool', label: 'WriteMDXmol (.ANI)', fileExt: '.ANI',
  help: 'Accumulate coordinates into SystemLabel.ANI (XYZ trajectory format for VMD, JMol, XCrySDen, OVITO)' },
@@ -103,36 +105,113 @@ const DEMO_MDE_TEXT = `# Step T (K) E_KS (eV) E_tot (eV) Vol (A^3) P (kBar)
  6 0.00 -468.42200 -468.42200 125.000 0.010
 `;
 
-const DEMO_OUT_TEXT = `Executable : siesta
-Version : 5.4.2
-reinit: System Label: h2o_relax
-reinit: System Name: Water Molecule Relaxation
-Species number: 1 Atomic number: 8 Label: O
-Species number: 2 Atomic number: 1 Label: H
-initatomlists: Number of atoms, orbitals, and projectors: 3 23 20
-InitMesh: Mesh cutoff (required, used) = 250.000 254.210 Ry
+const DEMO_OUT_TEXT = `Siesta Version  : 5.4.2
+Architecture    : Linux-x86_64-GNU
+Compiler version: GNU-11.4.0
+Parallelisations: MPI (4 cores)
+>> Start of run:  02-NOV-2026  14:22:10
+
+reinit: System Name: FAPbI3 Perovskite (Relaxed Equilibrium)
+reinit: System Label: FAPbI3_relax
+Species number:   1 Atomic number:   82 Label: Pb
+Species number:   2 Atomic number:   53 Label: I
+Species number:   3 Atomic number:    6 Label: C
+Species number:   4 Atomic number:    7 Label: N
+Species number:   5 Atomic number:    1 Label: H
+
+InitMesh: Mesh cutoff (required, used) = 350.000 354.120 Ry
+redata: Spin configuration                          = none
+
 outcell: Unit cell vectors (Ang):
- 10.000000 0.000000 0.000000
- 0.000000 10.000000 0.000000
- 0.000000 0.000000 10.000000
-outcell: Cell volume (Ang**3) : 1000.0000
+       6.362000    0.000000    0.000000
+       0.000000    6.362000    0.000000
+       0.000000    0.000000    6.362000
+outcell: Cell volume (Ang**3) :         257.5024
+outcell: Cell angles (23,13,12) (deg):   90.0000   90.0000   90.0000
+
 new_DM -- step: 1
-scf: 1 -465.123400 -468.102300 -468.102300 0.052100 -5.120000 0.082100
-scf: 2 -467.892100 -468.351200 -468.351200 0.018200 -5.125000 0.024300
-scf: 3 -468.398000 -468.415000 -468.415000 0.004100 -5.128000 0.005200
-scf: 4 -468.421500 -468.422000 -468.422000 0.000210 -5.128500 0.000320
-siesta: Total = -468.422030
-siesta: Fermi = -5.128500
-siesta: Max force = 0.004210
-siesta: Cell volume = 1000.000000 Ang**3
-dhscf: Vacuum level (max, mean) = 0.892311 0.851461 eV
+scf: 1 -1820.123400 -1842.102300 -1842.102300 0.052100 -4.850000 0.082100
+scf: 2 -1840.892100 -1844.351200 -1844.351200 0.018200 -4.855000 0.024300
+scf: 3 -1844.398000 -1844.515000 -1844.515000 0.004100 -4.858000 0.005200
+scf: 4 -1844.521500 -1844.522000 -1844.522000 0.000080 -4.858500 0.000120
+
+siesta: Final energy (eV):
+siesta:  Band Struct. =    -412.540120
+siesta:       Kinetic =    1582.410200
+siesta:       Hartree =     645.120050
+siesta:         Edftu =       0.000000
+siesta:         Eso   =       0.000000
+siesta:    Ext. field =       0.000000
+siesta:         Exch. =    -485.120400
+siesta:         Corr. =     -58.420100
+siesta:     Bulk bias =       0.000000
+siesta:   Exch.-corr. =    -543.540500
+siesta:  Ion-electron =   -2480.120300
+siesta:       Ion-ion =    -635.851350
+siesta:       Ekinion =       0.000000
+siesta: D3 dispersion =       0.000000
+siesta:         Total =   -1844.522020
+
+siesta: E_KS(eV) =            -1844.5220
+siesta:         Fermi =      -4.858500
+
+siesta: Atomic forces (eV/Ang):
+siesta:      1    0.001200   -0.002100    0.001500
+siesta:      2   -0.001500    0.001100   -0.002400
+siesta:      3    0.002100    0.000800   -0.001200
+siesta:      4   -0.001800   -0.000900    0.001800
+siesta:      5    0.000900    0.001400   -0.001500
+
+siesta: Max force = 0.003120
+
+siesta: Stress tensor Voigt[x,y,z,yz,xz,xy] (kbar):  1.24 -0.85 0.42 0.05 -0.02 0.08
+siesta: Cell volume =        257.502400 Ang**3
+
+siesta: Pressure (static):
+siesta:                Solid            Molecule  Units
+siesta:           0.00001850          0.00000620  Ry/Bohr**3
+siesta:           0.00169820          0.00056910  eV/Ang**3
+siesta:           0.27000000          0.09100000  kBar
+
+siesta: Electric dipole (Debye) =    0.145000    0.284000    0.012000
+siesta: Electric dipole (a.u.)  =    0.057050    0.111740    0.004720
+dhscf: Vacuum level (max, mean) =    0.942100    0.912400 eV
+
+outcoor: Final (unrelaxed) atomic coordinates (fractional): 
+    0.50000000    0.50000000    0.50000000   1       1  Pb
+    0.50000000    0.50000000    0.00000000   2       2  I
+    0.50000000    0.00000000    0.50000000   2       3  I
+    0.00000000    0.50000000    0.50000000   2       4  I
+    0.00000000    0.00000000    0.00000000   3       5  C
+
+mulliken: Atomic and Orbital Populations:
+Species: Pb
+Atom      Orb        Charge      Spin       Svec
+    1     Total     12.54120   0.00000
+Species: I
+    2     Total      7.82140   0.00000
+    3     Total      7.82150   0.00000
+    4     Total      7.82130   0.00000
+
+timer: Elapsed wall time (sec) =      14.850
+timer: CPU execution times (sec):
+Routine            Calls   Time/call    Tot.time        %
+siesta                 1      14.845      14.845   100.00
+IterSCF               24       0.420      10.080    67.90
+DHSCF                 28       0.115       3.220    21.69
+diagon                24       0.045       1.080     7.27
+setup_H               24       0.012       0.288     1.94
+
+>> End of run:  02-NOV-2026  14:22:25
 Job completed
 `;
 export function OutputSection() {
- const output = useFDFStore(s => s.output);
- const structure = useFDFStore(s => s.structure);
- const setField = useFDFStore(s => s.setField);
- const set = (k, v) => setField('output', k, v);
+  const output = useFDFStore(s => s.output);
+  const structure = useFDFStore(s => s.structure);
+  const outResult = useFDFStore(s => s.outResult);
+  const setOutResult = useFDFStore(s => s.setOutResult);
+  const setField = useFDFStore(s => s.setField);
+  const set = (k, v) => setField('output', k, v);
 
  // Mode: 'flags' (configure FDF keywords) vs 'viewer' (upload & analyze .out, .MDE, .ANI)
  const [activeTab, setActiveTab] = useState('flags');
@@ -169,11 +248,12 @@ export function OutputSection() {
  const reader = new FileReader();
  reader.onload = (ev) => {
  try {
- const parsed = parseSiestaOut(ev.target.result);
- setOutData(parsed);
- if (parsed.vacuumLevelMax !== null && parsed.fermiEnergy !== null) {
- setPotData(generatePotentialFromOut(parsed.vacuumLevelMax, parsed.vacuumLevelMean, parsed.fermiEnergy));
- }
+        const parsed = parseSiestaOut(ev.target.result);
+        setOutData(parsed);
+        setOutResult(parsed);
+        if (parsed.vacuumLevelMax !== null && parsed.fermiEnergy !== null) {
+          setPotData(generatePotentialFromOut(parsed.vacuumLevelMax, parsed.vacuumLevelMean, parsed.fermiEnergy));
+        }
  setLoadingMsg('');
  } catch (err) {
  setErrorMsg(`Failed to parse ${file.name}: ${err.message}`);
@@ -327,11 +407,11 @@ FINAL_HF 1858 0.000 0.0000 11778.626 0.1914 0.995`;
 
  const handleLoadDemoOut = () => {
  try {
- const parsed = parseSiestaOut(DEMO_OUT_TEXT);
- setOutData(parsed);
- setErrorMsg('');
- } catch (e) {
- setErrorMsg(e.message);
+      const parsed = parseSiestaOut(DEMO_OUT_TEXT);
+      setOutData(parsed);
+      setOutResult(parsed);
+      setErrorMsg('');
+    } catch (e) {
  }
  };
  const handleLoadAllDemo = () => {
@@ -342,12 +422,12 @@ FINAL_HF 1858 0.000 0.0000 11778.626 0.1914 0.995`;
  };
 
  const handleClearAll = () => {
- setOutData(null);
- setMdeData(null);
- setAniData(null);
- setTimesData(null);
- setErrorMsg('');
- setLoadingMsg('');
+    setOutData(null);
+    setOutResult(null);
+    setMdeData(null);
+    setAniData(null);
+    setTimesData(null);
+    setErrorMsg('');
  };
 
  // Drag and drop for multi-file upload
@@ -371,13 +451,12 @@ FINAL_HF 1858 0.000 0.0000 11778.626 0.1914 0.995`;
  reader.readAsText(file);
  } else if (name.endsWith('.out') || name.endsWith('.log')) {
  reader.onload = (ev) => {
- try {
- const parsed = parseSiestaOut(ev.target.result);
- setOutData(parsed);
- if (parsed.vacuumLevelMax !== null && parsed.fermiEnergy !== null) {
- setPotData(generatePotentialFromOut(parsed.vacuumLevelMax, parsed.vacuumLevelMean, parsed.fermiEnergy));
- }
- } catch (err) { setErrorMsg(err.message); }
+        const parsed = parseSiestaOut(ev.target.result);
+        setOutData(parsed);
+        setOutResult(parsed);
+        if (parsed.vacuumLevelMax !== null && parsed.fermiEnergy !== null) {
+          setPotData(generatePotentialFromOut(parsed.vacuumLevelMax, parsed.vacuumLevelMean, parsed.fermiEnergy));
+        }
  };
  reader.readAsText(file);
  } else if (name.endsWith('.cube')) {
@@ -980,55 +1059,13 @@ FINAL_HF 1858 0.000 0.0000 11778.626 0.1914 0.995`;
  </div>
 
  {/* Extracted Features from .out File */}
- {outData && (
- <div className="subsection">
- <div className="subsection-title">
- Extracted Features from Calculation Log (.out)
- </div>
- <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: '0.5rem', marginTop: '0.5rem' }}>
- <div className="slab-tool-card" style={{ padding: '0.5rem' }}>
- <div style={{ fontSize: '0.7rem', color: 'var(--muted)' }}>System / Formula</div>
- <div style={{ fontSize: '0.85rem', fontWeight: 600, fontFamily: 'monospace' }}>
- {outData.systemLabel || 'siesta'} ({outData.numberOfAtoms ?? '?'} atoms)
- </div>
- </div>
- <div className="slab-tool-card" style={{ padding: '0.5rem' }}>
- <div style={{ fontSize: '0.7rem', color: 'var(--muted)' }}>Final Total Energy</div>
- <div style={{ fontSize: '0.85rem', fontWeight: 600, fontFamily: 'monospace', color: 'var(--success, #10b981)' }}>
- {outData.finalEnergyTot ? `${outData.finalEnergyTot.toFixed(4)} eV` : 'N/A'}
- </div>
- </div>
- <div className="slab-tool-card" style={{ padding: '0.5rem' }}>
- <div style={{ fontSize: '0.7rem', color: 'var(--muted)' }}>Fermi Energy (E_F)</div>
- <div style={{ fontSize: '0.85rem', fontWeight: 600, fontFamily: 'monospace' }}>
- {outData.fermiEnergy ? `${outData.fermiEnergy.toFixed(4)} eV` : 'N/A'}
- </div>
- </div>
- <div className="slab-tool-card" style={{ padding: '0.5rem' }}>
- <div style={{ fontSize: '0.7rem', color: 'var(--muted)' }}>Mesh Cutoff Used</div>
- <div style={{ fontSize: '0.85rem', fontWeight: 600, fontFamily: 'monospace' }}>
- {outData.meshCutoff || 'N/A'}
- </div>
- </div>
- <div className="slab-tool-card" style={{ padding: '0.5rem' }}>
- <div style={{ fontSize: '0.7rem', color: 'var(--muted)' }}>Cell Volume</div>
- <div style={{ fontSize: '0.85rem', fontWeight: 600, fontFamily: 'monospace' }}>
- {outData.cellVolume ? `${outData.cellVolume.toFixed(2)} Å³` : 'N/A'}
- </div>
- </div>
- <div className="slab-tool-card" style={{ padding: '0.5rem' }}>
- <div style={{ fontSize: '0.7rem', color: 'var(--muted)' }}>Exit Status</div>
- <div style={{
- fontSize: '0.85rem',
- fontWeight: 700,
- color: outData.normalExit ? 'var(--success, #10b981)' : 'var(--warning)',
- }}>
- {outData.normalExit ? ' Completed Normally' : 'Running / Incomplete'}
- </div>
- </div>
- </div>
- </div>
- )}
+        {/* Simplified Executive Results Note & Complete Feature Extractor */}
+        {(outResult || outData) && (
+          <SimplifiedResultsNote
+            outData={outResult || outData}
+            onClear={() => { setOutResult(null); setOutData(null); }}
+          />
+        )}
 
  {/* Interactive Convergence Charts (.MDE or .out SCF) */}
  {(mdeData || (outData && outData.scfCycles.length > 0)) && (

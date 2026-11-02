@@ -7,8 +7,9 @@ import JSZip from 'jszip';
 export function Toolbar() {
  const getFDFText = useFDFStore(s => s.getFDFText);
  const loadFromText = useFDFStore(s => s.loadFromText);
- const loadFromCIF = useFDFStore(s => s.loadFromCIF);
- const validate = useFDFStore(s => s.validate);
+  const loadFromCIF = useFDFStore(s => s.loadFromCIF);
+  const loadOutFromText = useFDFStore(s => s.loadOutFromText);
+  const validate = useFDFStore(s => s.validate);
  const loadTemplate = useFDFStore(s => s.loadTemplate);
  const setActiveSection = useFDFStore(s => s.setActiveSection);
  const activeSection = useFDFStore(s => s.activeSection);
@@ -19,10 +20,11 @@ export function Toolbar() {
  const toggleTheme = useFDFStore(s => s.toggleTheme);
  const fullState = useFDFStore(s => s);
  const pseudoSettings = useFDFStore(s => s.pseudoSettings || {});
- const fileRef = useRef();
- const cifRef = useRef();
- const rawLabel = system.SystemLabel || 'siesta';
- const label = rawLabel.replace(/[/\\?%*:|"<>]/g, '_').replace(/\.\./g, '_').trim() || 'siesta';
+  const fileRef = useRef();
+  const cifRef = useRef();
+  const outRef = useRef();
+  const rawLabel = system?.SystemLabel || 'siesta';
+  const label = rawLabel.replace(/[/\\?%*:|"<>]/g, '_').replace(/\.\./g, '_').trim() || 'siesta';
  const pseudoPath = (pseudoSettings.pseudoPath || '').trim().replace(/\/+$/, '');
  const MAX_FILE_SIZE = 50 * 1024 * 1024; // 50 MB DoS / memory-exhaustion limit
 
@@ -127,10 +129,24 @@ Either copy your .psf/.psml files here, or edit run_siesta.sh to set
  }
  const reader = new FileReader();
  reader.onload = ev => loadFromCIF(ev.target.result);
- reader.readAsText(file);
- e.target.value = '';
- };
+    reader.readAsText(file);
+    e.target.value = '';
+  };
 
+  const handleLoadOut = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      try {
+        loadOutFromText(ev.target.result);
+      } catch (err) {
+        alert('Failed to parse SIESTA output: ' + err.message);
+      }
+    };
+    reader.readAsText(file);
+    e.target.value = '';
+  };
  const handleValidate = () => {
  const errs = validate();
  if (errs.length === 0) alert('No issues found — input looks valid!');
@@ -207,11 +223,15 @@ Either copy your .psf/.psml files here, or edit run_siesta.sh to set
  </button>
  <input ref={fileRef} type="file" accept=".fdf,.txt" style={{display:'none'}} onChange={handleLoad} />
 
- <button className="btn btn-secondary" onClick={() => cifRef.current.click()} title="Import crystal structure from CIF file">
- Import CIF
- </button>
- <input ref={cifRef} type="file" accept=".cif" style={{display:'none'}} onChange={handleLoadCIF} />
+      <button className="btn btn-secondary" onClick={() => cifRef.current.click()} title="Import crystal structure from CIF file">
+        Import CIF
+      </button>
+      <input ref={cifRef} type="file" accept=".cif" style={{display:'none'}} onChange={handleLoadCIF} />
 
+      <button className="btn btn-secondary" onClick={() => outRef.current.click()} title="Import final SIESTA calculation output (.out) to extract all features and display simplified note">
+        Import Result (.out)
+      </button>
+      <input ref={outRef} type="file" accept=".out,.log,.txt" style={{display:'none'}} onChange={handleLoadOut} />
  <button
  className={`btn ${errors.length > 0 ? 'btn-warning' : 'btn-secondary'}`}
  onClick={handleValidate}>
