@@ -25,54 +25,62 @@ export function ConvergenceChart({ mdeData, scfData }) {
  );
  }
 
- // Determine series to plot
- let series = [];
- let yLabel = '';
- let unit = '';
- let color = 'var(--accent, #6366f1)';
+  // Fallback to 'energy' if activeMetric is not present in the current dataset
+  const effectiveMetric = (activeMetric === 'scf_dh' && !hasSCF) ? 'energy' :
+                          ((activeMetric === 'temp' || activeMetric === 'pressure' || activeMetric === 'volume' || activeMetric === 'energy_rel') && !hasMDE) ? 'energy' : activeMetric;
 
- if (activeMetric === 'energy') {
- if (hasMDE) {
- series = mdeData.steps.map(s => ({ x: s.step, y: s.eTot }));
- yLabel = 'Total Energy (E_tot)';
- unit = 'eV';
- color = '#10b981'; // Green
- } else if (hasSCF) {
- series = scfData.map((s, idx) => ({ x: idx + 1, y: s.eKs ?? s.freeEng ?? 0 }));
- yLabel = 'Kohn-Sham Energy (E_KS)';
- unit = 'eV';
- color = '#10b981'; // Green
- }
- } else if (activeMetric === 'energy_rel' && hasMDE) {
- const e0 = mdeData.steps[0].eTot;
- series = mdeData.steps.map(s => ({ x: s.step, y: s.eTot - e0 }));
- yLabel = 'Relative Energy (ΔE)';
- unit = 'eV';
- color = '#06b6d4'; // Cyan
- } else if (activeMetric === 'temp' && hasMDE) {
- series = mdeData.steps.map(s => ({ x: s.step, y: s.temp }));
- yLabel = 'Temperature';
- unit = 'K';
- color = '#f59e0b'; // Amber
- } else if (activeMetric === 'pressure' && hasMDE) {
- series = mdeData.steps.map(s => ({ x: s.step, y: s.pressure }));
- yLabel = 'Pressure';
- unit = 'kBar';
- color = '#ec4899'; // Pink
- } else if (activeMetric === 'volume' && hasMDE) {
- series = mdeData.steps.map(s => ({ x: s.step, y: s.volume }));
- yLabel = 'Cell Volume';
- unit = 'Å³';
- color = '#8b5cf6'; // Purple
- } else if (activeMetric === 'scf_dh' && hasSCF) {
- series = scfData.map((s, idx) => ({ x: idx + 1, y: s.dHmax ?? s.dDmax ?? 0 }));
- yLabel = 'Max Hamiltonian Change (dHmax)';
- unit = 'eV';
- color = '#f97316'; // Orange
- }
+  let series = [];
+  let yLabel = '';
+  let unit = '';
+  let color = '#10b981';
 
- if (series.length === 0) return null;
+  if (effectiveMetric === 'energy') {
+    if (hasMDE) {
+      series = mdeData.steps.map(s => ({ x: s.step, y: s.eTot }));
+      yLabel = 'Total Energy (E_tot)';
+      unit = 'eV';
+      color = '#10b981'; // Green
+    } else if (hasSCF) {
+      series = scfData.map((s, idx) => ({ x: idx + 1, y: s.eKs ?? s.freeEng ?? 0 }));
+      yLabel = 'Kohn-Sham Energy (E_KS)';
+      unit = 'eV';
+      color = '#10b981'; // Green
+    }
+  } else if (effectiveMetric === 'energy_rel' && hasMDE) {
+    const e0 = mdeData.steps[0]?.eTot ?? 0;
+    series = mdeData.steps.map(s => ({ x: s.step, y: s.eTot - e0 }));
+    yLabel = 'Relative Energy (ΔE)';
+    unit = 'eV';
+    color = '#06b6d4'; // Cyan
+  } else if (effectiveMetric === 'temp' && hasMDE) {
+    series = mdeData.steps.map(s => ({ x: s.step, y: s.temp }));
+    yLabel = 'Temperature';
+    unit = 'K';
+    color = '#f59e0b'; // Amber
+  } else if (effectiveMetric === 'pressure' && hasMDE) {
+    series = mdeData.steps.map(s => ({ x: s.step, y: s.pressure }));
+    yLabel = 'Pressure';
+    unit = 'kBar';
+    color = '#ec4899'; // Pink
+  } else if (effectiveMetric === 'volume' && hasMDE) {
+    series = mdeData.steps.map(s => ({ x: s.step, y: s.volume }));
+    yLabel = 'Cell Volume';
+    unit = 'Å³';
+    color = '#8b5cf6'; // Purple
+  } else if (effectiveMetric === 'scf_dh' && hasSCF) {
+    series = scfData.map((s, idx) => ({ x: idx + 1, y: s.dHmax ?? s.dDmax ?? 0 }));
+    yLabel = 'Max Hamiltonian Change (dHmax)';
+    unit = 'eV';
+    color = '#f97316'; // Orange
+  }
 
+  if (series.length === 0) {
+    return (
+      <div className="hint" style={{ padding: '2rem', textAlign: 'center' }}>
+        No valid data points found for {yLabel || effectiveMetric}.
+      </div>
+    );
+  }
  // Chart dimensions
  const width = 640;
  const height = 260;
@@ -329,35 +337,35 @@ export function ConvergenceChart({ mdeData, scfData }) {
  {/* Summary Stat Cards */}
  {hasMDE && (
  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: '0.5rem', marginTop: '0.6rem' }}>
- <div className="slab-tool-card" style={{ padding: '0.5rem' }}>
- <div style={{ fontSize: '0.7rem', color: 'var(--muted)' }}>Initial Energy</div>
- <div style={{ fontSize: '0.85rem', fontWeight: 600, fontFamily: 'monospace' }}>
- {mdeData.summary.eInitial.toFixed(2)} eV
- </div>
- </div>
- <div className="slab-tool-card" style={{ padding: '0.5rem' }}>
- <div style={{ fontSize: '0.7rem', color: 'var(--muted)' }}>Final Energy</div>
- <div style={{ fontSize: '0.85rem', fontWeight: 600, fontFamily: 'monospace' }}>
- {mdeData.summary.eFinal.toFixed(2)} eV
- </div>
- </div>
- <div className="slab-tool-card" style={{ padding: '0.5rem' }}>
- <div style={{ fontSize: '0.7rem', color: 'var(--muted)' }}>ΔE (Relaxation)</div>
- <div style={{
- fontSize: '0.85rem',
- fontWeight: 700,
- fontFamily: 'monospace',
- color: mdeData.summary.deltaE < 0 ? 'var(--success, #10b981)' : 'var(--warning)',
- }}>
- {mdeData.summary.deltaE > 0 ? '+' : ''}{mdeData.summary.deltaE.toFixed(4)} eV
- </div>
- </div>
- <div className="slab-tool-card" style={{ padding: '0.5rem' }}>
- <div style={{ fontSize: '0.7rem', color: 'var(--muted)' }}>Volume Change</div>
- <div style={{ fontSize: '0.85rem', fontWeight: 600, fontFamily: 'monospace' }}>
- {mdeData.summary.deltaVolPercent > 0 ? '+' : ''}{mdeData.summary.deltaVolPercent.toFixed(2)}%
- </div>
- </div>
+            <div className="slab-tool-card" style={{ padding: '0.5rem' }}>
+              <div style={{ fontSize: '0.7rem', color: 'var(--muted)' }}>Initial Energy</div>
+              <div style={{ fontSize: '0.85rem', fontWeight: 600, fontFamily: 'monospace' }}>
+                {mdeData.summary?.eInitial !== undefined ? `${mdeData.summary.eInitial.toFixed(2)} eV` : 'N/A'}
+              </div>
+            </div>
+            <div className="slab-tool-card" style={{ padding: '0.5rem' }}>
+              <div style={{ fontSize: '0.7rem', color: 'var(--muted)' }}>Final Energy</div>
+              <div style={{ fontSize: '0.85rem', fontWeight: 600, fontFamily: 'monospace' }}>
+                {mdeData.summary?.eFinal !== undefined ? `${mdeData.summary.eFinal.toFixed(2)} eV` : 'N/A'}
+              </div>
+            </div>
+            <div className="slab-tool-card" style={{ padding: '0.5rem' }}>
+              <div style={{ fontSize: '0.7rem', color: 'var(--muted)' }}>ΔE (Relaxation)</div>
+              <div style={{
+                fontSize: '0.85rem',
+                fontWeight: 700,
+                fontFamily: 'monospace',
+                color: (mdeData.summary?.deltaE || 0) < 0 ? 'var(--success, #10b981)' : 'var(--warning)',
+              }}>
+                {mdeData.summary?.deltaE !== undefined ? `${mdeData.summary.deltaE > 0 ? '+' : ''}${mdeData.summary.deltaE.toFixed(4)} eV` : 'N/A'}
+              </div>
+            </div>
+            <div className="slab-tool-card" style={{ padding: '0.5rem' }}>
+              <div style={{ fontSize: '0.7rem', color: 'var(--muted)' }}>Volume Change</div>
+              <div style={{ fontSize: '0.85rem', fontWeight: 600, fontFamily: 'monospace' }}>
+                {mdeData.summary?.deltaVolPercent !== undefined ? `${mdeData.summary.deltaVolPercent > 0 ? '+' : ''}${mdeData.summary.deltaVolPercent.toFixed(2)}%` : 'N/A'}
+              </div>
+            </div>
  </div>
  )}
  </div>

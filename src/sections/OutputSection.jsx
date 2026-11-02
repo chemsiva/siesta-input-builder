@@ -439,11 +439,17 @@ FINAL_HF 1858 0.000 0.0000 11778.626 0.1914 0.995`;
  files.forEach(file => {
  const name = file.name.toLowerCase();
  const reader = new FileReader();
- if (name.endsWith('.mde')) {
- reader.onload = (ev) => {
- try { setMdeData(parseMDE(ev.target.result)); } catch (err) { setErrorMsg(err.message); }
- };
- reader.readAsText(file);
+      if (name.endsWith('.mde') || name.endsWith('.md') || (name.includes('mde') && (name.endsWith('.txt') || name.endsWith('.dat')))) {
+        reader.onload = (ev) => {
+          try {
+            const parsed = parseMDE(ev.target.result);
+            setMdeData(parsed);
+            setErrorMsg('');
+          } catch (err) {
+            setErrorMsg(`Failed to parse ${file.name}: ${err.message}`);
+          }
+        };
+        reader.readAsText(file);
  } else if (name.endsWith('.ani') || name.endsWith('.xyz')) {
  reader.onload = (ev) => {
  try { setAniData(parseANI(ev.target.result)); } catch (err) { setErrorMsg(err.message); }
@@ -1067,18 +1073,20 @@ FINAL_HF 1858 0.000 0.0000 11778.626 0.1914 0.995`;
           />
         )}
 
- {/* Interactive Convergence Charts (.MDE or .out SCF) */}
- {(mdeData || (outData && outData.scfCycles.length > 0)) && (
- <div className="subsection">
- <div className="subsection-title">
- Convergence &amp; Thermodynamic Curves
- </div>
- <ConvergenceChart
- mdeData={mdeData}
- scfData={outData?.scfCycles}
- />
- </div>
- )}
+        {/* Interactive Convergence Charts (.MDE or .out SCF) */}
+        {(mdeData || (outData && outData.scfCycles.length > 0)) && (
+          <div className="subsection">
+            <div className="subsection-title">
+              Convergence &amp; Thermodynamic Curves
+            </div>
+            <ErrorBoundary>
+              <ConvergenceChart
+                mdeData={mdeData}
+                scfData={outData?.scfCycles}
+              />
+            </ErrorBoundary>
+          </div>
+        )}
 
  {/* 3D Trajectory Player (.ANI) */}
  {aniData && (
