@@ -1,4 +1,4 @@
-import { useRef } from 'react';
+import { useRef, useState } from 'react';
 import { useFDFStore } from '../store/fdfStore';
 import templates from '../data/templates.json';
 import { generateConvergenceSuite } from '../utils/convergenceGenerator';
@@ -25,8 +25,10 @@ export function Toolbar() {
   const outRef = useRef();
   const rawLabel = system?.SystemLabel || 'siesta';
   const label = rawLabel.replace(/[/\\?%*:|"<>]/g, '_').replace(/\.\./g, '_').trim() || 'siesta';
- const pseudoPath = (pseudoSettings.pseudoPath || '').trim().replace(/\/+$/, '');
- const MAX_FILE_SIZE = 50 * 1024 * 1024; // 50 MB DoS / memory-exhaustion limit
+  const pseudoPath = (pseudoSettings.pseudoPath || '').trim().replace(/\/+$/, '');
+  const MAX_FILE_SIZE = 50 * 1024 * 1024; // 50 MB DoS / memory-exhaustion limit
+  const [showCiteModal, setShowCiteModal] = useState(false);
+  const [copyFeedback, setCopyFeedback] = useState('');
 
  // ── Plain .fdf download ──────────────────────────────────────────────────
  const download = () => {
@@ -208,16 +210,24 @@ Either copy your .psf/.psml files here, or edit run_siesta.sh to set
  Output Viewer
  </button>
 
- <a
- href="./SIESTA_Universal_Guide.pdf"
- target="_blank"
- rel="noopener noreferrer"
- className="btn btn-secondary"
- title="Open comprehensive 19-page SIESTA Universal Guide & DFT Handbook (PDF)"
- style={{ textDecoration: 'none' }}>
- User Guide
- </a>
+      <a
+        href="./SIESTA_Universal_Guide.pdf"
+        target="_blank"
+        rel="noopener noreferrer"
+        className="btn btn-secondary"
+        title="Open comprehensive 20-page SIESTA Universal Guide & DFT Handbook (PDF)"
+        style={{ textDecoration: 'none' }}>
+        User Guide
+      </a>
 
+      <button
+        type="button"
+        className="btn btn-secondary"
+        onClick={() => setShowCiteModal(true)}
+        title="Cite & Acknowledge this tool in your research"
+        style={{ color: 'var(--accent)', fontWeight: 600 }}>
+        Cite
+      </button>
  <button className="btn btn-secondary" onClick={() => fileRef.current.click()}>
  Load .fdf
  </button>
@@ -264,7 +274,122 @@ Either copy your .psf/.psml files here, or edit run_siesta.sh to set
 
  <button className="btn btn-ghost" onClick={() => { if(confirm('Reset all fields to defaults?')) reset(); }}
  title="Reset to defaults">Reset</button>
- </div>
- </div>
- );
+      </div>
+
+      {/* Citation & Acknowledgement Modal */}
+      {showCiteModal && (
+        <div style={{
+          position: 'fixed',
+          top: 0, left: 0, right: 0, bottom: 0,
+          backgroundColor: 'rgba(0, 0, 0, 0.75)',
+          backdropFilter: 'blur(4px)',
+          zIndex: 1000,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          padding: '1rem',
+        }} onClick={() => setShowCiteModal(false)}>
+          <div style={{
+            background: 'var(--surface)',
+            border: '1px solid var(--border)',
+            borderRadius: '10px',
+            maxWidth: '620px',
+            width: '100%',
+            padding: '1.4rem',
+            boxShadow: '0 8px 32px rgba(0,0,0,0.6)',
+            position: 'relative',
+          }} onClick={e => e.stopPropagation()}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.8rem' }}>
+              <strong style={{ fontSize: '1.05rem', color: 'var(--fg)' }}>
+                Cite &amp; Acknowledge this Software
+              </strong>
+              <button
+                type="button"
+                className="btn btn-ghost btn-sm"
+                onClick={() => setShowCiteModal(false)}
+                style={{ fontSize: '1rem', lineHeight: 1 }}>
+                ✕
+              </button>
+            </div>
+
+            <p style={{ fontSize: '0.82rem', color: 'var(--muted)', lineHeight: 1.5, marginBottom: '1rem' }}>
+              If this tool assisted in your computational research, crystal structure preparation, or post-DFT analysis, please acknowledge or cite:
+            </p>
+
+            {/* Author Credit Chip */}
+            <div style={{ background: 'var(--surface2)', padding: '0.6rem 0.8rem', borderRadius: '6px', border: '1px solid var(--border)', marginBottom: '1rem' }}>
+              <div style={{ fontSize: '0.74rem', color: 'var(--muted)' }}>Lead Developer / Author:</div>
+              <div style={{ fontSize: '0.92rem', fontWeight: 700, color: 'var(--accent)' }}>
+                Sivavadivel Sivakumar <span style={{ fontSize: '0.78rem', color: 'var(--muted)', fontWeight: 400 }}>(@chemsiva)</span>
+              </div>
+              <div style={{ fontSize: '0.74rem', color: 'var(--muted)', marginTop: '2px' }}>
+                Repository: <a href="https://github.com/chemsiva/siesta-input-builder" target="_blank" rel="noopener noreferrer" style={{ color: '#38bdf8' }}>github.com/chemsiva/siesta-input-builder</a>
+              </div>
+            </div>
+
+            {/* 1. Paper Acknowledgement */}
+            <div style={{ marginBottom: '1rem' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
+                <span style={{ fontSize: '0.78rem', fontWeight: 600 }}>Paper Acknowledgement:</span>
+                <button
+                  type="button"
+                  className="btn btn-xs btn-secondary"
+                  onClick={async () => {
+                    const text = `The DFT input files and post-processing analysis were prepared using the SIESTA Input Builder & Post-DFT Analysis Studio developed by Sivavadivel Sivakumar (https://github.com/chemsiva/siesta-input-builder).`;
+                    await navigator.clipboard.writeText(text);
+                    setCopyFeedback('ack');
+                    setTimeout(() => setCopyFeedback(''), 2500);
+                  }}>
+                  {copyFeedback === 'ack' ? 'Copied!' : 'Copy Text'}
+                </button>
+              </div>
+              <textarea
+                readOnly
+                rows={3}
+                value={`The DFT input files and post-processing analysis were prepared using the SIESTA Input Builder & Post-DFT Analysis Studio developed by Sivavadivel Sivakumar (https://github.com/chemsiva/siesta-input-builder).`}
+                style={{ width: '100%', fontSize: '0.75rem', padding: '0.5rem', background: '#090d16', border: '1px solid var(--border)', borderRadius: '4px', color: 'var(--fg)', resize: 'none' }}
+              />
+            </div>
+
+            {/* 2. BibTeX Citation */}
+            <div style={{ marginBottom: '1rem' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
+                <span style={{ fontSize: '0.78rem', fontWeight: 600 }}>BibTeX Reference:</span>
+                <button
+                  type="button"
+                  className="btn btn-xs btn-primary"
+                  onClick={async () => {
+                    const bib = `@software{sivakumar2026siesta,\n  author = {Sivakumar, Sivavadivel},\n  title = {SIESTA Input Builder \\& Post-DFT Analysis Studio},\n  year = {2026},\n  publisher = {GitHub},\n  journal = {GitHub repository},\n  url = {https://github.com/chemsiva/siesta-input-builder}\n}`;
+                    await navigator.clipboard.writeText(bib);
+                    setCopyFeedback('bib');
+                    setTimeout(() => setCopyFeedback(''), 2500);
+                  }}>
+                  {copyFeedback === 'bib' ? 'Copied BibTeX!' : 'Copy BibTeX'}
+                </button>
+              </div>
+              <pre style={{ margin: 0, padding: '0.6rem', fontSize: '0.72rem', background: '#090d16', border: '1px solid var(--border)', borderRadius: '4px', color: '#38bdf8', overflowX: 'auto' }}>
+{`@software{sivakumar2026siesta,
+  author = {Sivakumar, Sivavadivel},
+  title = {SIESTA Input Builder \\& Post-DFT Analysis Studio},
+  year = {2026},
+  publisher = {GitHub},
+  journal = {GitHub repository},
+  url = {https://github.com/chemsiva/siesta-input-builder}
+}`}
+              </pre>
+            </div>
+
+            <div style={{ textAlign: 'right' }}>
+              <button
+                type="button"
+                className="btn btn-sm btn-secondary"
+                onClick={() => setShowCiteModal(false)}>
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
 }

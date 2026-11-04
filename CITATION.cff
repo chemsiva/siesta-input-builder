@@ -1,0 +1,23 @@
+cff-version: 1.2.0
+message: "If you use this software in your research or publications, please cite it as below."
+title: "SIESTA Input Builder & Post-DFT Analysis Studio"
+abstract: "An interactive, open-source web application designed to streamline the operational lifecycle of SIESTA 5.x first-principles density functional theory (DFT) calculations: crystal structure manipulation, parameter configuration, pseudopotential matching, and comprehensive post-DFT analysis."
+authors:
+  - family-names: "Sivakumar"
+    given-names: "Sivavadivel"
+    alias: "chemsiva"
+version: 5.4.2
+date-released: "2026-11-02"
+license: "MIT"
+repository-code: "https://github.com/chemsiva/siesta-input-builder"
+url: "https://chemsiva.github.io/siesta-input-builder/"
+keywords:
+  - "siesta"
+  - "dft"
+  - "materials-science"
+  - "computational-chemistry"
+  - "density-functional-theory"
+  - "perovskites"
+  - "band-structure"
+  - "bader-charge-analysis"
+  - "optical-absorption"

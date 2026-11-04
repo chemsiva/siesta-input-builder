@@ -161,3 +161,33 @@ This tool **only builds input files**. It does not:
 
 Tested against keyword set from **SIESTA 5.4.2** (December 2025).
 Compatible with 4.1+ for all standard keywords.
+
+---
+
+## Author & Academic Citation
+
+Developed and maintained by **Sivavadivel Sivakumar** ([@chemsiva](https://github.com/chemsiva)).
+
+If you use this software in your research or publications, please cite and acknowledge:
+
+### BibTeX
+```bibtex
+@software{sivakumar2026siesta,
+  author       = {Sivakumar, Sivavadivel},
+  title        = {SIESTA Input Builder \& Post-DFT Analysis Studio},
+  year         = {2026},
+  publisher    = {GitHub},
+  journal      = {GitHub repository},
+  howpublished = {\url{https://github.com/chemsiva/siesta-input-builder}}
+}
+```
+
+### Paper Acknowledgement
+> *"The DFT input files and post-processing were prepared using the open-source SIESTA Input Builder & Post-DFT Analysis Studio developed by Sivavadivel Sivakumar (https://github.com/chemsiva/siesta-input-builder)."*
+
+---
+
+## License
+
+This project is licensed under the **MIT License** — see the [LICENSE](./LICENSE) file for details.
+Copyright (c) 2026 Sivavadivel Sivakumar.
