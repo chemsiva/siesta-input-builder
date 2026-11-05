@@ -353,6 +353,55 @@ Located in the **High-Symmetry Band Path Generator** card:
 \includegraphics[width=0.92\textwidth]{figures/fig11_homo_lumo_3d.png}
 \caption{Section 7 \& Section 8: Interactive 3D Molecular Orbital and HOMO / LUMO Isosurface Visualizer showing Benzene $C_6H_6$ $\pi$-orbital lobes, isovalue slider, phase selectors, and CPK molecular framework.}
 \end{figure}
+
+\subsubsection{Methodology: The In-Browser Numerical Convolution Engine vs. Traditional CLI Toolchain}
+In traditional SIESTA workflows, generating and visualizing Density of States (DOS) and Projected DOS (PDOS) curves is a multi-step, command-line intensive process requiring several compiled Fortran utilities:
+
+\begin{enumerate}[leftmargin=*]
+    \item \textbf{The Traditional CLI Toolchain (\texttt{Eig2DOS}, \texttt{fmpdos}, \texttt{gnubands}):}
+    \begin{itemize}
+        \item \textbf{Step 1 (SIESTA Execution):} Running a calculation with \texttt{WriteEigenvalues true} outputs discrete eigenvalues $\varepsilon_{n\mathbf{k}}$ in \texttt{SystemLabel.EIG}, and projected states in \texttt{SystemLabel.PDOS.xml}.
+        \item \textbf{Step 2 (Fortran Compilation):} The user must navigate to the SIESTA source directory, enter \texttt{Util/Eig2DOS}, and compile \texttt{Eig2DOS.f90} with \texttt{gfortran}, and enter \texttt{Util/pdosxml} to compile \texttt{fmpdos.f90}.
+        \item \textbf{Step 3 (CLI Invocation):} Execute the compiled binaries in terminal with static command-line flags:
+        \begin{lstlisting}[language=bash]
+./Eig2DOS -f -s 0.100 -n 1000 -m -6.0 -M 6.0 SystemLabel.EIG > dos.dat
+./fmpdos -f SystemLabel.PDOS.xml -s 0.100 -a 1 ... > pdos.dat
+        \end{lstlisting}
+        \item \textbf{Step 4 (Plot Scripting):} Write custom \texttt{gnuplot}, Grace (\texttt{xmgrace}), or Python \texttt{matplotlib} scripts to visualize the columnar text files.
+        \item \textbf{The Limitation:} If the Gaussian broadening $\sigma = 0.100\,\text{eV}$ is too smeared or too noisy, the user must re-run the Fortran executable with a new flag, overwrite the data file, and re-execute the plotting script.
+    \end{itemize}
+
+    \item \textbf{The Alternative: The Client-Side In-Browser Numerical Convolution Engine:}
+    This studio replaces the traditional toolchain with an in-browser mathematical engine written in high-performance JavaScript:
+    \begin{itemize}
+        \item \textbf{In-Memory Zero-Server Execution:} Files (\texttt{.EIG}, \texttt{.PDOS.xml}, \texttt{.bands}) are parsed directly in the client browser memory using typed arrays (\texttt{Float64Array}) and native DOM XML parsers. No calculation files are sent to any remote server.
+        \item \textbf{Exact Re-Implementation of Fortran \texttt{Eig2DOS}:} The browser evaluates continuous Gaussian or Lorentzian probability distributions over all $N_k$ sampling points and $N_{\text{bands}}$ Kohn-Sham eigenvalues:
+        $$\text{Gaussian: } g(E) = \sum_{n=1}^{N_{\text{bands}}} \sum_{\mathbf{k}=1}^{N_k} w_{\mathbf{k}} \frac{1}{\sqrt{\pi}\sigma} \exp\left(-\frac{(E - \varepsilon_{n\mathbf{k}})^2}{\sigma^2}\right)$$
+        $$\text{Lorentzian: } g(E) = \sum_{n=1}^{N_{\text{bands}}} \sum_{\mathbf{k}=1}^{N_k} w_{\mathbf{k}} \frac{1}{\pi} \frac{\sigma}{(E - \varepsilon_{n\mathbf{k}})^2 + \sigma^2}$$
+        Where $w_{\mathbf{k}}$ are $k$-point weights imported from \texttt{.KP} (or uniform $1/N_k$), and $\varepsilon_{n\mathbf{k}}$ are shifted automatically relative to the Fermi energy ($E - E_F = 0$).
+        \item \textbf{Native XML Tree Orbital Decomposition (Replacing \texttt{fmpdos}):} The engine parses the hierarchical XML tree in \texttt{SystemLabel.PDOS.xml}, dynamically groups angular momentum channels ($s, p_x, p_y, p_z, d_{z^2}, \dots$), resolves spin-up ($\uparrow$) and spin-down ($\downarrow$) densities, and allows interactive toggling of atom and orbital contributions.
+        \item \textbf{Instant 60~FPS Real-Time Interactivity:} Numerical convolution across 1,000 energy points takes less than 3~milliseconds in modern JavaScript engines. Adjusting the $\sigma$ broadening slider (0.01 to 0.50~eV) or dragging the energy window immediately re-computes and re-renders the curves in real time without generating temporary files.
+    \end{itemize}
+\end{enumerate}
+
+\begin{table}[h!]
+\centering
+\small
+\begin{tabular}{@{}lll@{}}
+\toprule
+\textbf{Feature / Operation} & \textbf{Traditional CLI Way (\texttt{Eig2DOS} / \texttt{fmpdos})} & \textbf{SIESTA Web Studio In-Browser Engine} \\
+\midrule
+\textbf{Dependencies} & Requires \texttt{gfortran}, Makefiles, shell environment & Zero install; runs directly in any modern browser \\
+\textbf{Broadening Tuning ($\sigma$)} & Re-run CLI binary with new \texttt{-s} flag, overwrite file & Live slider adjustment with real-time 60~FPS re-draw \\
+\textbf{Data Privacy} & Local terminal & 100\% client-side; data never leaves your browser \\
+\textbf{Orbital Channel Selection} & Complex command-line flags (\texttt{-a}, \texttt{-l}, \texttt{-m}) & Interactive checkbox toggles per element and orbital ($s, p, d, f$) \\
+\textbf{Bandgap \& Edge Detection} & Manual inspection of text data columns & Automatic Valence/Conduction edge markers and $E_g$ readout \\
+\textbf{Visualization \& Export} & Separate scripts (\texttt{gnuplot}, Python \texttt{matplotlib}) & Direct interactive SVG/Canvas with 300~DPI publication export \\
+\bottomrule
+\end{tabular}
+\caption{Comparison: Traditional SIESTA CLI post-processing utilities vs. the Studio's client-side numerical convolution engine.}
+\end{table}
+
 \subsection{Section 8 Output Flags \& Results Viewer}
 This section contains two distinct workspaces selected via top tab pills:
 

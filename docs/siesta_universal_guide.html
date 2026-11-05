@@ -728,6 +728,155 @@ and HOMO / LUMO Isosurface Visualizer showing Benzene
 lobes, isovalue slider, phase selectors, and CPK molecular
 framework.</figcaption>
 </figure>
+<h3
+id="methodology-the-in-browser-numerical-convolution-engine-vs.-traditional-cli-toolchain">Methodology:
+The In-Browser Numerical Convolution Engine vs. Traditional CLI
+Toolchain</h3>
+<p>In traditional SIESTA workflows, generating and visualizing Density
+of States (DOS) and Projected DOS (PDOS) curves is a multi-step,
+command-line intensive process requiring several compiled Fortran
+utilities:</p>
+<ol>
+<li><p><strong>The Traditional CLI Toolchain (<code>Eig2DOS</code>,
+<code>fmpdos</code>, <code>gnubands</code>):</strong></p>
+<ul>
+<li><p><strong>Step 1 (SIESTA Execution):</strong> Running a calculation
+with <code>WriteEigenvalues true</code> outputs discrete eigenvalues
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>ε</mi><mrow><mi>n</mi><mi>𝐤</mi></mrow></msub><annotation encoding="application/x-tex">\varepsilon_{n\mathbf{k}}</annotation></semantics></math>
+in <code>SystemLabel.EIG</code>, and projected states in
+<code>SystemLabel.PDOS.xml</code>.</p></li>
+<li><p><strong>Step 2 (Fortran Compilation):</strong> The user must
+navigate to the SIESTA source directory, enter
+<code>Util/Eig2DOS</code>, and compile <code>Eig2DOS.f90</code> with
+<code>gfortran</code>, and enter <code>Util/pdosxml</code> to compile
+<code>fmpdos.f90</code>.</p></li>
+<li><p><strong>Step 3 (CLI Invocation):</strong> Execute the compiled
+binaries in terminal with static command-line flags:</p>
+<div class="sourceCode" id="cb5" data-language="bash"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="ex">./Eig2DOS</span> <span class="at">-f</span> <span class="at">-s</span> 0.100 <span class="at">-n</span> 1000 <span class="at">-m</span> <span class="at">-6.0</span> <span class="at">-M</span> 6.0 SystemLabel.EIG <span class="op">&gt;</span> dos.dat</span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="ex">./fmpdos</span> <span class="at">-f</span> SystemLabel.PDOS.xml <span class="at">-s</span> 0.100 <span class="at">-a</span> 1 ... <span class="op">&gt;</span> pdos.dat</span></code></pre></div></li>
+<li><p><strong>Step 4 (Plot Scripting):</strong> Write custom
+<code>gnuplot</code>, Grace (<code>xmgrace</code>), or Python
+<code>matplotlib</code> scripts to visualize the columnar text
+files.</p></li>
+<li><p><strong>The Limitation:</strong> If the Gaussian broadening
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>σ</mi><mo>=</mo><mn>0.100</mn><mspace width="0.167em"></mspace><mtext mathvariant="normal">eV</mtext></mrow><annotation encoding="application/x-tex">\sigma = 0.100\,\text{eV}</annotation></semantics></math>
+is too smeared or too noisy, the user must re-run the Fortran executable
+with a new flag, overwrite the data file, and re-execute the plotting
+script.</p></li>
+</ul></li>
+<li><p><strong>The Alternative: The Client-Side In-Browser Numerical
+Convolution Engine:</strong> This studio replaces the traditional
+toolchain with an in-browser mathematical engine written in
+high-performance JavaScript:</p>
+<ul>
+<li><p><strong>In-Memory Zero-Server Execution:</strong> Files
+(<code>.EIG</code>, <code>.PDOS.xml</code>, <code>.bands</code>) are
+parsed directly in the client browser memory using typed arrays
+(<code>Float64Array</code>) and native DOM XML parsers. No calculation
+files are sent to any remote server.</p></li>
+<li><p><strong>Exact Re-Implementation of Fortran
+<code>Eig2DOS</code>:</strong> The browser evaluates continuous Gaussian
+or Lorentzian probability distributions over all
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>N</mi><mi>k</mi></msub><annotation encoding="application/x-tex">N_k</annotation></semantics></math>
+sampling points and
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>N</mi><mtext mathvariant="normal">bands</mtext></msub><annotation encoding="application/x-tex">N_{\text{bands}}</annotation></semantics></math>
+Kohn-Sham eigenvalues:
+<math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mrow><mtext mathvariant="normal">Gaussian: </mtext><mspace width="0.333em"></mspace></mrow><mi>g</mi><mrow><mo stretchy="true" form="prefix">(</mo><mi>E</mi><mo stretchy="true" form="postfix">)</mo></mrow><mo>=</mo><munderover><mo>∑</mo><mrow><mi>n</mi><mo>=</mo><mn>1</mn></mrow><msub><mi>N</mi><mtext mathvariant="normal">bands</mtext></msub></munderover><munderover><mo>∑</mo><mrow><mi>𝐤</mi><mo>=</mo><mn>1</mn></mrow><msub><mi>N</mi><mi>k</mi></msub></munderover><msub><mi>w</mi><mi>𝐤</mi></msub><mfrac><mn>1</mn><mrow><msqrt><mi>π</mi></msqrt><mi>σ</mi></mrow></mfrac><mo>exp</mo><mrow><mo stretchy="true" form="prefix">(</mo><mo>−</mo><mfrac><msup><mrow><mo stretchy="true" form="prefix">(</mo><mi>E</mi><mo>−</mo><msub><mi>ε</mi><mrow><mi>n</mi><mi>𝐤</mi></mrow></msub><mo stretchy="true" form="postfix">)</mo></mrow><mn>2</mn></msup><msup><mi>σ</mi><mn>2</mn></msup></mfrac><mo stretchy="true" form="postfix">)</mo></mrow></mrow><annotation encoding="application/x-tex">\text{Gaussian: } g(E) = \sum_{n=1}^{N_{\text{bands}}} \sum_{\mathbf{k}=1}^{N_k} w_{\mathbf{k}} \frac{1}{\sqrt{\pi}\sigma} \exp\left(-\frac{(E - \varepsilon_{n\mathbf{k}})^2}{\sigma^2}\right)</annotation></semantics></math>
+<math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mrow><mtext mathvariant="normal">Lorentzian: </mtext><mspace width="0.333em"></mspace></mrow><mi>g</mi><mrow><mo stretchy="true" form="prefix">(</mo><mi>E</mi><mo stretchy="true" form="postfix">)</mo></mrow><mo>=</mo><munderover><mo>∑</mo><mrow><mi>n</mi><mo>=</mo><mn>1</mn></mrow><msub><mi>N</mi><mtext mathvariant="normal">bands</mtext></msub></munderover><munderover><mo>∑</mo><mrow><mi>𝐤</mi><mo>=</mo><mn>1</mn></mrow><msub><mi>N</mi><mi>k</mi></msub></munderover><msub><mi>w</mi><mi>𝐤</mi></msub><mfrac><mn>1</mn><mi>π</mi></mfrac><mfrac><mi>σ</mi><mrow><msup><mrow><mo stretchy="true" form="prefix">(</mo><mi>E</mi><mo>−</mo><msub><mi>ε</mi><mrow><mi>n</mi><mi>𝐤</mi></mrow></msub><mo stretchy="true" form="postfix">)</mo></mrow><mn>2</mn></msup><mo>+</mo><msup><mi>σ</mi><mn>2</mn></msup></mrow></mfrac></mrow><annotation encoding="application/x-tex">\text{Lorentzian: } g(E) = \sum_{n=1}^{N_{\text{bands}}} \sum_{\mathbf{k}=1}^{N_k} w_{\mathbf{k}} \frac{1}{\pi} \frac{\sigma}{(E - \varepsilon_{n\mathbf{k}})^2 + \sigma^2}</annotation></semantics></math>
+Where
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>w</mi><mi>𝐤</mi></msub><annotation encoding="application/x-tex">w_{\mathbf{k}}</annotation></semantics></math>
+are
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>k</mi><annotation encoding="application/x-tex">k</annotation></semantics></math>-point
+weights imported from <code>.KP</code> (or uniform
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>1</mn><mi>/</mi><msub><mi>N</mi><mi>k</mi></msub></mrow><annotation encoding="application/x-tex">1/N_k</annotation></semantics></math>),
+and
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>ε</mi><mrow><mi>n</mi><mi>𝐤</mi></mrow></msub><annotation encoding="application/x-tex">\varepsilon_{n\mathbf{k}}</annotation></semantics></math>
+are shifted automatically relative to the Fermi energy
+(<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>E</mi><mo>−</mo><msub><mi>E</mi><mi>F</mi></msub><mo>=</mo><mn>0</mn></mrow><annotation encoding="application/x-tex">E - E_F = 0</annotation></semantics></math>).</p></li>
+<li><p><strong>Native XML Tree Orbital Decomposition (Replacing
+<code>fmpdos</code>):</strong> The engine parses the hierarchical XML
+tree in <code>SystemLabel.PDOS.xml</code>, dynamically groups angular
+momentum channels
+(<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>s</mi><mo>,</mo><msub><mi>p</mi><mi>x</mi></msub><mo>,</mo><msub><mi>p</mi><mi>y</mi></msub><mo>,</mo><msub><mi>p</mi><mi>z</mi></msub><mo>,</mo><msub><mi>d</mi><msup><mi>z</mi><mn>2</mn></msup></msub><mo>,</mo><mi>…</mi></mrow><annotation encoding="application/x-tex">s, p_x, p_y, p_z, d_{z^2}, \dots</annotation></semantics></math>),
+resolves spin-up
+(<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mo>↑</mo><annotation encoding="application/x-tex">\uparrow</annotation></semantics></math>)
+and spin-down
+(<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mo>↓</mo><annotation encoding="application/x-tex">\downarrow</annotation></semantics></math>)
+densities, and allows interactive toggling of atom and orbital
+contributions.</p></li>
+<li><p><strong>Instant 60 FPS Real-Time Interactivity:</strong>
+Numerical convolution across 1,000 energy points takes less than
+3 milliseconds in modern JavaScript engines. Adjusting the
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>σ</mi><annotation encoding="application/x-tex">\sigma</annotation></semantics></math>
+broadening slider (0.01 to 0.50 eV) or dragging the energy window
+immediately re-computes and re-renders the curves in real time without
+generating temporary files.</p></li>
+</ul></li>
+</ol>
+<table>
+<caption>Comparison: Traditional SIESTA CLI post-processing utilities
+vs. the Studio’s client-side numerical convolution engine.</caption>
+<thead>
+<tr class="header">
+<th style="text-align: left;"><strong>Feature / Operation</strong></th>
+<th style="text-align: left;"><strong>Traditional CLI Way
+(<code>Eig2DOS</code> / <code>fmpdos</code>)</strong></th>
+<th style="text-align: left;"><strong>SIESTA Web Studio In-Browser
+Engine</strong></th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;"><strong>Dependencies</strong></td>
+<td style="text-align: left;">Requires <code>gfortran</code>, Makefiles,
+shell environment</td>
+<td style="text-align: left;">Zero install; runs directly in any modern
+browser</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><strong>Broadening Tuning
+(<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>σ</mi><annotation encoding="application/x-tex">\sigma</annotation></semantics></math>)</strong></td>
+<td style="text-align: left;">Re-run CLI binary with new <code>-s</code>
+flag, overwrite file</td>
+<td style="text-align: left;">Live slider adjustment with real-time
+60 FPS re-draw</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;"><strong>Data Privacy</strong></td>
+<td style="text-align: left;">Local terminal</td>
+<td style="text-align: left;">100% client-side; data never leaves your
+browser</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><strong>Orbital Channel
+Selection</strong></td>
+<td style="text-align: left;">Complex command-line flags
+(<code>-a</code>, <code>-l</code>, <code>-m</code>)</td>
+<td style="text-align: left;">Interactive checkbox toggles per element
+and orbital
+(<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>s</mi><mo>,</mo><mi>p</mi><mo>,</mo><mi>d</mi><mo>,</mo><mi>f</mi></mrow><annotation encoding="application/x-tex">s, p, d, f</annotation></semantics></math>)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;"><strong>Bandgap &amp; Edge
+Detection</strong></td>
+<td style="text-align: left;">Manual inspection of text data
+columns</td>
+<td style="text-align: left;">Automatic Valence/Conduction edge markers
+and
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>E</mi><mi>g</mi></msub><annotation encoding="application/x-tex">E_g</annotation></semantics></math>
+readout</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><strong>Visualization &amp;
+Export</strong></td>
+<td style="text-align: left;">Separate scripts (<code>gnuplot</code>,
+Python <code>matplotlib</code>)</td>
+<td style="text-align: left;">Direct interactive SVG/Canvas with 300 DPI
+publication export</td>
+</tr>
+</tbody>
+</table>
 <h2 id="section-8-output-flags-results-viewer">Section 8 Output Flags
 &amp; Results Viewer</h2>
 <p>This section contains two distinct workspaces selected via top tab
@@ -1157,9 +1306,9 @@ FCC path:
 <code>MD.MaxForceTol 0.02 eV/Ang</code>.</p></li>
 <li><p>Click **Download Package** in the toolbar.</p></li>
 <li><p>On your cluster, extract the package and submit:</p>
-<div class="sourceCode" id="cb5" data-language="bash"><pre
-class="sourceCode bash"><code class="sourceCode bash"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="fu">unzip</span> silicon_bulk.zip <span class="kw">&amp;&amp;</span> <span class="bu">cd</span> silicon_bulk</span>
-<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="fu">bash</span> run_siesta.sh</span></code></pre></div></li>
+<div class="sourceCode" id="cb6" data-language="bash"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="fu">unzip</span> silicon_bulk.zip <span class="kw">&amp;&amp;</span> <span class="bu">cd</span> silicon_bulk</span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="fu">bash</span> run_siesta.sh</span></code></pre></div></li>
 <li><p>After completion, open Section 8 Tab 2, drag and drop
 <code>silicon_bulk.bands</code>, and inspect the electronic dispersion
 curves!</p></li>
