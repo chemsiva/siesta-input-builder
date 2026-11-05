@@ -4,6 +4,7 @@ import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { useFDFStore } from '../store/fdfStore';
 import { ELEMENT_DATA } from '../utils/elementData.js';
 import { createSafeWebGLRenderer, disposeWebGLRenderer } from '../utils/webglHelper.js';
+import { generateCIFText, generatePythonASEScript } from '../utils/crystalExport.js';
 export { ELEMENT_DATA };
 
 const Z_TO_SYMBOL = {
@@ -134,7 +135,8 @@ export function CrystalViewer({ structure }) {
   const initialDistRef = useRef(1);
   const isDraggingRef = useRef(false);
   const lastMouseRef = useRef({ x: 0, y: 0 });
-
+  const [showPythonModal, setShowPythonModal] = useState(false);
+  const [copyCodeMsg, setCopyCodeMsg] = useState(false);
  // Convert atomic coordinates to Cartesian Ångström
  const getCartesianAtoms = () => {
  if (!structure || !structure.atoms || structure.atoms.length === 0) return [];
@@ -153,14 +155,45 @@ export function CrystalViewer({ structure }) {
  const x = parseFloat(a.x) || 0;
  const y = parseFloat(a.y) || 0;
  const z = parseFloat(a.z) || 0;
- // Resolve species by index or label first (canonical source of truth)
- const spObj = (structure.species || []).find(sp =>
- String(sp.idx) === String(a.species) ||
- (sp.label && String(sp.label).toLowerCase() === String(a.label).toLowerCase())
- );
- const spTag = spObj?.label || (spObj?.z ? Z_TO_SYMBOL[spObj.z] : null) || a.label || a.species || 'Si';
- const el = getElementInfo(spTag);
+      // Robust Element Determination (Never default to 'Si'):
+      // 1. If atom has an explicit label that matches a known element (e.g. "Pb", "I", "N", "C", "H", "Pb1", "I_2")
+      let el = null;
+      if (a.label && typeof a.label === 'string') {
+        const clean = a.label.replace(/[^a-zA-Z]/g, '').trim();
+        if (clean) {
+          const info = getElementInfo(clean);
+          if (info && info.sym !== 'X' && ELEMENT_DATA[info.sym]) {
+            el = info;
+          }
+        }
+      }
 
+      // 2. If not determined from label, check structure.species by index or label
+      if (!el && structure.species && structure.species.length > 0) {
+        const spObj = structure.species.find(sp =>
+          String(sp.idx) === String(a.species) ||
+          (sp.label && a.label && String(sp.label).toLowerCase() === String(a.label).toLowerCase())
+        );
+        if (spObj && spObj.label) {
+          const info = getElementInfo(spObj.label);
+          if (info && info.sym !== 'X') {
+            el = info;
+          }
+        }
+      }
+
+      // 3. Check if a.species itself is an element symbol or atomic number Z (e.g. "Pb", "82", "53")
+      if (!el && a.species) {
+        const info = getElementInfo(a.species);
+        if (info && info.sym !== 'X') {
+          el = info;
+        }
+      }
+
+      // 4. Default: 'X' (neutral gray) — NEVER 'Si'!
+      if (!el) {
+        el = { color: 0x9ca3af, radius: 0.8, sym: 'X' };
+      }
  let cx = x, cy = y, cz = z;
  if (format === 'Fractional') {
  cx = (x * lv[0][0] + y * lv[1][0] + z * lv[2][0]) * scale;
@@ -382,30 +415,21 @@ export function CrystalViewer({ structure }) {
  }
  }
 
- // 4. Bounding Box & Camera Framing (100% guarantees all atoms are visible)
- const box = new THREE.Box3();
- if (atoms.length > 0) {
- atoms.forEach(a => box.expandByPoint(new THREE.Vector3(a.x, a.y, a.z)));
- }
- // Expand by cell corners
- [
- new THREE.Vector3(0, 0, 0),
- v1, v2, v3,
- new THREE.Vector3().add(v1).add(v2),
- new THREE.Vector3().add(v1).add(v3),
- new THREE.Vector3().add(v2).add(v3),
- new THREE.Vector3().add(v1).add(v2).add(v3),
- ].forEach(c => box.expandByPoint(c));
+    // 4. Bounding Box & Camera Framing (Centered directly on the atoms!)
+    const atomBox = new THREE.Box3();
+    if (atoms.length > 0) {
+      atoms.forEach(a => atomBox.expandByPoint(new THREE.Vector3(a.x, a.y, a.z)));
+    }
+    const atomCenter = atomBox.getCenter(new THREE.Vector3());
+    const atomSize = atomBox.getSize(new THREE.Vector3());
+    const atomMaxDim = Math.max(atomSize.x, atomSize.y, atomSize.z, 4);
 
- const center = box.getCenter(new THREE.Vector3());
- const size = box.getSize(new THREE.Vector3());
- const maxDim = Math.max(size.x, size.y, size.z, 6);
-
-    camera.position.set(center.x + maxDim * 1.3, center.y + maxDim * 1.0, center.z + maxDim * 1.6);
-    camera.lookAt(center);
-    controls.target.copy(center);
+    // Position camera looking directly at the atoms center
+    camera.position.set(atomCenter.x + atomMaxDim * 1.3, atomCenter.y + atomMaxDim * 1.0, atomCenter.z + atomMaxDim * 1.6);
+    camera.lookAt(atomCenter);
+    controls.target.copy(atomCenter);
     controls.update();
-    initialDistRef.current = camera.position.distanceTo(center);
+    initialDistRef.current = camera.position.distanceTo(atomCenter);
 
     controls.addEventListener('change', () => {
       if (initialDistRef.current > 0 && camera && controls) {
@@ -486,43 +510,50 @@ export function CrystalViewer({ structure }) {
  const v2 = [lv[1][0] * scale * ny, lv[1][1] * scale * ny, lv[1][2] * scale * ny];
  const v3 = [lv[2][0] * scale * nz, lv[2][1] * scale * nz, lv[2][2] * scale * nz];
 
- // Compute center of unit cell
- const cc = [
- (v1[0] + v2[0] + v3[0]) * 0.5,
- (v1[1] + v2[1] + v3[1]) * 0.5,
- (v1[2] + v2[2] + v3[2]) * 0.5,
- ];
+    // Compute center: Center on ATOMS so slabs with vacuum are centered in the viewport!
+    let cc = [
+      (v1[0] + v2[0] + v3[0]) * 0.5,
+      (v1[1] + v2[1] + v3[1]) * 0.5,
+      (v1[2] + v2[2] + v3[2]) * 0.5,
+    ];
 
- const len1 = Math.hypot(v1[0], v1[1], v1[2]);
- const len2 = Math.hypot(v2[0], v2[1], v2[2]);
- const len3 = Math.hypot(v3[0], v3[1], v3[2]);
- const maxCellDim = Math.max(len1, len2, len3, 6);
+    let maxSpan = Math.max(Math.hypot(...v1), Math.hypot(...v2), Math.hypot(...v3), 6);
 
- // Base scale fits entire cell (even 40+ A tall slabs) cleanly into viewport
- const baseScale = (Math.min(w, h) * 0.38) / maxCellDim;
- const D = 120;
+    if (atoms.length > 0) {
+      const xs = atoms.map(a => a.x);
+      const ys = atoms.map(a => a.y);
+      const zs = atoms.map(a => a.z);
+      const minX = Math.min(...xs), maxX = Math.max(...xs);
+      const minY = Math.min(...ys), maxY = Math.max(...ys);
+      const minZ = Math.min(...zs), maxZ = Math.max(...zs);
+      cc = [(minX + maxX) * 0.5, (minY + maxY) * 0.5, (minZ + maxZ) * 0.5];
+      const atomSpan = Math.max(maxX - minX, maxY - minY, maxZ - minZ, 4);
+      maxSpan = Math.max(atomSpan * 1.25, 6);
+    }
 
- const project = (x, y, z) => {
- const x0 = x - cc[0];
- const y0 = y - cc[1];
- const z0 = z - cc[2];
+    const baseScale = (Math.min(w, h) * 0.44) / maxSpan;
 
- const x1 = x0 * Math.cos(rotY) + z0 * Math.sin(rotY);
- const z1 = -x0 * Math.sin(rotY) + z0 * Math.cos(rotY);
+    const project = (x, y, z) => {
+      const x0 = x - cc[0];
+      const y0 = y - cc[1];
+      const z0 = z - cc[2];
 
- const y1 = y0 * Math.cos(rotX) - z1 * Math.sin(rotX);
- const z2 = y0 * Math.sin(rotX) + z1 * Math.cos(rotX);
+      const x1 = x0 * Math.cos(rotY) + z0 * Math.sin(rotY);
+      const z1 = -x0 * Math.sin(rotY) + z0 * Math.cos(rotY);
 
- const pers = D / (D + z2);
- const sc = baseScale * zoom * pers;
+      const y1 = y0 * Math.cos(rotX) - z1 * Math.sin(rotX);
+      const z2 = y0 * Math.sin(rotX) + z1 * Math.cos(rotX);
 
- return {
- sx: w / 2 + pan.x + x1 * sc,
- sy: h / 2 + pan.y - y1 * sc,
- depth: z2,
- scale: sc,
- };
- };
+      // Clean parallel orthographic projection: parallel unit cell lines stay strictly parallel!
+      const sc = baseScale * zoom;
+
+      return {
+        sx: w / 2 + pan.x + x1 * sc,
+        sy: h / 2 + pan.y - y1 * sc,
+        depth: z2,
+        scale: sc,
+      };
+    };
 
  // 1. Draw Unit Cell Wireframe
  if (showCell) {
@@ -767,7 +798,7 @@ export function CrystalViewer({ structure }) {
  };
 
  const atomsCount = atoms.length;
- const uniqueElements = Array.from(new Set(atoms.map(a => a.element)));
+  const uniqueElements = Array.from(new Set(atoms.map(a => a.element))).filter(el => el && el !== 'X');
 
  return (
  <div className="viewer-container" style={{ position: 'relative' }}>
@@ -800,8 +831,16 @@ export function CrystalViewer({ structure }) {
  className="btn btn-secondary btn-xs"
  onClick={() => setEngineMode(m => m === 'webgl' ? 'canvas2d' : 'webgl')}
  title="Switch between WebGL (3D) and Canvas 2D (zero WebGL context limit fallback)">
- {engineMode === 'webgl' ? 'WebGL' : '2D Canvas'}
- </button>
+            {engineMode === 'webgl' ? 'WebGL' : '2D Canvas'}
+          </button>
+          <button
+            type="button"
+            className="btn btn-xs btn-primary"
+            onClick={() => setShowPythonModal(true)}
+            style={{ fontWeight: 600 }}
+            title="Open Python 3D Viewer (ASE GUI) & VESTA CIF export">
+            🐍 Python 3D (ASE)
+          </button>
  <label className="toggle" style={{ fontSize: '0.75rem' }}>
  <input type="checkbox" checked={showBonds} onChange={e => setShowBonds(e.target.checked)} />
  <span>Bonds</span>
@@ -1031,9 +1070,129 @@ export function CrystalViewer({ structure }) {
  );
  })}
  </div>
- </div>
- </div>
- );
+      </div>
+
+      {/* Python 3D Viewer & VESTA CIF Export Modal */}
+      {showPythonModal && (
+        <div style={{
+          position: 'fixed',
+          top: 0, left: 0, right: 0, bottom: 0,
+          backgroundColor: 'rgba(0, 0, 0, 0.75)',
+          backdropFilter: 'blur(4px)',
+          zIndex: 1000,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          padding: '1rem',
+        }} onClick={() => setShowPythonModal(false)}>
+          <div style={{
+            background: 'var(--surface)',
+            border: '1px solid var(--border)',
+            borderRadius: '10px',
+            maxWidth: '680px',
+            width: '100%',
+            padding: '1.4rem',
+            boxShadow: '0 8px 32px rgba(0,0,0,0.6)',
+            position: 'relative',
+            maxHeight: '90vh',
+            overflowY: 'auto',
+          }} onClick={e => e.stopPropagation()}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.8rem' }}>
+              <strong style={{ fontSize: '1.05rem', color: 'var(--fg)' }}>
+                🐍 Interactive 3D Crystal Viewer with Python (ASE &amp; VESTA)
+              </strong>
+              <button
+                type="button"
+                className="btn btn-ghost btn-sm"
+                onClick={() => setShowPythonModal(false)}
+                style={{ fontSize: '1rem', lineHeight: 1 }}>
+                ✕
+              </button>
+            </div>
+
+            <p style={{ fontSize: '0.82rem', color: 'var(--muted)', lineHeight: 1.5, marginBottom: '1rem' }}>
+              You can view and rotate this crystal structure ({atomsCount} atoms) using standard Python materials science packages (ASE, PyVista, NGLView) or export directly to desktop crystallographic software like VESTA and OVITO.
+            </p>
+
+            {/* Method 1: ASE GUI Desktop Window */}
+            <div style={{ background: 'var(--surface2)', padding: '0.8rem', borderRadius: '6px', border: '1px solid var(--border)', marginBottom: '1rem' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
+                <strong style={{ fontSize: '0.82rem', color: 'var(--accent)' }}>
+                  Method 1: Native Desktop ASE-GUI (Atomic Simulation Environment)
+                </strong>
+                <div style={{ display: 'flex', gap: '0.3rem' }}>
+                  <button
+                    type="button"
+                    className="btn btn-xs btn-secondary"
+                    onClick={async () => {
+                      const code = generatePythonASEScript(structure);
+                      await navigator.clipboard.writeText(code);
+                      setCopyCodeMsg(true);
+                      setTimeout(() => setCopyCodeMsg(false), 2500);
+                    }}>
+                    {copyCodeMsg ? 'Copied Script!' : 'Copy Python Script'}
+                  </button>
+                  <button
+                    type="button"
+                    className="btn btn-xs btn-primary"
+                    onClick={() => {
+                      const code = generatePythonASEScript(structure);
+                      const blob = new Blob([code], { type: 'text/x-python' });
+                      const a = document.createElement('a');
+                      a.href = URL.createObjectURL(blob);
+                      a.download = 'view_structure_3d.py';
+                      a.click();
+                    }}>
+                    Download .py
+                  </button>
+                </div>
+              </div>
+              <div style={{ fontSize: '0.74rem', color: 'var(--muted)', marginBottom: '6px' }}>
+                Run in terminal: <code>python3 view_structure_3d.py</code> (requires <code>pip install ase</code>)
+              </div>
+              <pre style={{ margin: 0, padding: '0.6rem', fontSize: '0.7rem', background: '#090d16', border: '1px solid var(--border)', borderRadius: '4px', color: '#38bdf8', maxHeight: '140px', overflowY: 'auto' }}>
+{generatePythonASEScript(structure)}
+              </pre>
+            </div>
+
+            {/* Method 2: VESTA / CIF Export */}
+            <div style={{ background: 'var(--surface2)', padding: '0.8rem', borderRadius: '6px', border: '1px solid var(--border)', marginBottom: '1rem' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
+                <strong style={{ fontSize: '0.82rem', color: '#22c55e' }}>
+                  Method 2: Standard CIF Export for VESTA / OVITO / Mercury
+                </strong>
+                <button
+                  type="button"
+                  className="btn btn-xs btn-primary"
+                  onClick={() => {
+                    const cif = generateCIFText(structure);
+                    const blob = new Blob([cif], { type: 'text/plain' });
+                    const a = document.createElement('a');
+                    a.href = URL.createObjectURL(blob);
+                    a.download = `${structure.systemLabel || 'structure'}.cif`;
+                    a.click();
+                  }}>
+                  Download .cif for VESTA
+                </button>
+              </div>
+              <div style={{ fontSize: '0.74rem', color: 'var(--muted)', lineHeight: 1.5 }}>
+                Open the downloaded <code>.cif</code> in <strong>VESTA</strong> for coordination polyhedra, space-filling CPK spheres, and publication-ready raytraced figures.
+              </div>
+            </div>
+
+            <div style={{ textAlign: 'right' }}>
+              <button
+                type="button"
+                className="btn btn-sm btn-secondary"
+                onClick={() => setShowPythonModal(false)}>
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
 }
 
 export default CrystalViewer;
