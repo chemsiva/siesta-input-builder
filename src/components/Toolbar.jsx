@@ -379,6 +379,25 @@ Either copy your .psf/.psml files here, or edit run_siesta.sh to set
               </pre>
             </div>
 
+            {/* 3. Single-Handed Work & Mandatory Manual Verification Disclaimer */}
+            <div style={{
+              background: 'rgba(245, 158, 11, 0.08)',
+              border: '1px solid rgba(245, 158, 11, 0.3)',
+              borderRadius: '6px',
+              padding: '0.65rem 0.8rem',
+              marginBottom: '1rem',
+              fontSize: '0.74rem',
+              lineHeight: 1.5,
+              color: 'var(--fg)',
+            }}>
+              <strong style={{ color: '#f59e0b', display: 'block', marginBottom: '2px' }}>
+                ⚠️ Single-Handed Project &amp; Scientific Verification Disclaimer:
+              </strong>
+              This software is an independent, single-handed project designed and developed solely by <strong>Sivavadivel Sivakumar</strong>.
+              The author assumes <strong>no responsibility or liability</strong> for any software bugs, numerical inaccuracies, data mismatches, or failed supercomputer runs.
+              Users must manually inspect, check, and verify all generated parameters, coordinate tables, and units before running calculations on HPC clusters or publishing research.
+            </div>
+
             <div style={{ textAlign: 'right' }}>
               <button
                 type="button"

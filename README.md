@@ -187,7 +187,12 @@ If you use this software in your research or publications, please cite and ackno
 
 ---
 
-## License
+## License & Scientific Disclaimer
 
-This project is licensed under the **MIT License** — see the [LICENSE](./LICENSE) file for details.
+This project is licensed under the **MIT License** — see the [LICENSE](./LICENSE) file for complete legal terms.  
 Copyright (c) 2026 Sivavadivel Sivakumar.
+
+> ### ⚠️ Single-Handed Work & Mandatory Manual Verification Notice
+> * **Independent Single-Handed Project:** This entire web studio, FDF builder, and post-DFT analysis platform was designed, engineered, and maintained solely as an independent, single-handed project by **Sivavadivel Sivakumar** ([@chemsiva](https://github.com/chemsiva)).
+> * **No Liability for Bugs or Data Mismatches:** The author assumes **no responsibility or liability** for any software bugs, numerical inaccuracies, data mismatches, unit discrepancies, or failed/aborted calculations.
+> * **Mandatory Manual Verification:** Users, researchers, and students **must manually inspect, review, and verify** all generated `.fdf` parameters, atomic coordinate tables, pseudopotential mappings, and simulation outputs before submitting production jobs to high-performance computing (HPC) clusters or using data in academic papers.

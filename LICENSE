@@ -19,3 +19,24 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
+
+================================================================================
+SCIENTIFIC DISCLAIMER & SINGLE-HANDED DEVELOPMENT NOTICE
+================================================================================
+
+1. INDEPENDENT SINGLE-HANDED PROJECT:
+   This software is an independent, single-handed tool developed, maintained,
+   and provided free of charge by Sivavadivel Sivakumar (@chemsiva) for the
+   scientific and computational materials research community.
+
+2. NO LIABILITY FOR BUGS, DATA MISMATCHES, OR SIMULATION OUTCOMES:
+   The author assumes NO responsibility, legal liability, or warranty for any
+   software bugs, numerical inaccuracies, data mismatches, unit conversion
+   discrepancies, aborted calculations, or wasted high-performance computing
+   (HPC) allocation hours.
+
+3. MANDATORY MANUAL VERIFICATION:
+   All users, researchers, and students MUST manually review, inspect, and
+   verify all generated .fdf parameters, atomic coordinates, pseudopotential
+   bindings, and simulation settings prior to running calculations on
+   supercomputing clusters or incorporating results into academic publications.
